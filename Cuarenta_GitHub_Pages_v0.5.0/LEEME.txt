@@ -1,0 +1,28 @@
+CUARENTA - PROTOTIPO LOCAL 0.5.0
+
+PARA JUGAR:
+1. Extrae el ZIP completo.
+2. Abre Jugar_Cuarenta.html con Chrome, Edge, Firefox o Safari actualizado.
+3. Elige jugar contra la maquina o pasar el dispositivo entre dos personas.
+4. Elige Facil, Medio, Dificil o Experto contra la maquina. Escribe los nombres y reparte.
+5. Toca una carta y confirma la jugada.
+
+No necesita Internet ni instalacion.
+La interfaz responde a pantallas pequenas y al modo claro u oscuro del dispositivo.
+El guardado depende del navegador y del mismo archivo/ubicacion.
+
+ALTERNATIVA EN ESTE EQUIPO WINDOWS:
+Abre Iniciar_Cuarenta.cmd. Usa el Node.js instalado o incluido con Codex
+para servir el juego solo en este dispositivo.
+
+README.md explica el funcionamiento y la estructura del codigo.
+VALIDACION.md describe las pruebas y los limites de esta entrega.
+No incluye todavia multijugador entre dispositivos ni aplicacion de tienda.
+
+NOVEDADES 0.5: en Experto puedes valorar las jugadas para ajustar su busqueda.
+La retroalimentacion se guarda localmente; se desactiva en Preferencias.
+NOVEDADES 0.4: nivel Experto analiza respuestas probables y contra-jugadas.
+NOVEDADES 0.3: interfaz adaptable de inspiracion Apple, con modo claro u oscuro.
+NOVEDADES 0.2: ronda de tres iguales = +2; caida inmediata a una carta
+de esa ronda = victoria. Nueva mesa vintage. Empieza una nueva partida
+para aplicar estas reglas; las guardadas conservan su perfil anterior.
