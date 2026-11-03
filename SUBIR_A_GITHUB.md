@@ -1,6 +1,6 @@
 # Publicar Cuarenta para pruebas de grupo
 
-Esta entrega v0.5.0 está preparada para GitHub Pages. La publicación crea un sitio web estático: quienes tengan el enlace pueden jugar desde PC, Android o iPhone con un navegador actualizado. No requiere instalar una aplicación.
+Esta entrega v0.5.1 está preparada para GitHub Pages. La publicación crea un sitio web estático: quienes tengan el enlace pueden jugar desde PC, Android o iPhone con un navegador actualizado. No requiere instalar una aplicación.
 
 ## 1. Crear o elegir el repositorio
 
@@ -8,7 +8,7 @@ Usa un repositorio de GitHub al que tengas acceso de escritura. Para pruebas sen
 
 ## 2. Subir los archivos
 
-1. Descarga y extrae `Cuarenta_GitHub_Pages_v0.5.0.zip` en una carpeta de tu computador.
+1. Descarga y extrae `Cuarenta_GitHub_Pages_v0.5.1.zip` en una carpeta de tu computador.
 2. Abre PowerShell en esa carpeta, donde deben verse `index.html`, `package.json`, `dist` y `.github`.
 3. Si es un repositorio nuevo y vacío, ejecuta estos comandos, reemplazando `TU_USUARIO` por tu usuario de GitHub:
 
@@ -35,7 +35,7 @@ El flujo ejecuta `npm test`, prepara una página autocontenida y despliega el di
 ## Qué pueden probar los participantes
 
 - Contra la máquina en Fácil, Medio, Difícil y Experto.
-- Retroalimentación de dificultad del bot en Experto.
+- Valoración opcional del reto Experto al terminar cada partida, una sola vez.
 - Dos personas pasando el mismo dispositivo.
 - Ronda, caída a ronda, limpia, cartón, marcador, guardado local y reanudación.
 - Pantallas de inicio y juego en PC y móvil.
@@ -48,4 +48,4 @@ Activa **Issues** en la configuración del repositorio y comparte con el grupo c
 
 ## Validación de esta entrega
 
-La compilación local generó la página de 149 KB sin recursos externos. El núcleo del juego, las sesiones, las reglas, las dificultades y la versión autocontenida pasaron 42 pruebas. En este entorno Windows, 9 de las 53 pruebas totales no pudieron completarse por restricciones del entorno al abrir sockets locales o crear enlaces simbólicos; el flujo de GitHub las vuelve a ejecutar en Ubuntu antes de publicar. La validación visual en teléfonos físicos sigue pendiente; el grupo podrá ayudar a cubrirla.
+La compilación local generó la página de 150 KB sin recursos externos. El núcleo del juego, las sesiones, las reglas, las dificultades y la versión autocontenida pasaron 42 pruebas. En este entorno Windows, 9 de las 53 pruebas totales no pudieron completarse por restricciones del entorno al abrir sockets locales o crear enlaces simbólicos; el flujo de GitHub las vuelve a ejecutar en Ubuntu antes de publicar. La validación visual en teléfonos físicos sigue pendiente; el grupo podrá ayudar a cubrirla.

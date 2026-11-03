@@ -1,18 +1,19 @@
 # Validación de la entrega local
 
-## Preparación para pruebas públicas en GitHub Pages · versión 0.5.0 · 2 de noviembre de 2026
+## Preparación para pruebas públicas en GitHub Pages · versión 0.5.1 · 2 de noviembre de 2026
 
-- La compilación de Pages genera `site/index.html` e `index.html` autocontenidos, con los cinco módulos integrados y sin solicitudes a recursos externos. Tamaño observado: **149 413 bytes**.
+- La compilación de Pages genera `site/index.html` e `index.html` autocontenidos, con los cinco módulos integrados y sin solicitudes a recursos externos. Tamaño observado: **149 968 bytes**.
 - La suite completa contiene **53 pruebas**. En este entorno local pasaron **44**; las otras **9** no se pudieron completar porque el sandbox bloquea conexiones TCP a `127.0.0.1` (`EACCES`) y creación de enlaces simbólicos (`EPERM`). Los fallos de los lanzadores de Windows resultan del mismo bloqueo al iniciar el servidor. No se ocultan ni se presentan como aprobados.
 - Las pruebas de bot, motor, sesión y empaquetado pasaron: **42 de 42**. Incluyen partidas completas de los cuatro niveles y ajustes de retroalimentación del Experto.
-- El workflow de GitHub Actions ejecuta `npm test` en un runner Ubuntu antes de desplegar `site/`. La revisión visual en la URL publicada y en teléfonos físicos queda pendiente hasta completar el despliegue.
+- El workflow de GitHub Actions ejecuta `npm test` en un runner Ubuntu antes de desplegar `site/`. La versión de escritorio se revisa al publicar; la prueba con teléfonos físicos queda pendiente.
 - Los datos de prueba de cada jugador permanecen en el almacenamiento local de su navegador. El prototipo no recoge automáticamente resultados ni valoraciones.
+- La valoración del Experto aparece dentro del resultado final, solo para partidas contra la máquina en nivel Experto. Cada partida la ofrece una sola vez; se puede omitir. Ya no interrumpe las jugadas.
 
 ## Retroalimentación local del Experto · versión 0.5.0 · 30 de octubre de 2026
 
 Preferencias activa la retroalimentación del nivel Experto por defecto y permite apagarla. Después de cada jugada no terminal del bot se puede subir el reto, mantenerlo o bajarlo. El ajuste se guarda en las preferencias locales y modifica los límites de búsqueda: 4–24 candidatas y 3–14 respuestas estimadas. No entrena un modelo, no cambia reglas y no envía datos fuera del dispositivo. Se añadió la opción de restablecer el ajuste.
 
-La validación actualizada de esta versión está resumida al inicio del documento. Esta nota histórica registra que el 30 de octubre todavía no se había ejecutado la suite para el flujo de retroalimentación.
+La validación actualizada de esta versión está resumida al inicio del documento. Esta nota histórica registra que el 30 de octubre todavía no se había ejecutado la suite para el flujo de retroalimentación. En 0.5.1, la pregunta se movió al resultado final de la partida.
 
 ## Actualización de dificultad Experto · versión 0.4.0 · 30 de octubre de 2026
 

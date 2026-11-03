@@ -1,6 +1,6 @@
-# Cuarenta · Prototipo local 0.5.0
+# Cuarenta · Prototipo 0.5.1
 
-Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto, 30 de octubre de 2026.
+Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
 ## Versión para probar en línea
 
@@ -24,7 +24,7 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 
 ## Jugar ahora
 
-1. Abre **Jugar_Cuarenta.html** con doble clic en un navegador moderno de escritorio.
+1. Abre **index.html** con doble clic en un navegador moderno de escritorio.
 2. Elige **Contra la máquina** o **Pasar el dispositivo**.
 3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. Escribe los nombres, escoge caída y limpia juntas (2 o 4 puntos) y pulsa **Repartir cartas**.
 4. Selecciona una carta y confirma la jugada. Si admite varias capturas, cambia entre las opciones antes de confirmar.
@@ -63,9 +63,9 @@ El estilo usa CSS propio y fuentes instaladas en el sistema. Es una referencia v
 
 **Fácil** elige al azar entre acciones legales. **Medio** prioriza victorias, puntos y cartas recogidas. **Difícil** estima respuestas inmediatas y protege cartas de ronda. El nivel describe la estrategia de la máquina, no una garantía de ganar o perder. El tiempo de respuesta se ajusta por separado en Preferencias.
 
-## Retroalimentación del bot: versión 0.5
+## Retroalimentación del bot: versión 0.5.1
 
-En Preferencias está activado **Retroalimentación del Experto**. Después de cada jugada no terminal de la máquina en nivel Experto, puedes marcar **Demasiado fácil**, **Buen reto** o **Demasiado difícil**. Las dos primeras/últimas opciones aumentan o reducen un ajuste local de búsqueda en pasos limitados; “Buen reto” lo mantiene. La búsqueda estándar considera hasta 12 candidatas y 8 respuestas del rival; el ajuste puede cambiar esos límites entre 4 y 24 candidatas y 3 y 14 respuestas. **Restablecer ajuste** vuelve al valor inicial. El ajuste se guarda en las preferencias de este navegador y no se transmite.
+En Preferencias está activada **Retroalimentación del Experto**. Al terminar una partida contra Experto, la pantalla del resultado pregunta cómo estuvo el reto. Puedes elegir **Demasiado fácil**, **Buen reto** o **Demasiado difícil**, u omitir la valoración. Cada partida muestra la pregunta una sola vez y no interrumpe las jugadas. Las opciones para aumentar o reducir el reto cambian el alcance local de búsqueda; “Buen reto” lo mantiene. La búsqueda estándar considera hasta 12 candidatas y 8 respuestas del rival; el ajuste puede cambiar esos límites entre 4 y 24 candidatas y 3 y 14 respuestas. **Restablecer ajuste** vuelve al valor inicial. El ajuste se guarda en las preferencias de este navegador y no se transmite.
 
 La retroalimentación calibra cuánto explora la heurística; no entrena un modelo de IA ni promete que cada ajuste sea mejor. Puedes apagar las solicitudes en Preferencias. El ajuste solo se usa en Experto y no altera las reglas de Cuarenta.
 
@@ -105,7 +105,7 @@ node scripts/build-standalone.mjs
 node scripts/serve.mjs
 ```
 
-Edita los archivos de `dist/` y vuelve a construir el HTML. No edites solo el HTML generado: los cambios se perderían en el siguiente empaquetado. `dist/index.html` usa módulos y debe abrirse mediante el servidor; el archivo que admite doble clic es **Jugar_Cuarenta.html**.
+Edita los archivos de `dist/` y vuelve a construir el HTML. No edites solo el HTML generado: los cambios se perderían en el siguiente empaquetado. `dist/index.html` usa módulos y debe abrirse mediante el servidor; los archivos autocontenidos para abrir con doble clic son **index.html** y **Jugar_Cuarenta.html** (este último se genera con `npm run build`).
 
 ## Evolución a dispositivos cercanos
 
