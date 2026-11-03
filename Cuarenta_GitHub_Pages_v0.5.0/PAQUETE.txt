@@ -1,3 +1,0 @@
-Cuarenta v0.5.0 - paquete listo para GitHub Pages
-
-Extrae el contenido completo en la raiz del repositorio. Lee SUBIR_A_GITHUB.md antes de publicar.
