@@ -621,7 +621,7 @@ h2,h3{color:var(--ink);font-family:var(--sans)}
 .difficulty-picker select,.name-fields input{height:46px;min-height:46px;padding:10px 14px;border:1px solid #8e8e93;border-radius:var(--radius-field);background:var(--paper);color:var(--ink);font-size:16px}
 .difficulty-picker select{height:auto;min-height:46px}
 .difficulty-note,.setup-footnote{font-size:13px;line-height:1.45;color:var(--muted);margin:0}
-.name-fields{gap:12px;margin-bottom:15px}
+.name-fields{align-items:flex-end;gap:12px;margin-bottom:15px}
 .name-fields input{margin-top:6px}
 .name-fields input::placeholder{color:#636366;opacity:1}
 .combo-choice{margin:2px 0 15px;gap:12px}
@@ -1361,4 +1361,50 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   [data-table-layout="horizontal"] .privacy-curtain p:not(.eyebrow) {
     margin: 6px 0 9px;
   }
+}
+
+/* Quito at a glance: Basílica del Voto Nacional, San Francisco and El Panecillo. */
+.hero-table-inner,
+.game-table {
+  --quito-skyline: url("data:image/svg+xml,\
+%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 960 245'%3E\
+%3Cpath fill='%23d8e7c9' fill-opacity='.07' d='M0 173 103 120 163 139 251 88 342 129 394 116 470 156 588 102 635 116 716 75 765 119 798 103 960 176V245H0Z'/%3E\
+%3Cpath fill='%23d8e7c9' fill-opacity='.1' d='M0 205 46 194 46 179 64 179 64 170 86 170 99 180 117 180 117 198 263 198 263 173 282 173 282 164 300 155 317 165 317 178 329 178 329 188 346 188 346 170 360 157 377 170 393 170 393 205 596 205 596 186 618 186 618 170 639 158 660 170 660 196 694 196 694 210 960 210V245H0Z'/%3E\
+%3Cg fill='%23d8e7c9' fill-opacity='.21'%3E\
+%3Cpath d='M83 230V135h9v-24h8V76h5l16-51 16 51h5v35h8v23h13v-15l28-29 28 29v15h13v-23h8V76h5l16-51 16 51h5v35h8v24h9v95Z'/%3E\
+%3Cpath d='M315 230v-26h49v-40h34v-25h-4l8-7h5c0-9 4-15 12-19 8 4 12 10 12 19h5l8 7h-4v24h8v-9h12l34-21 34 21h12v9h8v-24h-4l8-7h5c0-9 4-15 12-19 8 4 12 10 12 19h5l8 7h-4v25h31v40h53v26Z'/%3E\
+%3Cpath d='M610 230c38-6 60-26 91-47 25-18 53-23 83-25 44-2 68 13 99 28 24 13 45 20 77 24v20ZM761 161v-9h7v-6h10l-2-12 4-20c-7 1-17-5-23-15l-5-19c9 5 16 9 22 16l6 8 1-9 4-4-1-6 3-4h5l3 4-2 7 3 5 2 8c11-10 21-20 31-22l-6 16c-7 11-17 15-25 16l3 15 1 16h10v6h7v9Z'/%3E\
+%3Cpath d='M0 230H960V245H0Z'/%3E\
+%3C/g%3E\
+%3Cg fill='%23163b31' fill-opacity='.64'%3E\
+%3Ccircle cx='121' cy='121' r='10'/%3E%3Ccircle cx='261' cy='121' r='10'/%3E\
+%3Ccircle cx='191' cy='144' r='14'/%3E\
+%3Cpath d='M104 98v-15l5-8 5 8v15Zm24 0v-15l5-8 5 8v15Zm116 0v-15l5-8 5 8v15Zm24 0v-15l5-8 5 8v15ZM176 224v-37l15-16 15 16v37Zm-66-4v-25l11-13 11 13v25Zm140 0v-25l11-13 11 13v25ZM410 157v-12a9 9 0 0 1 18 0v12Zm150 0v-12a9 9 0 0 1 18 0v12ZM480 229v-32a14 14 0 0 1 28 0v32Zm-42-5v-19a8 8 0 0 1 16 0v19Zm96 0v-19a8 8 0 0 1 16 0v19Z'/%3E\
+%3C/g%3E\
+%3Cg fill='none' stroke='%23d8e7c9' stroke-opacity='.24' stroke-width='2' stroke-linecap='round'%3E\
+%3Cpath d='M121 17v11m-4-7h8m136-4v11m-4-7h8m-66 71v-9m-3 4h6M419 114v-8m-3 3h6m147 5v-8m-3 3h6m-75 24v-8m-3 3h6M84 229h220m7 2h365'/%3E\
+%3C/g%3E%3C/svg%3E");
+  isolation: isolate;
+}
+
+.hero-table-inner::before,
+.game-table::before {
+  display: block;
+  inset: 12% 4%;
+  z-index: -1;
+  opacity: 1;
+  background: var(--quito-skyline) center bottom / contain no-repeat;
+}
+
+.hero-table-inner::before {
+  inset: 8% 4%;
+  background-position: center 72%;
+}
+
+.game-table::before {
+  background-position: center 62%;
+}
+
+.game-table .felt-watermark {
+  display: none;
 }

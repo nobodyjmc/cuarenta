@@ -1,6 +1,7 @@
 /** Local, serializable rules engine. No DOM, network, or bot access to hidden cards. */
 export const RANKS = Object.freeze(['A', '2', '3', '4', '5', '6', '7', 'J', 'Q', 'K']);
 export const SUITS = Object.freeze(['hearts', 'diamonds', 'clubs', 'spades']);
+export const DEFAULT_BOT_NAME = 'Don Julio';
 const STATUSES = ['playing', 'round-end', 'finished'];
 const DIFFICULTIES = ['easy', 'medium', 'hard', 'expert'];
 const copy = (value) => structuredClone(value);
@@ -103,7 +104,7 @@ function dealHands(state, random) {
   }
 }
 
-export function createGame({ mode = 'solo', names = ['Tú', 'Don Jacinto'], comboPoints = 2, difficulty = 'medium', random, dealer } = {}) {
+export function createGame({ mode = 'solo', names = ['Tú', mode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2'], comboPoints = 2, difficulty = 'medium', random, dealer } = {}) {
   if (!['solo', 'pass'].includes(mode)) fail('Modalidad desconocida.');
   if (!DIFFICULTIES.includes(difficulty)) fail('Dificultad desconocida.');
   if (![2, 4].includes(comboPoints)) fail('Caída y limpia debe valer 2 o 4 puntos.');

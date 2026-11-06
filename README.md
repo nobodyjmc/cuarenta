@@ -1,4 +1,4 @@
-# Cuarenta · Prototipo 0.5.2
+# Cuarenta · Prototipo 0.5.3
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -26,7 +26,7 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 
 1. Abre **index.html** con doble clic en un navegador moderno de escritorio.
 2. Elige **Contra la máquina** o **Pasar el dispositivo**.
-3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. Escribe los nombres, escoge caída y limpia juntas (2 o 4 puntos) y pulsa **Repartir cartas**.
+3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. Puedes cambiar el nombre de **Don Julio** en **Nombre del bot (opcional)**. Escoge **2** o **4 puntos** por caída y limpia juntas y pulsa **Repartir cartas**.
 4. Selecciona una carta y confirma la jugada. Si admite varias capturas, cambia entre las opciones antes de confirmar.
 5. Usa **Horizontal** o **Vertical** encima de la mesa para cambiar la vista en plena partida. La vista horizontal viene activada al empezar y el navegador recuerda tu elección.
 
@@ -44,7 +44,7 @@ Para una sesión de servidor con cierre visible, ejecuta `node scripts/serve.mjs
 
 ## Incluido
 
-- Partida a 40 puntos contra Don Jacinto, una máquina con cuatro estrategias que no recibe tu mano ni el orden del mazo.
+- Partida a 40 puntos contra Don Julio, una máquina con cuatro estrategias y nombre personalizable.
 - Dos personas en el mismo dispositivo, con una pantalla de entrega que oculta ambas manos entre turnos.
 - Baraja de 40 cartas, capturas por igualdad y suma, escalera, caída, limpia, ronda, cartón, límite de 30 por cartón y cierre desde 38.
 - Elección previa de caída y limpia juntas por 2 o 4 puntos; reglas fijas durante la partida.
