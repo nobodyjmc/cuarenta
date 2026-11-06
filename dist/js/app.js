@@ -88,7 +88,7 @@ function renderHome() {
     <section class="lobby-layout" aria-label="Preparar una partida">
       <div class="hero-table"><div class="hero-table-inner"><div class="hero-fan" aria-hidden="true">${cardMarkup(demoCard('A', 'hearts'))}${cardMarkup(demoCard('7', 'clubs'))}${cardMarkup(demoCard('K', 'diamonds'))}</div></div><div class="hero-bottom"><span>Un poquito de suerte.</span><span>Mucho de saber jugar.</span></div></div>
       <div class="setup-panel"><h2>¿Cómo jugamos?</h2><div class="mode-options" role="group" aria-label="Modo de juego"><button class="mode-option ${mode === 'solo' ? 'chosen' : ''}" data-action="mode" data-mode="solo" aria-pressed="${mode === 'solo'}"><span class="mode-icon">${icon('bot')}</span><span><strong>Contra la máquina</strong><small>Juega contra ${DEFAULT_BOT_NAME}.</small></span><span class="radio-dot"></span></button><button class="mode-option ${mode === 'pass' ? 'chosen' : ''}" data-action="mode" data-mode="pass" aria-pressed="${mode === 'pass'}"><span class="mode-icon">${icon('people')}</span><span><strong>Pasar el dispositivo</strong><small>Dos personas, una misma mesa.</small></span><span class="radio-dot"></span></button></div>
-      <form id="new-game-form">${mode === 'solo' ? `<div class="difficulty-picker"><label for="bot-difficulty">Nivel de la máquina</label><select id="bot-difficulty" name="difficulty" aria-describedby="difficulty-note">${Object.entries(difficultyNames).map(([key,label]) => `<option value="${key}" ${difficulty === key ? 'selected' : ''}>${label}</option>`).join('')}</select><p class="difficulty-note" id="difficulty-note">${difficultyNotes[difficulty]}</p></div>` : ''}<div class="name-fields"><label>Tu nombre<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="Tú" value="${esc(draftNames.player)}"></label><label>${opponentLabel}<input id="opponent-name" name="opponent" autocomplete="off" maxlength="20" placeholder="${opponentDefault}" value="${esc(draftNames[mode])}"></label></div><div class="combo-choice"><span>Caída y limpia juntas ${icon('spark')}</span><div role="group" aria-label="Puntos de caída y limpia"><button type="button" class="${comboPoints === 2 ? 'chosen' : ''}" data-action="combo" data-points="2" aria-pressed="${comboPoints === 2}">2 puntos</button><button type="button" class="${comboPoints === 4 ? 'chosen' : ''}" data-action="combo" data-points="4" aria-pressed="${comboPoints === 4}">4 puntos</button></div></div><button class="button primary start-button" type="submit">Repartir cartas ${icon('arrow')}</button></form>
+      <form id="new-game-form">${mode === 'solo' ? `<div class="difficulty-picker"><label for="bot-difficulty">Nivel de la máquina</label><select id="bot-difficulty" name="difficulty" aria-describedby="difficulty-note">${Object.entries(difficultyNames).map(([key,label]) => `<option value="${key}" ${difficulty === key ? 'selected' : ''}>${label}</option>`).join('')}</select><p class="difficulty-note" id="difficulty-note">${difficultyNotes[difficulty]}</p></div>` : ''}<div class="name-fields"><label>Tu nombre<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="Tú" value="${esc(draftNames.player)}"></label><label>${opponentLabel}<input id="opponent-name" name="opponent" autocomplete="off" maxlength="20" placeholder="${opponentDefault}" value="${esc(draftNames[mode])}"></label></div><div class="combo-choice"><span>Caída y limpia juntas ${icon('spark')}</span><div role="group" aria-label="Puntos de caída y limpia"><button type="button" class="${comboPoints === 2 ? 'chosen' : ''}" data-action="combo" data-points="2" aria-pressed="${comboPoints === 2}">2 puntos</button><button type="button" class="${comboPoints === 4 ? 'chosen' : ''}" data-action="combo" data-points="4" aria-pressed="${comboPoints === 4}">4 puntos</button></div></div>${tableLayoutPicker()}<button class="button primary start-button" type="submit">Repartir cartas ${icon('arrow')}</button></form>
       ${canResume ? `<button class="button resume-button" data-action="resume">${icon('play')} Continuar partida · ${saved.players[0].score} a ${saved.players[1].score}</button>` : ''}
       ${canResume && legacyRules(saved) ? '<p class="legacy-note">Tu partida guardada conserva las reglas anteriores. Reparte una nueva para activar la caída a la ronda.</p>' : ''}<p class="setup-footnote">A 40 puntos · Sin reloj · <button data-action="rules">Ver reglas</button></p></div>
     </section>`);
@@ -106,13 +106,16 @@ function tableLayoutPicker() {
   const buttons = Object.entries(tableLayouts).map(([value, label]) =>
     `<button type="button" data-action="table-layout" data-layout="${value}" aria-pressed="${prefs.tableLayout === value}">${label}</button>`
   );
-  return `<div class="table-layout-picker" role="group" aria-label="Orientación de la mesa">${buttons.join('')}</div>`;
+  return `<div class="table-layout-choice">
+    <span class="table-layout-label" id="table-layout-label">Vista de la mesa</span>
+    <div class="table-layout-picker" role="group" aria-labelledby="table-layout-label">${buttons.join('')}</div>
+  </div>`;
 }
 
 function changeTableLayout(layout) {
-  if (landscapeGame.matches || !Object.hasOwn(tableLayouts, layout) || prefs.tableLayout === layout) return;
+  if (!Object.hasOwn(tableLayouts, layout) || prefs.tableLayout === layout) return;
   prefs.tableLayout = layout;
-  app.querySelector('#main').dataset.tableLayout = layout;
+  updateGameOrientation();
   for (const button of app.querySelectorAll('.table-layout-picker button')) {
     button.setAttribute('aria-pressed', String(button.dataset.layout === layout));
   }
@@ -125,7 +128,7 @@ function updateGameOrientation() {
   const main = gameShell.querySelector('#main');
   const landscape = landscapeGame.matches;
   gameShell.classList.toggle('is-landscape-play', landscape);
-  main.dataset.tableLayout = landscape ? 'horizontal' : prefs.tableLayout;
+  main.dataset.tableLayout = prefs.tableLayout;
 }
 
 function renderGame() {

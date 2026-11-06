@@ -983,6 +983,24 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   gap: 8px;
 }
 
+.table-layout-choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-width: 0;
+}
+
+.table-layout-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.setup-panel .table-layout-choice {
+  margin-bottom: 12px;
+}
+
 .table-layout-picker {
   display: flex;
   gap: 2px;
@@ -1082,10 +1100,6 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   padding-inline: max(12px, env(safe-area-inset-left, 0px)) max(12px, env(safe-area-inset-right, 0px));
 }
 
-.is-landscape-play .table-layout-picker {
-  display: none;
-}
-
 .is-landscape-play .game-layout {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -1121,8 +1135,13 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   }
 
   .game-heading-actions {
+    align-items: flex-end;
     justify-content: space-between;
     width: 100%;
+  }
+
+  .game-heading-actions .table-layout-choice {
+    flex: 1 1 160px;
   }
 
   [data-table-layout] .game-heading .small-button {
@@ -1351,7 +1370,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
     font-size: 11px;
   }
 
-  [data-table-layout="horizontal"] .action-panel {
+  [data-table-layout] .action-panel {
     flex-direction: row;
     align-items: center;
     flex-wrap: wrap;
@@ -1361,15 +1380,15 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
     padding: 4px 8px;
   }
 
-  [data-table-layout="horizontal"] .action-copy {
+  [data-table-layout] .action-copy {
     flex: 1 1 220px;
   }
 
-  [data-table-layout="horizontal"] .action-copy small {
+  [data-table-layout] .action-copy small {
     font-size: 11px;
   }
 
-  [data-table-layout="horizontal"] .move-controls {
+  [data-table-layout] .move-controls {
     width: auto;
     flex-wrap: wrap;
   }
@@ -1397,6 +1416,32 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
   [data-table-layout="horizontal"] .privacy-curtain p:not(.eyebrow) {
     margin: 6px 0 9px;
+  }
+
+  [data-table-layout="vertical"] .game-table {
+    min-height: 0;
+    padding: 12px;
+  }
+
+  [data-table-layout="vertical"] .opponent-zone {
+    margin-top: 8px;
+  }
+
+  [data-table-layout="vertical"] .table-center {
+    min-height: 110px;
+    margin: 8px 0;
+  }
+
+  [data-table-layout="vertical"] .table-cards {
+    max-height: 150px;
+  }
+
+  [data-table-layout="vertical"] .own-hand {
+    min-height: 0;
+  }
+
+  [data-table-layout="vertical"] .own-hand .playing-card {
+    width: clamp(44px, 12dvh, 56px);
   }
 }
 
