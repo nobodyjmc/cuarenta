@@ -14,6 +14,8 @@ let difficulty = 'medium';
 const draftNames = { player: '', solo: '', pass: '' };
 const difficultyNames = { easy: 'Fácil', medium: 'Medio', hard: 'Difícil', expert: 'Experto' };
 const tableLayouts = { horizontal: 'Horizontal', vertical: 'Vertical' };
+const portraitGame = window.matchMedia('(orientation: portrait) and (max-width: 850px), (orientation: portrait) and (max-width: 1024px) and (pointer: coarse)');
+const landscapeGame = window.matchMedia('(orientation: landscape) and (max-width: 1199px) and (max-height: 850px), (orientation: landscape) and (max-width: 1400px) and (pointer: coarse)');
 const difficultyNotes = {
   easy: 'Una mesa tranquila: la máquina elige jugadas al azar.',
   medium: 'La máquina busca puntos y buenas capturas.',
@@ -44,6 +46,7 @@ const iconPaths = {
   book: '<path d="M12 5v16M3 4c4-1 6 0 9 2 3-2 5-3 9-2v15c-4-1-6 0-9 2-3-2-5-3-9-2z"/>',
   settings: '<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="16" cy="17" r="3"/>',
   arrow: '<path d="M4 12h16m-6-6 6 6-6 6"/>',
+  rotate: '<rect x="8" y="7" width="8" height="13" rx="2" transform="rotate(-35 12 13.5)"/><path d="M4 12a8 8 0 0 1 12-8l2 2m0-4v4h-4"/>',
   back: '<path d="M20 12H4m6-6-6 6 6 6"/>',
   close: '<path d="m6 6 12 12M6 18 18 6"/>',
   sound: '<path d="m11 4-6 5H2v6h3l6 5zM15 8c3 2 3 6 0 8m3-11c5 4 5 10 0 14"/>',
@@ -109,13 +112,48 @@ function tableLayoutPicker() {
 }
 
 function changeTableLayout(layout) {
-  if (!Object.hasOwn(tableLayouts, layout) || prefs.tableLayout === layout) return;
+  if (landscapeGame.matches || !Object.hasOwn(tableLayouts, layout) || prefs.tableLayout === layout) return;
   prefs.tableLayout = layout;
   app.querySelector('#main').dataset.tableLayout = layout;
   for (const button of app.querySelectorAll('.table-layout-picker button')) {
     button.setAttribute('aria-pressed', String(button.dataset.layout === layout));
   }
   if (!savePreferences(prefs)) toast('No se pudo guardar la orientación en este navegador.');
+}
+
+function rotationNotice() {
+  return `<section class="rotate-notice" aria-labelledby="rotate-title" hidden>
+    <span class="rotate-illustration">${icon('rotate')}</span>
+    <p class="eyebrow">VISTA HORIZONTAL</p>
+    <h1 id="rotate-title" tabindex="-1">Gira tu dispositivo</h1>
+    <p>Pon la pantalla de lado para jugar a Cuarenta.</p>
+    <button class="button outline" data-action="home">Volver al inicio</button>
+  </section>`;
+}
+
+function updateGameOrientation() {
+  const gameShell = app.querySelector('.is-playing');
+  const main = gameShell.querySelector('#main');
+  const paused = portraitGame.matches;
+  const landscape = landscapeGame.matches;
+  gameShell.classList.toggle('is-rotation-paused', paused);
+  gameShell.classList.toggle('is-landscape-play', landscape);
+  main.dataset.tableLayout = landscape ? 'horizontal' : prefs.tableLayout;
+  main.querySelector('.rotate-notice').hidden = !paused;
+  main.querySelector('.game-play-area').hidden = paused;
+}
+
+function handleOrientationChange() {
+  if (screen !== 'game') return;
+  const wasPaused = app.querySelector('.is-rotation-paused') !== null;
+  updateGameOrientation();
+  if (wasPaused === portraitGame.matches) return;
+  if (portraitGame.matches) {
+    cancelBot();
+    closeModal(false);
+  }
+  if (!modal.open) focusGame();
+  presentGameStatus();
 }
 
 function renderGame() {
@@ -132,8 +170,8 @@ function renderGame() {
   let instruction = v.status === 'round-end' ? 'Terminó el ciclo. Vamos a contar el cartón.' : v.status === 'finished' ? 'La chica ya tiene ganador.' : locked ? 'Las cartas están ocultas. Pasa el dispositivo.' : !myTurn ? `${other.name} está pensando…` : selectedId ? (captureIds.length ? `Recoges ${captureIds.length + 1} cartas${chosen.points ? ` · +${chosen.points} puntos` : ''}` : 'Esta carta se quedará en la mesa.') : 'Tu turno. Elige una carta de tu mano.';
   if (chosen?.rondaFall) instruction = '¡Caída a la ronda! Esta jugada gana la partida.';
   else if (chosen?.winsGame) instruction = 'Esta jugada completa los 40 puntos.';
-  app.innerHTML = shell(`<div class="game-heading"><div><p class="eyebrow">${mode === 'solo' ? `TÚ CONTRA ${esc(other.name)}` : 'UNA MESA PARA DOS'}</p><h1>Que hablen las cartas.</h1>${mode === 'solo' ? `<span class="difficulty-badge">Mesa ${difficultyNames[v.difficulty || 'medium'].toLowerCase()}</span>` : ''}</div><div class="game-heading-actions">${tableLayoutPicker()}<button class="button outline small-button" data-action="new">${icon('cards')} Nueva partida</button></div></div><div class="game-layout"><section class="game-column"><div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta"><div class="table-meta"><span>CICLO ${v.round} <i>·</i> REPARTO ${v.deal}/4</span><span class="deck-label">${icon('cards')} ${v.deckCount} por repartir</span></div><div class="opponent-zone">${playerBadge(other, false, v.turn === other.id)}<div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${Array.from({ length: other.handCount }, () => cardMarkup(null, { back: true })).join('')}</div></div><div class="table-center"><span class="felt-watermark" aria-hidden="true">40</span><div class="table-cards" aria-label="Cartas sobre la mesa">${v.table.length ? v.table.map(c => cardMarkup(c, { highlight: captureIds.includes(c.id), last: v.lastPlay?.cardId === c.id })).join('') : '<div class="empty-table"><span>La mesa está limpia.</span><small>Una carta puede cambiarlo todo.</small></div>'}</div></div><div class="own-zone">${!locked && v.rondas?.[viewer] && me.hand?.some(c => v.rondas[viewer].cardIds.includes(c.id)) ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(v.rondas[viewer].rank)} · +2 al repartir</div>` : ''}<div class="own-label">${playerBadge(me, true, v.turn === me.id)}<span class="hand-tip">${myTurn ? 'ELIGE TU CARTA' : 'TU MANO'}</span></div><div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${locked ? Array.from({ length: me.handCount }, () => cardMarkup(null, { back: true })).join('') : (me.hand || []).map(c => cardMarkup(c, { interactive: myTurn, selected: c.id === selectedId })).join('')}</div></div>${locked ? `<div class="privacy-curtain"><div class="privacy-icon">${icon('eye')}</div><p class="eyebrow">CAMBIO DE TURNO</p><h2>Pasa el dispositivo a<br>${esc(v.players[v.turn].name)}.</h2><p>Tu mano solo aparece cuando estés listo.</p><button class="button gold" data-action="reveal">Soy ${esc(v.players[v.turn].name)} · Ver mi mano ${icon('arrow')}</button></div>` : ''}</div><div class="action-panel"><div class="action-copy"><span class="action-dot ${myTurn ? 'ready' : ''}"></span><div><strong>${esc(instruction)}</strong><small>${chosen ? moveDescription(chosen) : myTurn ? 'Haz clic o toca una carta. Después confirma la jugada.' : 'Sin prisa. Aquí se juega a gusto.'}</small></div></div><div class="move-controls">${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}${v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>' : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>' : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${chosen?.captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`}</div></div><div class="save-status">${icon(session.warning ? 'shield' : 'check')} ${esc(session.warning || 'Partida guardada en este navegador')}${mode === 'pass' ? '<span>Las manos se ocultan entre turnos.</span>' : ''}</div></section><aside class="game-aside" aria-label="Marcador e historial">${scorePanel(v)}<section class="history-panel"><div class="panel-label">ASÍ VA LA PARTIDA <span>Últimas jugadas</span></div><ol class="history-list">${(v.history || []).slice(-7).reverse().map((e, i) => `<li class="${i === 0 ? 'latest' : ''}"><span class="history-icon">${icon(e.points ? 'spark' : 'cards')}</span><span>${esc(e.text)}</span></li>`).join('') || '<li>La baraja está lista. ¡A jugar!</li>'}</ol></section><button class="help-tile" data-action="rules">${icon('book')}<span>¿Una duda con las reglas?<small>El reglamento de esta mesa</small></span>${icon('arrow')}</button></aside></div>`);
-  app.querySelector('#main').dataset.tableLayout = prefs.tableLayout;
+  app.innerHTML = shell(`${rotationNotice()}<div class="game-play-area"><div class="game-heading"><div><p class="eyebrow">${mode === 'solo' ? `TÚ CONTRA ${esc(other.name)}` : 'UNA MESA PARA DOS'}</p><h1>Que hablen las cartas.</h1>${mode === 'solo' ? `<span class="difficulty-badge">Mesa ${difficultyNames[v.difficulty || 'medium'].toLowerCase()}</span>` : ''}</div><div class="game-heading-actions">${tableLayoutPicker()}<button class="button outline small-button" data-action="new">${icon('cards')} Nueva partida</button></div></div><div class="game-layout"><section class="game-column"><div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta"><div class="table-meta"><span>CICLO ${v.round} <i>·</i> REPARTO ${v.deal}/4</span><span class="deck-label">${icon('cards')} ${v.deckCount} por repartir</span></div><div class="opponent-zone">${playerBadge(other, false, v.turn === other.id)}<div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${Array.from({ length: other.handCount }, () => cardMarkup(null, { back: true })).join('')}</div></div><div class="table-center"><span class="felt-watermark" aria-hidden="true">40</span><div class="table-cards" aria-label="Cartas sobre la mesa">${v.table.length ? v.table.map(c => cardMarkup(c, { highlight: captureIds.includes(c.id), last: v.lastPlay?.cardId === c.id })).join('') : '<div class="empty-table"><span>La mesa está limpia.</span><small>Una carta puede cambiarlo todo.</small></div>'}</div></div><div class="own-zone">${!locked && v.rondas?.[viewer] && me.hand?.some(c => v.rondas[viewer].cardIds.includes(c.id)) ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(v.rondas[viewer].rank)} · +2 al repartir</div>` : ''}<div class="own-label">${playerBadge(me, true, v.turn === me.id)}<span class="hand-tip">${myTurn ? 'ELIGE TU CARTA' : 'TU MANO'}</span></div><div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${locked ? Array.from({ length: me.handCount }, () => cardMarkup(null, { back: true })).join('') : (me.hand || []).map(c => cardMarkup(c, { interactive: myTurn, selected: c.id === selectedId })).join('')}</div></div>${locked ? `<div class="privacy-curtain"><div class="privacy-icon">${icon('eye')}</div><p class="eyebrow">CAMBIO DE TURNO</p><h2>Pasa el dispositivo a<br>${esc(v.players[v.turn].name)}.</h2><p>Tu mano solo aparece cuando estés listo.</p><button class="button gold" data-action="reveal">Soy ${esc(v.players[v.turn].name)} · Ver mi mano ${icon('arrow')}</button></div>` : ''}</div><div class="action-panel"><div class="action-copy"><span class="action-dot ${myTurn ? 'ready' : ''}"></span><div><strong>${esc(instruction)}</strong><small>${chosen ? moveDescription(chosen) : myTurn ? 'Haz clic o toca una carta. Después confirma la jugada.' : 'Sin prisa. Aquí se juega a gusto.'}</small></div></div><div class="move-controls">${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}${v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>' : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>' : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${chosen?.captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`}</div></div><div class="save-status">${icon(session.warning ? 'shield' : 'check')} ${esc(session.warning || 'Partida guardada en este navegador')}${mode === 'pass' ? '<span>Las manos se ocultan entre turnos.</span>' : ''}</div></section><aside class="game-aside" aria-label="Marcador e historial">${scorePanel(v)}<section class="history-panel"><div class="panel-label">ASÍ VA LA PARTIDA <span>Últimas jugadas</span></div><ol class="history-list">${(v.history || []).slice(-7).reverse().map((e, i) => `<li class="${i === 0 ? 'latest' : ''}"><span class="history-icon">${icon(e.points ? 'spark' : 'cards')}</span><span>${esc(e.text)}</span></li>`).join('') || '<li>La baraja está lista. ¡A jugar!</li>'}</ol></section><button class="help-tile" data-action="rules">${icon('book')}<span>¿Una duda con las reglas?<small>El reglamento de esta mesa</small></span>${icon('arrow')}</button></aside></div></div>`);
+  updateGameOrientation();
   app.querySelector('.table-meta').insertAdjacentHTML('afterend', `<div class="compact-score" aria-label="Puntuación actual">${v.players.map(p => `<span><span>${esc(p.name)}</span><strong>${p.score}<small> / 40</small></strong></span>`).join('')}</div>`);
 }
 
@@ -153,7 +191,7 @@ function render() {
 }
 
 function focusGame() {
-  app.querySelector('#main').focus({ preventScroll: true });
+  app.querySelector(portraitGame.matches ? '#rotate-title' : '#main')?.focus({ preventScroll: true });
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
@@ -182,10 +220,10 @@ function cancelBot() { clearTimeout(botTimer); botTimer = null; }
 function scheduleBot() {
   cancelBot();
   const v = session.view(0);
-  if (screen !== 'game' || modal.open || !v || v.mode !== 'solo' || v.turn !== 1 || v.status !== 'playing') return;
+  if (screen !== 'game' || portraitGame.matches || document.hidden || modal.open || !v || v.mode !== 'solo' || v.turn !== 1 || v.status !== 'playing') return;
   const revision = v.revision;
   botTimer = setTimeout(() => {
-    if (session.revision !== revision || screen !== 'game' || modal.open) return;
+    if (session.revision !== revision || screen !== 'game' || portraitGame.matches || document.hidden || modal.open) return;
     try {
       const move = chooseBotMove(session.view(1), {
         feedbackChallenge: prefs.feedbackMode ? prefs.feedbackChallenge : 0,
@@ -196,15 +234,21 @@ function scheduleBot() {
   }, prefs.quickBot || prefs.reducedMotion ? 280 : 1000);
 }
 
+function presentGameStatus() {
+  if (portraitGame.matches || modal.open) return;
+  const status = getView()?.status;
+  if (status === 'round-end') showRoundSummary();
+  else if (status === 'finished') showResult();
+  else scheduleBot();
+}
+
 function afterMove() {
   selectedId = null; selectedMoveIndex = 0;
   const v = session.view(0);
   if (v.mode === 'pass' && v.status === 'playing') locked = true;
   announce(v.lastEvent?.text || 'Jugada realizada.'); playSound(v.lastEvent?.points);
   render();
-  if (v.status === 'round-end') showRoundSummary();
-  else if (v.status === 'finished') showResult();
-  else scheduleBot();
+  presentGameStatus();
 }
 
 function startGame(options) {
@@ -213,7 +257,7 @@ function startGame(options) {
     session.dispatch({ type: 'NEW_GAME', options });
     screen = 'game'; mode = options.mode; difficulty = options.difficulty || 'medium'; viewer = 0; locked = mode === 'pass'; selectedId = null;
     render(); focusGame(); announce('Partida iniciada.');
-    if (session.view(0).status === 'finished') showResult(); else scheduleBot();
+    presentGameStatus();
     if (session.warning) toast(session.warning);
   } catch (error) { toast(error.message); }
 }
@@ -324,7 +368,7 @@ function handleAction(target) {
       button.setAttribute('aria-pressed', String(selected));
     }
   }
-  else if (action === 'resume') { screen = 'game'; viewer = 0; locked = session.view(0).mode === 'pass'; render(); focusGame(); const v = getView(); if (v.status === 'round-end') showRoundSummary(); else scheduleBot(); }
+  else if (action === 'resume') { screen = 'game'; viewer = 0; locked = session.view(0).mode === 'pass'; render(); focusGame(); presentGameStatus(); }
   else if (action === 'table-layout') changeTableLayout(target.dataset.layout);
   else if (action === 'reveal') { viewer = getView().turn; locked = false; render(); announce(`Turno de ${getView().players[viewer].name}.`); }
   else if (action === 'select-card') { selectedId = target.dataset.card; selectedMoveIndex = 0; render(); document.querySelector(`[data-card="${CSS.escape(selectedId)}"]`)?.focus(); }
@@ -335,7 +379,7 @@ function handleAction(target) {
     try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(); }
     catch (error) { toast(error.message); selectedId = null; render(); }
   }
-  else if (action === 'next-round') { closeModal(false); try { session.dispatch({ type: 'NEXT_ROUND' }); locked = mode === 'pass'; selectedId = null; render(); if (getView().status === 'finished') showResult(); else scheduleBot(); } catch (error) { toast(error.message); } }
+  else if (action === 'next-round') { closeModal(false); try { session.dispatch({ type: 'NEXT_ROUND' }); locked = mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); } }
   else if (action === 'rules') showRules();
   else if (action === 'settings') showSettings();
   else if (action === 'feedback-rating') rateBot(target.dataset.rating);
@@ -386,6 +430,8 @@ document.addEventListener('change', event => {
   render();
 });
 modal.addEventListener('cancel', event => { event.preventDefault(); closeModal(); });
+portraitGame.addEventListener('change', handleOrientationChange);
+landscapeGame.addEventListener('change', handleOrientationChange);
 document.addEventListener('visibilitychange', () => { if (document.hidden) cancelBot(); else scheduleBot(); });
 window.addEventListener('pagehide', cancelBot);
 render();

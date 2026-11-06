@@ -975,6 +975,58 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 /* Table views share the same cards and controls. */
+.rotate-notice {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  width: min(100%, 500px);
+  margin: clamp(12px, 5dvh, 48px) auto 24px;
+  padding: clamp(24px, 6vw, 44px);
+  border: 1px solid #588473;
+  border-radius: var(--radius-surface);
+  background: radial-gradient(ellipse at top, #285b4c, #163a31 85%);
+  color: #fff;
+  text-align: center;
+}
+
+.rotate-illustration {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border: 1px solid #bde4cd66;
+  border-radius: 50%;
+  background: #092c2559;
+  color: #d8e7c9;
+}
+
+.rotate-illustration .icon {
+  width: 38px;
+  height: 38px;
+}
+
+.rotate-notice h1 {
+  margin: 0;
+  color: inherit;
+  font-size: clamp(27px, 7vw, 36px);
+}
+
+.rotate-notice p {
+  margin: 0;
+  color: #d8e7c9;
+}
+
+.rotate-notice .button.outline {
+  margin-top: 4px;
+  border-color: #79a493;
+  background: #102c26;
+  color: #fff;
+}
+
+.rotate-notice .button.outline:hover:not(:disabled) {
+  background: #214b3e;
+}
+
 .game-heading-actions {
   display: flex;
   align-items: center;
@@ -1075,6 +1127,27 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 [data-table-layout="vertical"] .help-tile {
+  grid-column: 1 / -1;
+}
+
+.is-landscape-play [data-table-layout] {
+  padding-inline: max(12px, env(safe-area-inset-left, 0px)) max(12px, env(safe-area-inset-right, 0px));
+}
+
+.is-landscape-play .table-layout-picker {
+  display: none;
+}
+
+.is-landscape-play .game-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.is-landscape-play .game-aside {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.is-landscape-play .help-tile {
   grid-column: 1 / -1;
 }
 

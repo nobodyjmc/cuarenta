@@ -1,4 +1,4 @@
-# Cuarenta · Prototipo 0.5.4
+# Cuarenta · Prototipo 0.5.5
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -28,9 +28,8 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 2. Elige **Contra la máquina** o **Pasar el dispositivo**.
 3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. Puedes cambiar el nombre de **Don Julio** en **Nombre del bot (opcional)**. Escoge **2** o **4 puntos** por caída y limpia juntas y pulsa **Repartir cartas**.
 4. Selecciona una carta y confirma la jugada. Si admite varias capturas, cambia entre las opciones antes de confirmar.
-5. Usa **Horizontal** o **Vertical** encima de la mesa para cambiar la vista en plena partida. La vista horizontal viene activada al empezar y el navegador recuerda tu elección.
-
-En un celular de pie, la mesa y los botones de jugada aparecen primero. Desliza hacia abajo para ver el historial y el marcador detallado.
+5. En el celular, gira el dispositivo para jugar en horizontal. La partida se pausa al volver a ponerlo de pie. Desliza hacia abajo para ver el marcador detallado, el historial y las reglas.
+6. En una ventana amplia, usa **Horizontal** o **Vertical** encima de la mesa para cambiar su distribución. El navegador recuerda tu elección.
 
 El archivo contiene todo el juego: no necesita instalación, conexión, cuentas ni recursos externos. Para volver, abre el mismo archivo en el mismo navegador. Si este permite el almacenamiento local, aparece **Continuar partida**. El guardado de archivos locales depende del navegador; mover el HTML, usar modo privado o borrar los datos puede impedir recuperar la partida. El juego avisa si no puede guardar.
 
