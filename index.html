@@ -852,6 +852,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   .game-heading h1{font-size:31px;line-height:1.08}
   .game-heading .eyebrow{font-size:12px;letter-spacing:0}
   .game-heading .small-button{min-width:40px;min-height:40px;padding:9px;font-size:0}
+  .game-layout{grid-template-columns:minmax(0,1fr)}
   .game-table,.game-table:has(.ronda-notice){height:auto;min-height:500px;padding:17px 12px 14px;border-radius:var(--radius-surface)}
   .table-meta{font-size:10px;letter-spacing:0}
   .deck-label{font-size:11px}
@@ -884,7 +885,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   .option-button{font-size:12px;padding:9px 10px}
   .save-status{font-size:11px;align-items:flex-start;flex-wrap:wrap;margin-top:10px}
   .save-status>span{width:100%;margin:0 0 0 18px}
-  .game-aside{grid-template-columns:1fr 1fr;gap:9px;margin-top:4px}
+  .game-aside{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:4px}
   .score-panel,.history-panel{padding:13px 11px;border-radius:var(--radius-surface)}
   .panel-label{font-size:10px;letter-spacing:0;gap:3px;margin-bottom:12px}
   .panel-label>span{font-size:10px}
