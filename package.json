@@ -1,6 +1,6 @@
 {
   "name": "cuarenta-local",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "private": true,
   "type": "module",
   "description": "Cuarenta ecuatoriano para jugar en un dispositivo, sin dependencias de instalacion.",
