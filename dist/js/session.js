@@ -74,7 +74,7 @@ export class LocalSession {
 }
 
 export function loadPreferences(storage) {
-  const fallback = { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 0 };
+  const fallback = { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 0, tableLayout: 'horizontal' };
   try {
     const saved = JSON.parse((storage ?? globalThis.localStorage).getItem(PREFS_KEY) || '{}');
     const feedbackChallenge = Number.isInteger(saved.feedbackChallenge) ? Math.max(-3, Math.min(3, saved.feedbackChallenge)) : 0;
@@ -84,6 +84,7 @@ export function loadPreferences(storage) {
       quickBot: saved.quickBot === true,
       feedbackMode: saved.feedbackMode === undefined ? true : saved.feedbackMode === true,
       feedbackChallenge,
+      tableLayout: saved.tableLayout === 'vertical' ? 'vertical' : 'horizontal',
     };
   } catch { return fallback; }
 }

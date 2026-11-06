@@ -87,12 +87,12 @@ test('storage failure does not interrupt a match and private projections stay de
 
 test('preferences accept booleans only, clamp local bot feedback, and tolerate unavailable storage', () => {
   const storage = memoryStorage();
-  assert.equal(savePreferences({ sound: true, reducedMotion: true, quickBot: 'true', feedbackMode: 'false', feedbackChallenge: '3' }, storage), true);
-  assert.deepEqual(loadPreferences(storage), { sound: true, reducedMotion: true, quickBot: false, feedbackMode: false, feedbackChallenge: 0 });
-  assert.equal(savePreferences({ feedbackMode: true, feedbackChallenge: 9 }, storage), true);
-  assert.deepEqual(loadPreferences(storage), { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 3 });
+  assert.equal(savePreferences({ sound: true, reducedMotion: true, quickBot: 'true', feedbackMode: 'false', feedbackChallenge: '3', tableLayout: 'diagonal' }, storage), true);
+  assert.deepEqual(loadPreferences(storage), { sound: true, reducedMotion: true, quickBot: false, feedbackMode: false, feedbackChallenge: 0, tableLayout: 'horizontal' });
+  assert.equal(savePreferences({ feedbackMode: true, feedbackChallenge: 9, tableLayout: 'vertical' }, storage), true);
+  assert.deepEqual(loadPreferences(storage), { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 3, tableLayout: 'vertical' });
   assert.equal(savePreferences({}, { setItem() { throw Error('blocked'); } }), false);
-  assert.deepEqual(loadPreferences({ getItem() { throw Error('blocked'); } }), { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 0 });
+  assert.deepEqual(loadPreferences({ getItem() { throw Error('blocked'); } }), { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 0, tableLayout: 'horizontal' });
 });
 
 function roundRandom() {

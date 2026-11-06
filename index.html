@@ -984,6 +984,396 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   *,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
 
+/* Table views share the same cards and controls. */
+.game-heading-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-layout-picker {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--pearl);
+}
+
+.table-layout-picker button {
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--radius-control);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.table-layout-picker button[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+
+.table-layout-picker button:hover:not([aria-pressed="true"]) {
+  background: var(--panel);
+}
+
+[data-table-layout] .game-table {
+  height: auto;
+  max-height: none;
+  border: 1px solid #588473;
+  background: radial-gradient(ellipse at 50% 35%, #285b4c, #163a31 85%);
+  box-shadow: inset 0 0 0 4px #173e35;
+  color: #fff;
+}
+
+[data-table-layout] .table-center {
+  border: 1px solid #bde4cd45;
+  border-radius: 12px;
+  background: #092c2559;
+}
+
+[data-table-layout] .felt-watermark {
+  font-size: clamp(58px, 12vw, 106px);
+}
+
+[data-table-layout] .table-cards {
+  align-content: flex-start;
+  padding: 9px 7px 17px;
+}
+
+[data-table-layout="horizontal"] .game-table {
+  min-height: clamp(350px, calc(100dvh - 285px), 510px);
+}
+
+[data-table-layout="horizontal"] .table-center {
+  min-height: 115px;
+  margin: 12px 0;
+}
+
+[data-table-layout="horizontal"] .table-cards {
+  max-height: 220px;
+}
+
+[data-table-layout="horizontal"] .own-label {
+  margin-bottom: 8px;
+}
+
+[data-table-layout="vertical"] .game-heading,
+[data-table-layout="vertical"] .game-layout {
+  width: min(100%, 570px);
+  margin-inline: auto;
+}
+
+[data-table-layout="vertical"] .game-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+[data-table-layout="vertical"] .game-table {
+  min-height: clamp(480px, 67dvh, 590px);
+}
+
+[data-table-layout="vertical"] .table-center {
+  min-height: 150px;
+}
+
+[data-table-layout="vertical"] .game-aside {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+[data-table-layout="vertical"] .help-tile {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 620px) {
+  [data-table-layout] .game-heading {
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+
+  .game-heading-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  [data-table-layout] .game-heading .small-button {
+    min-height: 44px;
+  }
+
+  [data-table-layout="horizontal"] .game-table {
+    min-height: 0;
+    padding: 11px 10px;
+  }
+
+  [data-table-layout="horizontal"] .opponent-zone {
+    margin-top: 8px;
+  }
+
+  [data-table-layout="horizontal"] .table-center {
+    min-height: 92px;
+    margin: 8px 0;
+  }
+
+  [data-table-layout="horizontal"] .table-cards {
+    max-height: 170px;
+  }
+
+  [data-table-layout="horizontal"] .own-hand {
+    min-height: 75px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .is-playing .sidebar {
+    position: static;
+    height: 40px;
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+  }
+
+  .is-playing .sidebar nav {
+    height: auto;
+  }
+
+  .is-playing .nav-item {
+    min-height: 36px;
+    flex-direction: row;
+  }
+
+  .is-playing .topbar {
+    display: none;
+  }
+
+  .is-playing .main-shell {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  [data-table-layout] {
+    padding: 6px max(12px, env(safe-area-inset-right, 0px)) 12px max(12px, env(safe-area-inset-left, 0px));
+  }
+
+  [data-table-layout] .game-heading {
+    margin-bottom: 7px;
+  }
+
+  [data-table-layout] .game-heading h1 {
+    margin: 0;
+    font-size: 19px;
+  }
+
+  [data-table-layout] .game-heading .eyebrow {
+    display: none;
+  }
+
+  [data-table-layout] .difficulty-badge {
+    padding: 2px 7px;
+    font-size: 10px;
+  }
+
+  .game-heading-actions {
+    width: auto;
+  }
+
+  [data-table-layout="horizontal"] .game-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  [data-table-layout="horizontal"] .game-table {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "meta score"
+      "opponent opponent"
+      "cards cards"
+      "hand hand";
+    align-items: center;
+    column-gap: 8px;
+    min-height: 0;
+    padding: 7px 12px;
+  }
+
+  [data-table-layout="horizontal"] .table-meta {
+    grid-area: meta;
+    justify-content: flex-start;
+    font-size: 10px;
+  }
+
+  [data-table-layout="horizontal"] .deck-label {
+    font-size: 11px;
+  }
+
+  [data-table-layout="horizontal"] .compact-score {
+    grid-area: score;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  [data-table-layout="horizontal"] .compact-score > span {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 6px;
+    color: #f5f5f7;
+    font-size: 11px;
+  }
+
+  [data-table-layout="horizontal"] .compact-score > span > span {
+    max-width: min(13vw, 110px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  [data-table-layout="horizontal"] .compact-score strong {
+    color: #fff;
+    font: 600 14px/1.2 var(--sans);
+    white-space: nowrap;
+  }
+
+  [data-table-layout="horizontal"] .compact-score small {
+    font-size: 10px;
+  }
+
+  [data-table-layout="horizontal"] .opponent-zone {
+    grid-area: opponent;
+    margin-top: 4px;
+  }
+
+  [data-table-layout="horizontal"] .opponent-hand .playing-card {
+    width: 21px;
+  }
+
+  [data-table-layout="horizontal"] .avatar {
+    width: 24px;
+    height: 24px;
+  }
+
+  [data-table-layout="horizontal"] .avatar .icon {
+    width: 15px;
+    height: 15px;
+  }
+
+  [data-table-layout="horizontal"] .player-badge strong,
+  [data-table-layout="horizontal"] .player-badge small {
+    font-size: 11px;
+  }
+
+  [data-table-layout="horizontal"] .table-center {
+    grid-area: cards;
+    min-height: 76px;
+    margin: 5px 0;
+  }
+
+  [data-table-layout="horizontal"] .table-cards {
+    max-height: clamp(76px, 24dvh, 114px);
+    gap: 6px;
+  }
+
+  [data-table-layout="horizontal"] .table-cards > .playing-card {
+    width: clamp(31px, 10dvh, 44px);
+  }
+
+  [data-table-layout="horizontal"] .empty-table span {
+    font-size: 17px;
+  }
+
+  [data-table-layout="horizontal"] .empty-table small {
+    margin-top: 2px;
+    font-size: 12px;
+  }
+
+  [data-table-layout="horizontal"] .own-zone {
+    grid-area: hand;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+  }
+
+  [data-table-layout="horizontal"] .own-label {
+    margin: 0;
+  }
+
+  [data-table-layout="horizontal"] .hand-tip {
+    display: none;
+  }
+
+  [data-table-layout="horizontal"] .own-hand {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-top: 4px;
+  }
+
+  [data-table-layout="horizontal"] .own-hand .playing-card {
+    width: clamp(44px, 12dvh, 56px);
+  }
+
+  [data-table-layout="horizontal"] .ronda-notice {
+    flex-basis: 100%;
+    margin: 0 0 3px;
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+
+  [data-table-layout="horizontal"] .action-panel {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    min-height: 0;
+    gap: 6px;
+    margin-top: 6px;
+    padding: 4px 8px;
+  }
+
+  [data-table-layout="horizontal"] .action-copy {
+    flex: 1 1 220px;
+  }
+
+  [data-table-layout="horizontal"] .action-copy small {
+    font-size: 11px;
+  }
+
+  [data-table-layout="horizontal"] .move-controls {
+    width: auto;
+    flex-wrap: wrap;
+  }
+
+  [data-table-layout="horizontal"] .game-aside {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  [data-table-layout="horizontal"] .help-tile {
+    grid-column: 1 / -1;
+  }
+
+  [data-table-layout="horizontal"] .privacy-icon {
+    display: none;
+  }
+
+  [data-table-layout="horizontal"] .privacy-curtain {
+    padding: 10px;
+  }
+
+  [data-table-layout="horizontal"] .privacy-curtain h2 {
+    font-size: 23px;
+  }
+
+  [data-table-layout="horizontal"] .privacy-curtain p:not(.eyebrow) {
+    margin: 6px 0 9px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1792,7 +2182,7 @@ class LocalSession {
 }
 
 function loadPreferences(storage) {
-  const fallback = { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 0 };
+  const fallback = { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 0, tableLayout: 'horizontal' };
   try {
     const saved = JSON.parse((storage ?? globalThis.localStorage).getItem(PREFS_KEY) || '{}');
     const feedbackChallenge = Number.isInteger(saved.feedbackChallenge) ? Math.max(-3, Math.min(3, saved.feedbackChallenge)) : 0;
@@ -1802,6 +2192,7 @@ function loadPreferences(storage) {
       quickBot: saved.quickBot === true,
       feedbackMode: saved.feedbackMode === undefined ? true : saved.feedbackMode === true,
       feedbackChallenge,
+      tableLayout: saved.tableLayout === 'vertical' ? 'vertical' : 'horizontal',
     };
   } catch { return fallback; }
 }
@@ -1834,6 +2225,7 @@ let mode = 'solo';
 let comboPoints = 2;
 let difficulty = 'medium';
 const difficultyNames = { easy: 'Fácil', medium: 'Medio', hard: 'Difícil', expert: 'Experto' };
+const tableLayouts = { horizontal: 'Horizontal', vertical: 'Vertical' };
 const difficultyNotes = {
   easy: 'Una mesa tranquila: la máquina elige jugadas al azar.',
   medium: 'La máquina busca puntos y buenas capturas.',
@@ -1889,7 +2281,7 @@ function cardMarkup(card, { back = false, selected = false, highlight = false, i
 }
 
 function shell(content) {
-  return `<div class="app-shell">
+  return `<div class="app-shell${screen === 'game' ? ' is-playing' : ''}">
     <aside class="sidebar" aria-label="Menú principal">
       <button class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark">40<span>◆</span></span><span class="brand-word">cuarenta<span>DE AQUÍ, DE SIEMPRE</span></span></button>
       <nav><button class="nav-item active" data-action="home">${icon('cards')}<span>La mesa</span></button><button class="nav-item" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button><button class="nav-item" data-action="settings">${icon('settings')}<span>Preferencias</span></button></nav>
@@ -1920,6 +2312,23 @@ function scorePanel(v) {
   return `<section class="score-panel"><div class="panel-label">EL MARCADOR <span>40 para ganar</span></div>${v.players.map((p, i) => `<div class="score-row"><div class="score-name"><span class="score-dot ${i ? 'opponent-dot' : ''}"></span>${esc(p.name)}</div><strong>${p.score}<span> / 40</span></strong><div class="score-track"><span class="${i ? 'opponent-fill' : ''}" style="width:${Math.min(100, p.score / 40 * 100)}%"></span></div><small>${p.capturedCount} cartas recogidas${p.score === 38 ? (legacyRules(v) ? ' · Solo te falta una caída' : ' · Cierras con caída o ronda') : ''}</small></div>`).join('')}<div class="score-rule">${icon('spark')} Caída y limpia: ${v.rules.comboPoints} puntos</div></section>`;
 }
 
+function tableLayoutPicker() {
+  const buttons = Object.entries(tableLayouts).map(([value, label]) =>
+    `<button type="button" data-action="table-layout" data-layout="${value}" aria-pressed="${prefs.tableLayout === value}">${label}</button>`
+  );
+  return `<div class="table-layout-picker" role="group" aria-label="Orientación de la mesa">${buttons.join('')}</div>`;
+}
+
+function changeTableLayout(layout) {
+  if (!Object.hasOwn(tableLayouts, layout) || prefs.tableLayout === layout) return;
+  prefs.tableLayout = layout;
+  app.querySelector('#main').dataset.tableLayout = layout;
+  for (const button of app.querySelectorAll('.table-layout-picker button')) {
+    button.setAttribute('aria-pressed', String(button.dataset.layout === layout));
+  }
+  if (!savePreferences(prefs)) toast('No se pudo guardar la orientación en este navegador.');
+}
+
 function renderGame() {
   const v = getView();
   if (!v) { screen = 'home'; renderHome(); return; }
@@ -1934,7 +2343,8 @@ function renderGame() {
   let instruction = v.status === 'round-end' ? 'Terminó el ciclo. Vamos a contar el cartón.' : v.status === 'finished' ? 'La chica ya tiene ganador.' : locked ? 'Las cartas están ocultas. Pasa el dispositivo.' : !myTurn ? `${other.name} está pensando…` : selectedId ? (captureIds.length ? `Recoges ${captureIds.length + 1} cartas${chosen.points ? ` · +${chosen.points} puntos` : ''}` : 'Esta carta se quedará en la mesa.') : 'Tu turno. Elige una carta de tu mano.';
   if (chosen?.rondaFall) instruction = '¡Caída a la ronda! Esta jugada gana la partida.';
   else if (chosen?.winsGame) instruction = 'Esta jugada completa los 40 puntos.';
-  app.innerHTML = shell(`<div class="game-heading"><div><p class="eyebrow">${mode === 'solo' ? 'TÚ CONTRA DON JACINTO' : 'UNA MESA PARA DOS'}</p><h1>Que hablen las cartas.</h1>${mode === 'solo' ? `<span class="difficulty-badge">Mesa ${difficultyNames[v.difficulty || 'medium'].toLowerCase()}</span>` : ''}</div><button class="button outline small-button" data-action="new">${icon('cards')} Nueva partida</button></div><div class="game-layout"><section class="game-column"><div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta"><div class="table-meta"><span>CICLO ${v.round} <i>·</i> REPARTO ${v.deal}/4</span><span class="deck-label">${icon('cards')} ${v.deckCount} por repartir</span></div><div class="opponent-zone">${playerBadge(other, false, v.turn === other.id)}<div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${Array.from({ length: other.handCount }, () => cardMarkup(null, { back: true })).join('')}</div></div><div class="table-center"><span class="felt-watermark" aria-hidden="true">40</span><div class="table-cards" aria-label="Cartas sobre la mesa">${v.table.length ? v.table.map(c => cardMarkup(c, { highlight: captureIds.includes(c.id), last: v.lastPlay?.cardId === c.id })).join('') : '<div class="empty-table"><span>La mesa está limpia.</span><small>Una carta puede cambiarlo todo.</small></div>'}</div></div><div class="own-zone">${!locked && v.rondas?.[viewer] && me.hand?.some(c => v.rondas[viewer].cardIds.includes(c.id)) ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(v.rondas[viewer].rank)} · +2 al repartir</div>` : ''}<div class="own-label">${playerBadge(me, true, v.turn === me.id)}<span class="hand-tip">${myTurn ? 'ELIGE TU CARTA' : 'TU MANO'}</span></div><div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${locked ? Array.from({ length: me.handCount }, () => cardMarkup(null, { back: true })).join('') : (me.hand || []).map(c => cardMarkup(c, { interactive: myTurn, selected: c.id === selectedId })).join('')}</div></div>${locked ? `<div class="privacy-curtain"><div class="privacy-icon">${icon('eye')}</div><p class="eyebrow">CAMBIO DE TURNO</p><h2>Pasa el dispositivo a<br>${esc(v.players[v.turn].name)}.</h2><p>Tu mano solo aparece cuando estés listo.</p><button class="button gold" data-action="reveal">Soy ${esc(v.players[v.turn].name)} · Ver mi mano ${icon('arrow')}</button></div>` : ''}</div><div class="action-panel"><div class="action-copy"><span class="action-dot ${myTurn ? 'ready' : ''}"></span><div><strong>${esc(instruction)}</strong><small>${chosen ? moveDescription(chosen) : myTurn ? 'Haz clic o toca una carta. Después confirma la jugada.' : 'Sin prisa. Aquí se juega a gusto.'}</small></div></div><div class="move-controls">${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}${v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>' : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>' : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${chosen?.captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`}</div></div><div class="save-status">${icon(session.warning ? 'shield' : 'check')} ${esc(session.warning || 'Partida guardada en este navegador')}${mode === 'pass' ? '<span>Las manos se ocultan entre turnos.</span>' : ''}</div></section><aside class="game-aside" aria-label="Marcador e historial">${scorePanel(v)}<section class="history-panel"><div class="panel-label">ASÍ VA LA PARTIDA <span>Últimas jugadas</span></div><ol class="history-list">${(v.history || []).slice(-7).reverse().map((e, i) => `<li class="${i === 0 ? 'latest' : ''}"><span class="history-icon">${icon(e.points ? 'spark' : 'cards')}</span><span>${esc(e.text)}</span></li>`).join('') || '<li>La baraja está lista. ¡A jugar!</li>'}</ol></section><button class="help-tile" data-action="rules">${icon('book')}<span>¿Una duda con las reglas?<small>El reglamento de esta mesa</small></span>${icon('arrow')}</button></aside></div>`);
+  app.innerHTML = shell(`<div class="game-heading"><div><p class="eyebrow">${mode === 'solo' ? 'TÚ CONTRA DON JACINTO' : 'UNA MESA PARA DOS'}</p><h1>Que hablen las cartas.</h1>${mode === 'solo' ? `<span class="difficulty-badge">Mesa ${difficultyNames[v.difficulty || 'medium'].toLowerCase()}</span>` : ''}</div><div class="game-heading-actions">${tableLayoutPicker()}<button class="button outline small-button" data-action="new">${icon('cards')} Nueva partida</button></div></div><div class="game-layout"><section class="game-column"><div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta"><div class="table-meta"><span>CICLO ${v.round} <i>·</i> REPARTO ${v.deal}/4</span><span class="deck-label">${icon('cards')} ${v.deckCount} por repartir</span></div><div class="opponent-zone">${playerBadge(other, false, v.turn === other.id)}<div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${Array.from({ length: other.handCount }, () => cardMarkup(null, { back: true })).join('')}</div></div><div class="table-center"><span class="felt-watermark" aria-hidden="true">40</span><div class="table-cards" aria-label="Cartas sobre la mesa">${v.table.length ? v.table.map(c => cardMarkup(c, { highlight: captureIds.includes(c.id), last: v.lastPlay?.cardId === c.id })).join('') : '<div class="empty-table"><span>La mesa está limpia.</span><small>Una carta puede cambiarlo todo.</small></div>'}</div></div><div class="own-zone">${!locked && v.rondas?.[viewer] && me.hand?.some(c => v.rondas[viewer].cardIds.includes(c.id)) ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(v.rondas[viewer].rank)} · +2 al repartir</div>` : ''}<div class="own-label">${playerBadge(me, true, v.turn === me.id)}<span class="hand-tip">${myTurn ? 'ELIGE TU CARTA' : 'TU MANO'}</span></div><div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${locked ? Array.from({ length: me.handCount }, () => cardMarkup(null, { back: true })).join('') : (me.hand || []).map(c => cardMarkup(c, { interactive: myTurn, selected: c.id === selectedId })).join('')}</div></div>${locked ? `<div class="privacy-curtain"><div class="privacy-icon">${icon('eye')}</div><p class="eyebrow">CAMBIO DE TURNO</p><h2>Pasa el dispositivo a<br>${esc(v.players[v.turn].name)}.</h2><p>Tu mano solo aparece cuando estés listo.</p><button class="button gold" data-action="reveal">Soy ${esc(v.players[v.turn].name)} · Ver mi mano ${icon('arrow')}</button></div>` : ''}</div><div class="action-panel"><div class="action-copy"><span class="action-dot ${myTurn ? 'ready' : ''}"></span><div><strong>${esc(instruction)}</strong><small>${chosen ? moveDescription(chosen) : myTurn ? 'Haz clic o toca una carta. Después confirma la jugada.' : 'Sin prisa. Aquí se juega a gusto.'}</small></div></div><div class="move-controls">${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}${v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>' : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>' : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${chosen?.captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`}</div></div><div class="save-status">${icon(session.warning ? 'shield' : 'check')} ${esc(session.warning || 'Partida guardada en este navegador')}${mode === 'pass' ? '<span>Las manos se ocultan entre turnos.</span>' : ''}</div></section><aside class="game-aside" aria-label="Marcador e historial">${scorePanel(v)}<section class="history-panel"><div class="panel-label">ASÍ VA LA PARTIDA <span>Últimas jugadas</span></div><ol class="history-list">${(v.history || []).slice(-7).reverse().map((e, i) => `<li class="${i === 0 ? 'latest' : ''}"><span class="history-icon">${icon(e.points ? 'spark' : 'cards')}</span><span>${esc(e.text)}</span></li>`).join('') || '<li>La baraja está lista. ¡A jugar!</li>'}</ol></section><button class="help-tile" data-action="rules">${icon('book')}<span>¿Una duda con las reglas?<small>El reglamento de esta mesa</small></span>${icon('arrow')}</button></aside></div>`);
+  app.querySelector('#main').dataset.tableLayout = prefs.tableLayout;
   app.querySelector('.table-meta').insertAdjacentHTML('afterend', `<div class="compact-score" aria-label="Puntuación actual">${v.players.map(p => `<span><span>${esc(p.name)}</span><strong>${p.score}<small> / 40</small></strong></span>`).join('')}</div>`);
 }
 
@@ -1951,6 +2361,11 @@ function moveDescription(move) {
 function render() {
   document.documentElement.classList.toggle('reduce-motion', prefs.reducedMotion);
   screen === 'home' ? renderHome() : renderGame();
+}
+
+function focusGame() {
+  app.querySelector('#main').focus({ preventScroll: true });
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function announce(text) { document.querySelector('#announcement').textContent = text; }
@@ -2008,7 +2423,7 @@ function startGame(options) {
   try {
     session.dispatch({ type: 'NEW_GAME', options });
     screen = 'game'; mode = options.mode; difficulty = options.difficulty || 'medium'; viewer = 0; locked = mode === 'pass'; selectedId = null;
-    render(); announce('Partida iniciada.');
+    render(); focusGame(); announce('Partida iniciada.');
     if (session.view(0).status === 'finished') showResult(); else scheduleBot();
     if (session.warning) toast(session.warning);
   } catch (error) { toast(error.message); }
@@ -2108,7 +2523,8 @@ function handleAction(target) {
   if (action === 'home') { cancelBot(); closeModal(false); screen = 'home'; selectedId = null; render(); }
   else if (action === 'mode') { const name = document.querySelector('#player-name')?.value || ''; mode = target.dataset.mode; render(); document.querySelector('#player-name').value = name; }
   else if (action === 'combo') { comboPoints = Number(target.dataset.points); const values = readForm(); render(); document.querySelector('#player-name').value = values.names[0] === 'Tú' ? '' : values.names[0]; if (mode === 'pass') document.querySelector('#opponent-name').value = values.names[1] === 'Jugador 2' ? '' : values.names[1]; }
-  else if (action === 'resume') { screen = 'game'; viewer = 0; locked = session.view(0).mode === 'pass'; render(); const v = getView(); if (v.status === 'round-end') showRoundSummary(); else scheduleBot(); }
+  else if (action === 'resume') { screen = 'game'; viewer = 0; locked = session.view(0).mode === 'pass'; render(); focusGame(); const v = getView(); if (v.status === 'round-end') showRoundSummary(); else scheduleBot(); }
+  else if (action === 'table-layout') changeTableLayout(target.dataset.layout);
   else if (action === 'reveal') { viewer = getView().turn; locked = false; render(); announce(`Turno de ${getView().players[viewer].name}.`); }
   else if (action === 'select-card') { selectedId = target.dataset.card; selectedMoveIndex = 0; render(); document.querySelector(`[data-card="${CSS.escape(selectedId)}"]`)?.focus(); }
   else if (action === 'next-capture') { selectedMoveIndex++; const moves = legalMoves(getView(), viewer).filter(m => m.cardId === selectedId); selectedMoveIndex %= moves.length; render(); }
