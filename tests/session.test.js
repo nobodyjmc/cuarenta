@@ -117,7 +117,8 @@ test('ronda and immediate-victory provenance survive closing and restoring a ses
   session.dispatch({ type: 'PLAY', move: { playerId: 0, cardId: 'hearts-5', captureIds: [], expectedRevision: 0 } });
   session = new LocalSession(storage);
   assert.equal(session.view(1).difficulty, 'hard');
-  assert.equal(session.view(1).lastPlay.fromRonda, true);
+  assert.equal(session.view(0).lastPlay.fromRonda, true);
+  assert.equal(session.view(1).lastPlay.fromRonda, undefined);
   assert.equal(session.view(1).rondas[0], null);
   session.dispatch({ type: 'PLAY', move: { playerId: 1, cardId: 'spades-5', captureIds: ['hearts-5'], expectedRevision: 1 } });
   const restored = new LocalSession(storage);

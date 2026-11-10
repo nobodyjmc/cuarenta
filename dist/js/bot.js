@@ -4,6 +4,31 @@ const MAX_ANALYSED_MOVES = 64;
 const MAX_EXPERT_CANDIDATES = 12;
 const MAX_EXPERT_REPLY_MOVES = 8;
 
+function sampleRandom(random) {
+  const sample = random();
+  if (!Number.isFinite(sample) || sample < 0 || sample >= 1) throw new Error('El azar del rival debe devolver un número entre 0 y 1, sin incluir 1.');
+  return sample;
+}
+
+// Vary tactically close choices without letting noise overwhelm a clear gain
+// or a dangerous response. Stronger levels keep a narrower quality margin.
+function chooseVaried(candidates, random, margin, temperature) {
+  const ranked = candidates.slice().sort((a, b) => b.value - a.value);
+  const bestValue = ranked[0].value;
+  const close = ranked.filter((candidate) => bestValue - candidate.value <= margin);
+  if (close.length === 1) return close[0].move;
+  const weighted = close.map((candidate) => ({
+    ...candidate,
+    weight: Math.exp((candidate.value - bestValue) / temperature),
+  }));
+  let pick = sampleRandom(random) * weighted.reduce((sum, candidate) => sum + candidate.weight, 0);
+  for (const candidate of weighted) {
+    pick -= candidate.weight;
+    if (pick < 0) return candidate.move;
+  }
+  return weighted.at(-1).move;
+}
+
 function command(view, move) {
   return { playerId: view.currentPlayerId, cardId: move.cardId, captureIds: move.captureIds.slice(), expectedRevision: view.revision };
 }
@@ -181,7 +206,9 @@ function expertLineRisk(view, player, rival, move, unknownRanks, maxReplyMoves) 
 /** Four local opponents. All decisions use only the bot's public projection:
  * easy picks randomly; medium values immediate gains; hard estimates a strong
  * rival reply; expert also searches the bot's best answer to that reply.
- * Hidden hands and the future deck are never read. */
+ * Each level varies close decisions; all levels take an immediate victory.
+ * Hidden hands and the future deck are never read. Randomness is injectable
+ * for replayable tests and never changes the legal moves or game rules. */
 export function chooseBotMove(view, { random = Math.random, feedbackChallenge = 0 } = {}) {
   const playerId = view.currentPlayerId;
   if (![0, 1].includes(playerId) || view.turn !== playerId || view.status !== 'playing') return null;
@@ -189,16 +216,18 @@ export function chooseBotMove(view, { random = Math.random, feedbackChallenge = 
   const moves = legalMoves(view, playerId);
   if (!moves.length) return null;
 
+  const victories = moves.filter((move) => wins(move, player.score));
+  if (victories.length) {
+    return command(view, chooseVaried(victories.map((move) => ({ move, value: 0 })), random, 0, 1));
+  }
+
   if (view.difficulty === 'easy') {
-    const sample = random();
-    if (!Number.isFinite(sample) || sample < 0 || sample >= 1) throw new Error('El azar del rival debe devolver un número entre 0 y 1, sin incluir 1.');
+    const sample = sampleRandom(random);
     return command(view, moves[Math.floor(sample * moves.length)]);
   }
 
-  const victory = moves.find((move) => wins(move, player.score));
-  if (victory) return command(view, victory);
   const ranked = moves.map((move) => ({ move, value: immediateValue(move, player) })).sort((a, b) => b.value - a.value);
-  if (!['hard', 'expert'].includes(view.difficulty)) return command(view, ranked[0].move);
+  if (!['hard', 'expert'].includes(view.difficulty)) return command(view, chooseVaried(ranked, random, 8, 3));
 
   const rival = view.players.find((candidate) => candidate.id === 1 - playerId);
   const known = new Set([...player.hand, ...view.table].map((card) => card.id));
@@ -218,8 +247,7 @@ export function chooseBotMove(view, { random = Math.random, feedbackChallenge = 
     analysed.push({ move: candidate.move, immediate: candidate.value, risk, value: candidate.value - risk });
   }
   if (view.difficulty === 'hard') {
-    analysed.sort((a, b) => b.value - a.value);
-    return command(view, analysed[0]?.move ?? ranked[0].move);
+    return command(view, chooseVaried(analysed, random, 3, 1.25));
   }
 
   const adjustment = Number.isFinite(feedbackChallenge)
@@ -227,16 +255,12 @@ export function chooseBotMove(view, { random = Math.random, feedbackChallenge = 
     : 0;
   const candidateBudget = Math.max(4, Math.min(24, MAX_EXPERT_CANDIDATES + adjustment * 4));
   const replyBudget = Math.max(3, Math.min(14, MAX_EXPERT_REPLY_MOVES + adjustment * 2));
-  let best = ranked[0].move;
-  let bestValue = -Infinity;
+  const expertCandidates = [];
   analysed.sort((a, b) => b.value - a.value);
   for (const candidate of analysed.slice(0, candidateBudget)) {
     const lineRisk = expertLineRisk(view, player, rival, candidate.move, unknownRanks, replyBudget);
     const value = candidate.immediate - candidate.risk * 0.25 - lineRisk * 0.85;
-    if (value > bestValue) {
-      bestValue = value;
-      best = candidate.move;
-    }
+    expertCandidates.push({ move: candidate.move, value });
   }
-  return command(view, best);
+  return command(view, chooseVaried(expertCandidates, random, 1.25, 0.5));
 }

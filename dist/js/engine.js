@@ -315,6 +315,15 @@ export function assertInvariant(state) {
  * holds the full game; this is a bot/UI boundary, not network anti-cheat security. */
 export function publicView(state, playerId) {
   if (![0, 1].includes(playerId)) fail('Asiento inválido para consultar la partida.');
+  // The award remains part of the real score, but its private explanation must
+  // not reveal the opponent's triple. Terminal result events explain a ronda win
+  // only after it happens; the bot cannot anticipate it through provenance.
+  const visibleEvent = (entry) => entry && (entry.kind !== 'ronda' || entry.playerId === playerId);
+  const history = state.history.filter(visibleEvent);
+  const latest = visibleEvent(state.lastEvent) ? state.lastEvent : history.at(-1);
+  const lastEvent = latest ? Object.fromEntries(Object.entries(latest).filter(([key]) => key !== 'id')) : null;
+  const lastPlay = state.lastPlay ? { ...state.lastPlay } : null;
+  if (lastPlay?.playerId !== playerId) delete lastPlay?.fromRonda;
   return copy({
     schemaVersion: state.schemaVersion, id: state.id, revision: state.revision,
     rules: state.rules, mode: state.mode, difficulty: state.difficulty ?? 'medium', currentPlayerId: playerId,
@@ -326,7 +335,7 @@ export function publicView(state, playerId) {
     })),
     table: state.table, deckCount: state.deck.length, discardedCount: state.discarded.length,
     dealer: state.dealer, turn: state.turn, round: state.round, deal: state.deal,
-    status: state.status, winner: state.winner, lastPlay: state.lastPlay,
-    history: state.history, roundSummary: state.roundSummary, lastEvent: state.lastEvent,
+    status: state.status, winner: state.winner, lastPlay,
+    history, roundSummary: state.roundSummary, lastEvent,
   });
 }

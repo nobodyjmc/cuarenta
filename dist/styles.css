@@ -1171,278 +1171,281 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   }
 }
 
-@media (orientation: landscape) and (max-height: 500px) {
-  .is-playing .sidebar {
-    position: static;
-    height: 40px;
-    padding-left: max(12px, env(safe-area-inset-left, 0px));
-    padding-right: max(12px, env(safe-area-inset-right, 0px));
-  }
+/* Compact landscape styles also serve the rotated mobile view. */
+.is-compact-play {
+  --compact-view-height: var(--rotated-height, 100dvh);
+}
 
-  .is-playing .sidebar nav {
-    height: auto;
-  }
+.is-compact-play .sidebar {
+  position: static;
+  height: 40px;
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+}
 
-  .is-playing .nav-item {
-    min-height: 36px;
-    flex-direction: row;
-  }
+.is-compact-play .sidebar nav {
+  height: auto;
+}
 
-  .is-playing .topbar {
-    display: none;
-  }
+.is-compact-play .nav-item {
+  min-height: 36px;
+  flex-direction: row;
+}
 
-  .is-playing .main-shell {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
+.is-compact-play .topbar {
+  display: none;
+}
 
-  [data-table-layout] {
-    padding: 6px max(12px, env(safe-area-inset-right, 0px)) 12px max(12px, env(safe-area-inset-left, 0px));
-  }
+.is-compact-play .main-shell {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
 
-  [data-table-layout] .game-heading {
-    margin-bottom: 7px;
-  }
+.is-compact-play [data-table-layout] {
+  padding: 6px max(12px, env(safe-area-inset-right, 0px)) 12px max(12px, env(safe-area-inset-left, 0px));
+}
 
-  [data-table-layout] .game-heading h1 {
-    margin: 0;
-    font-size: 19px;
-  }
+.is-compact-play [data-table-layout] .game-heading {
+  margin-bottom: 7px;
+}
 
-  [data-table-layout] .game-heading .eyebrow {
-    display: none;
-  }
+.is-compact-play [data-table-layout] .game-heading h1 {
+  margin: 0;
+  font-size: 19px;
+}
 
-  [data-table-layout] .difficulty-badge {
-    padding: 2px 7px;
-    font-size: 10px;
-  }
+.is-compact-play [data-table-layout] .game-heading .eyebrow {
+  display: none;
+}
 
-  .game-heading-actions {
-    width: auto;
-  }
+.is-compact-play [data-table-layout] .difficulty-badge {
+  padding: 2px 7px;
+  font-size: 10px;
+}
 
-  [data-table-layout="horizontal"] .game-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-  }
+.is-compact-play .game-heading-actions {
+  width: auto;
+}
 
-  [data-table-layout="horizontal"] .game-table {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "meta score"
-      "opponent opponent"
-      "cards cards"
-      "hand hand";
-    align-items: center;
-    column-gap: 8px;
-    min-height: 0;
-    padding: 7px 12px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .game-layout {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+}
 
-  [data-table-layout="horizontal"] .table-meta {
-    grid-area: meta;
-    justify-content: flex-start;
-    font-size: 10px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .game-table {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "meta score"
+    "opponent opponent"
+    "cards cards"
+    "hand hand";
+  align-items: center;
+  column-gap: 8px;
+  min-height: 0;
+  padding: 7px 12px;
+}
 
-  [data-table-layout="horizontal"] .deck-label {
-    font-size: 11px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .table-meta {
+  grid-area: meta;
+  justify-content: flex-start;
+  font-size: 10px;
+}
 
-  [data-table-layout="horizontal"] .compact-score {
-    grid-area: score;
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 0;
-    padding: 0;
-    border: 0;
-  }
+.is-compact-play [data-table-layout="horizontal"] .deck-label {
+  font-size: 11px;
+}
 
-  [data-table-layout="horizontal"] .compact-score > span {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    gap: 6px;
-    color: #f5f5f7;
-    font-size: 11px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .compact-score {
+  grid-area: score;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 
-  [data-table-layout="horizontal"] .compact-score > span > span {
-    max-width: min(13vw, 110px);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.is-compact-play [data-table-layout="horizontal"] .compact-score > span {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 6px;
+  color: #f5f5f7;
+  font-size: 11px;
+}
 
-  [data-table-layout="horizontal"] .compact-score strong {
-    color: #fff;
-    font: 600 14px/1.2 var(--sans);
-    white-space: nowrap;
-  }
+.is-compact-play [data-table-layout="horizontal"] .compact-score > span > span {
+  max-width: min(13vw, 110px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  [data-table-layout="horizontal"] .compact-score small {
-    font-size: 10px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .compact-score strong {
+  color: #fff;
+  font: 600 14px/1.2 var(--sans);
+  white-space: nowrap;
+}
 
-  [data-table-layout="horizontal"] .opponent-zone {
-    grid-area: opponent;
-    margin-top: 4px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .compact-score small {
+  font-size: 10px;
+}
 
-  [data-table-layout="horizontal"] .opponent-hand .playing-card {
-    width: 21px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .opponent-zone {
+  grid-area: opponent;
+  margin-top: 4px;
+}
 
-  [data-table-layout="horizontal"] .avatar {
-    width: 24px;
-    height: 24px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .opponent-hand .playing-card {
+  width: 21px;
+}
 
-  [data-table-layout="horizontal"] .avatar .icon {
-    width: 15px;
-    height: 15px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .avatar {
+  width: 24px;
+  height: 24px;
+}
 
-  [data-table-layout="horizontal"] .player-badge strong,
-  [data-table-layout="horizontal"] .player-badge small {
-    font-size: 11px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .avatar .icon {
+  width: 15px;
+  height: 15px;
+}
 
-  [data-table-layout="horizontal"] .table-center {
-    grid-area: cards;
-    min-height: 76px;
-    margin: 5px 0;
-  }
+.is-compact-play [data-table-layout="horizontal"] .player-badge strong,
+.is-compact-play [data-table-layout="horizontal"] .player-badge small {
+  font-size: 11px;
+}
 
-  [data-table-layout="horizontal"] .table-cards {
-    max-height: clamp(76px, 24dvh, 114px);
-    gap: 6px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .table-center {
+  grid-area: cards;
+  min-height: 76px;
+  margin: 5px 0;
+}
 
-  [data-table-layout="horizontal"] .table-cards > .playing-card {
-    width: clamp(31px, 10dvh, 44px);
-  }
+.is-compact-play [data-table-layout="horizontal"] .table-cards {
+  max-height: clamp(76px, calc(var(--compact-view-height) * .24), 114px);
+  gap: 6px;
+}
 
-  [data-table-layout="horizontal"] .empty-table span {
-    font-size: 17px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .table-cards > .playing-card {
+  width: clamp(31px, calc(var(--compact-view-height) * .10), 44px);
+}
 
-  [data-table-layout="horizontal"] .empty-table small {
-    margin-top: 2px;
-    font-size: 12px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .empty-table span {
+  font-size: 17px;
+}
 
-  [data-table-layout="horizontal"] .own-zone {
-    grid-area: hand;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px 8px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .empty-table small {
+  margin-top: 2px;
+  font-size: 12px;
+}
 
-  [data-table-layout="horizontal"] .own-label {
-    margin: 0;
-  }
+.is-compact-play [data-table-layout="horizontal"] .own-zone {
+  grid-area: hand;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
 
-  [data-table-layout="horizontal"] .hand-tip {
-    display: none;
-  }
+.is-compact-play [data-table-layout="horizontal"] .own-label {
+  margin: 0;
+}
 
-  [data-table-layout="horizontal"] .own-hand {
-    flex: 1 1 auto;
-    min-height: 0;
-    padding-top: 4px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .hand-tip {
+  display: none;
+}
 
-  [data-table-layout="horizontal"] .own-hand .playing-card {
-    width: clamp(44px, 12dvh, 56px);
-  }
+.is-compact-play [data-table-layout="horizontal"] .own-hand {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding-top: 4px;
+}
 
-  [data-table-layout="horizontal"] .ronda-notice {
-    flex-basis: 100%;
-    margin: 0 0 3px;
-    padding: 2px 6px;
-    font-size: 11px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .own-hand .playing-card {
+  width: clamp(44px, calc(var(--compact-view-height) * .12), 56px);
+}
 
-  [data-table-layout] .action-panel {
-    flex-direction: row;
-    align-items: center;
-    flex-wrap: wrap;
-    min-height: 0;
-    gap: 6px;
-    margin-top: 6px;
-    padding: 4px 8px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .ronda-notice {
+  flex-basis: 100%;
+  margin: 0 0 3px;
+  padding: 2px 6px;
+  font-size: 11px;
+}
 
-  [data-table-layout] .action-copy {
-    flex: 1 1 220px;
-  }
+.is-compact-play [data-table-layout] .action-panel {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  min-height: 0;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 4px 8px;
+}
 
-  [data-table-layout] .action-copy small {
-    font-size: 11px;
-  }
+.is-compact-play [data-table-layout] .action-copy {
+  flex: 1 1 220px;
+}
 
-  [data-table-layout] .move-controls {
-    width: auto;
-    flex-wrap: wrap;
-  }
+.is-compact-play [data-table-layout] .action-copy small {
+  font-size: 11px;
+}
 
-  [data-table-layout="horizontal"] .game-aside {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.is-compact-play [data-table-layout] .move-controls {
+  width: auto;
+  flex-wrap: wrap;
+}
 
-  [data-table-layout="horizontal"] .help-tile {
-    grid-column: 1 / -1;
-  }
+.is-compact-play [data-table-layout="horizontal"] .game-aside {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
 
-  [data-table-layout="horizontal"] .privacy-icon {
-    display: none;
-  }
+.is-compact-play [data-table-layout="horizontal"] .help-tile {
+  grid-column: 1 / -1;
+}
 
-  [data-table-layout="horizontal"] .privacy-curtain {
-    padding: 10px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .privacy-icon {
+  display: none;
+}
 
-  [data-table-layout="horizontal"] .privacy-curtain h2 {
-    font-size: 23px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .privacy-curtain {
+  padding: 10px;
+}
 
-  [data-table-layout="horizontal"] .privacy-curtain p:not(.eyebrow) {
-    margin: 6px 0 9px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .privacy-curtain h2 {
+  font-size: 23px;
+}
 
-  [data-table-layout="vertical"] .game-table {
-    min-height: 0;
-    padding: 12px;
-  }
+.is-compact-play [data-table-layout="horizontal"] .privacy-curtain p:not(.eyebrow) {
+  margin: 6px 0 9px;
+}
 
-  [data-table-layout="vertical"] .opponent-zone {
-    margin-top: 8px;
-  }
+.is-compact-play [data-table-layout="vertical"] .game-table {
+  min-height: 0;
+  padding: 12px;
+}
 
-  [data-table-layout="vertical"] .table-center {
-    min-height: 110px;
-    margin: 8px 0;
-  }
+.is-compact-play [data-table-layout="vertical"] .opponent-zone {
+  margin-top: 8px;
+}
 
-  [data-table-layout="vertical"] .table-cards {
-    max-height: 150px;
-  }
+.is-compact-play [data-table-layout="vertical"] .table-center {
+  min-height: 110px;
+  margin: 8px 0;
+}
 
-  [data-table-layout="vertical"] .own-hand {
-    min-height: 0;
-  }
+.is-compact-play [data-table-layout="vertical"] .table-cards {
+  max-height: 150px;
+}
 
-  [data-table-layout="vertical"] .own-hand .playing-card {
-    width: clamp(44px, 12dvh, 56px);
-  }
+.is-compact-play [data-table-layout="vertical"] .own-hand {
+  min-height: 0;
+}
+
+.is-compact-play [data-table-layout="vertical"] .own-hand .playing-card {
+  width: clamp(44px, calc(var(--compact-view-height) * .12), 56px);
 }
 
 /* Quito at a glance: Basílica del Voto Nacional, San Francisco and El Panecillo. */
@@ -1489,4 +1492,224 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 .game-table .felt-watermark {
   display: none;
+}
+
+/* Keep the whole game usable when the browser cannot rotate the screen. */
+.is-rotated-view {
+  --rotated-width: 100dvh;
+  --rotated-height: 100dvw;
+}
+
+.is-rotated-view,
+.is-rotated-view body {
+  overflow: hidden;
+}
+
+.is-rotated-view .rotated-stage {
+  position: fixed;
+  inset: 0 auto auto var(--rotated-height);
+  width: var(--rotated-width);
+  height: var(--rotated-height);
+  transform: rotate(90deg);
+  transform-origin: top left;
+  background: var(--paper);
+}
+
+.is-rotated-view #app {
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.is-rotated-view .app-shell {
+  min-height: var(--rotated-height);
+}
+
+.is-rotated-view .main-shell {
+  min-height: calc(var(--rotated-height) - 40px);
+  padding-bottom: env(safe-area-inset-left, 0px);
+}
+
+.is-rotated-view .sidebar {
+  position: static;
+  padding-inline: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.is-rotated-view main {
+  padding-inline: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-bottom, 0px));
+}
+
+.is-rotated-view #modal[open] {
+  position: fixed;
+  inset: 50% auto auto 50%;
+  width: min(580px, calc(var(--rotated-width) - 48px));
+  max-height: calc(var(--rotated-height) - 30px);
+  margin: 0;
+  padding: 18px;
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.is-rotated-view .toast {
+  bottom: 12px;
+}
+
+/* Card impacts sit above the felt and never receive input. */
+.play-impact {
+  --impact-color: #a4f5c7;
+  --impact-center: 43%;
+  --impact-travel: clamp(48px, 15vmin, 92px);
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.play-impact--ronda,
+.play-impact--win {
+  --impact-color: #ffdb82;
+  --impact-travel: clamp(58px, 20vmin, 116px);
+}
+
+.impact-rays,
+.impact-ring,
+.impact-particles,
+.impact-card,
+.impact-hand {
+  position: absolute;
+  top: var(--impact-center);
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.impact-rays {
+  width: calc(var(--impact-travel) * 2.5);
+  aspect-ratio: 1;
+  background: repeating-conic-gradient(from 18deg, var(--impact-color) 0deg 3deg, transparent 3deg 36deg);
+  mask-image: radial-gradient(transparent 15%, #000 30%, transparent 67%);
+  animation: impact-rays 650ms 155ms ease-out both;
+}
+
+.impact-ring {
+  width: calc(var(--impact-travel) * 2);
+  aspect-ratio: 1;
+  border: 2px solid var(--impact-color);
+  border-radius: 50%;
+  box-shadow: inset 0 0 12px var(--impact-color), 0 0 13px var(--impact-color);
+  animation: impact-ring 590ms 155ms ease-out both;
+}
+
+.impact-particles > i {
+  position: absolute;
+  inset: -3px auto auto -3px;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--impact-color);
+  box-shadow: 0 0 9px var(--impact-color);
+  animation: impact-particle 630ms 155ms cubic-bezier(.16, .68, .33, 1) both;
+}
+
+.impact-hand {
+  width: clamp(65px, 12vw, 106px);
+  color: var(--impact-color);
+  filter: drop-shadow(0 3px 5px #09201a);
+  animation: impact-hand 410ms cubic-bezier(.22, .72, .31, 1) both;
+}
+
+.impact-hand svg {
+  width: 100%;
+  height: auto;
+}
+
+.impact-card {
+  animation: impact-land 710ms cubic-bezier(.18, .64, .25, 1) both;
+}
+
+.impact-card .playing-card {
+  width: clamp(41px, 9vmin, 70px);
+  box-shadow: 0 7px 16px #09201ab0;
+}
+
+.impact-caption {
+  position: absolute;
+  top: 74%;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 24px);
+  margin: 0;
+  padding: 5px 14px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--impact-color);
+  border-radius: 999px;
+  background: #102c26;
+  color: var(--impact-color);
+  font-size: clamp(13px, 3vmin, 20px);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  animation: impact-caption 680ms 155ms ease-out both;
+}
+
+.game-table:has(> .play-impact) {
+  animation: impact-table 270ms 155ms ease-out both;
+}
+
+@keyframes impact-land {
+  0% { opacity: 0; transform: translate(-95%, -155%) rotate(-19deg) scale(1.25); }
+  21% { opacity: 1; transform: translate(-50%, -50%) rotate(4deg) scale(.94); }
+  39% { transform: translate(-50%, -56%) rotate(-2deg) scale(1.04); }
+  63%, 83% { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(0) scale(1); }
+}
+
+@keyframes impact-hand {
+  0% { opacity: 0; transform: translate(-74%, -160%) rotate(-16deg); }
+  40% { opacity: .86; transform: translate(-74%, -68%) rotate(5deg); }
+  100% { opacity: 0; transform: translate(-105%, -110%) rotate(-10deg); }
+}
+
+@keyframes impact-rays {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
+  20% { opacity: .65; }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18); }
+}
+
+@keyframes impact-ring {
+  0% { opacity: .95; transform: translate(-50%, -50%) scale(.15); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.24); }
+}
+
+@keyframes impact-particle {
+  0% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateY(-6px); }
+  15% { opacity: 1; }
+  100% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateY(calc(-1 * var(--impact-travel))) rotate(45deg) scale(.3); }
+}
+
+@keyframes impact-caption {
+  0% { opacity: 0; transform: translate(-50%, -32%) scale(.93); }
+  24%, 78% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -54%) scale(1); }
+}
+
+@keyframes impact-table {
+  0%, 100% { transform: translateX(0); }
+  22% { transform: translateX(3px); }
+  44% { transform: translateX(-2px); }
+  69% { transform: translateX(1px); }
+}
+
+.reduce-motion .play-impact > :not(.impact-caption) {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .play-impact > :not(.impact-caption) {
+    display: none;
+  }
+
+  .play-impact .impact-caption,
+  .game-table:has(> .play-impact) {
+    animation: none;
+  }
 }

@@ -1,4 +1,4 @@
-# Cuarenta · Prototipo 0.5.7
+# Cuarenta · Versión 0.6.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -28,8 +28,10 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 2. Elige **Contra la máquina** o **Pasar el dispositivo**.
 3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. Puedes cambiar el nombre de **Don Julio** en **Nombre del bot (opcional)**. Escoge **2** o **4 puntos** por caída y limpia juntas y pulsa **Repartir cartas**.
 4. Selecciona una carta y confirma la jugada. Si admite varias capturas, cambia entre las opciones antes de confirmar.
-5. En **Vista de la mesa**, elige **Horizontal** o **Vertical** antes de repartir o durante la partida. La vista horizontal aprovecha el ancho disponible y la vertical presenta una mesa más alta. El navegador recuerda tu elección.
+5. En **Vista de la mesa**, elige **Horizontal** o **Vertical** antes de repartir o durante la partida. En el celular, tocar **Horizontal** gira la vista completa del juego y **Vertical** la devuelve a la vista normal. El navegador recuerda tu elección.
 6. En el celular puedes jugar de pie o de lado. Desliza hacia abajo para ver el marcador detallado, el historial y las reglas.
+
+Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo en **Preferencias → Reducir movimiento**. El aviso y las cartas de una ronda solo aparecen en la vista de quien la recibe. Los puntos se suman al marcador.
 
 El archivo contiene todo el juego: no necesita instalación, conexión, cuentas ni recursos externos. Para volver, abre el mismo archivo en el mismo navegador. Si este permite el almacenamiento local, aparece **Continuar partida**. El guardado de archivos locales depende del navegador; mover el HTML, usar modo privado o borrar los datos puede impedir recuperar la partida. El juego avisa si no puede guardar.
 

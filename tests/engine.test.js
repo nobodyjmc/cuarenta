@@ -274,7 +274,8 @@ test('v2 records the three original ronda cards privately and preserves difficul
     prefix.slice(0, 3).forEach((id) => assert.equal(hidden.includes(id), false));
     const after = play(restored, legalMoves(restored, 0).find((move) => move.cardId === h('A')));
     assert.equal(after.lastPlay.fromRonda, true);
-    assert.equal(publicView(after, 1).lastPlay.fromRonda, true);
+    assert.equal(publicView(after, 0).lastPlay.fromRonda, true);
+    assert.equal(Object.hasOwn(publicView(after, 1).lastPlay, 'fromRonda'), false);
     assert.deepEqual(publicView(after, 1).rondas, [null, null]);
     assert.equal(after.difficulty, difficulty);
     const cycleEnd = ending(21, 17, [30, 30]); cycleEnd.difficulty = difficulty;
@@ -282,6 +283,36 @@ test('v2 records the three original ronda cards privately and preserves difficul
   }
   assert.equal(createGame({ random: rng(3) }).difficulty, 'medium');
   assert.throws(() => createGame({ difficulty: 'superhuman' }), /Dificultad/);
+});
+
+test('ronda explanation is private in projected history and last event while scores remain authoritative', () => {
+  const prefix = [h('A'), s('A'), c('A'), h('2'), h('3'), h('4'), h('5'), h('6'), h('7'), h('J')];
+  const state = createGame({ dealer: 1, random: orderedRandom(prefix) });
+  const original = structuredClone(state);
+  const owner = publicView(state, 0);
+  const rival = publicView(state, 1);
+  assert.equal(state.lastEvent.kind, 'ronda');
+  assert.equal(owner.lastEvent.kind, 'ronda');
+  assert.equal(owner.history.some((item) => item.kind === 'ronda'), true);
+  assert.equal(rival.history.some((item) => item.kind === 'ronda'), false);
+  assert.equal(rival.lastEvent.kind, 'deal');
+  assert.equal(rival.lastEvent.id, undefined);
+  assert.equal(rival.players[0].score, 2);
+  assert.equal(rival.players[0].hand, null);
+  assert.deepEqual(rival.rondas, [null, null]);
+  assert.deepEqual(state, original);
+  const after = play(state, legalMoves(state, 0).find((move) => move.cardId === h('A')));
+  const afterRival = publicView(after, 1);
+  assert.equal(afterRival.lastPlay.cardId, h('A'));
+  assert.equal(afterRival.lastPlay.playerId, 0);
+  assert.equal(Object.hasOwn(afterRival.lastPlay, 'fromRonda'), false);
+  assert.equal(afterRival.lastEvent.kind, 'drop');
+  assert.equal(afterRival.lastEvent.playerId, 0);
+  assert.equal(afterRival.lastEvent.text, after.lastEvent.text);
+  assert.equal(afterRival.history.some((item) => item.kind === 'ronda'), false);
+  // A non-ronda rival play also omits the property; false must not be a clue.
+  const ordinary = fixture({ table: [s('7')], lastPlay: { playerId: 1, cardId: s('7'), round: 1, deal: 1 } });
+  assert.equal(Object.hasOwn(publicView(ordinary, 0).lastPlay, 'fromRonda'), false);
 });
 
 test('an immediate equality fall on the first, second or third original ronda card wins below forty', () => {
@@ -296,10 +327,12 @@ test('an immediate equality fall on the first, second or third original ronda ca
     const restored = JSON.parse(JSON.stringify(state));
     const move = legalMoves(restored, 0)[0];
     assert.equal(move.fall, true); assert.equal(move.rondaFall, true); assert.equal(move.winsGame, true);
-    assert.deepEqual(legalMoves(publicView(restored, 0), 0), legalMoves(restored, 0));
+    assert.deepEqual(legalMoves(publicView(restored, 0), 0), legalMoves(restored, 0).map((candidate) => ({ ...candidate, rondaFall: false, winsGame: false })));
     const next = play(restored, move);
     assert.equal(next.status, 'finished'); assert.equal(next.winner, 0);
     assert.equal(next.players[0].score, 2); assert.equal(next.lastEvent.kind, 'ronda-fall');
+    assert.equal(publicView(next, 0).lastEvent.kind, 'ronda-fall');
+    assert.equal(publicView(next, 1).lastEvent.kind, 'ronda-fall');
     assert.equal(next.roundSummary, null); assert.equal(next.deal, 1);
     assert.equal(next.history.filter((item) => item.kind === 'ronda-fall').length, 1);
     assert.throws(() => play(next, move), /no admite/);

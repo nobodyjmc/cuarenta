@@ -39,6 +39,40 @@ test('easy selects legal options with an injectable random source and repeatable
   for (const value of [-1, 1, NaN, Infinity]) assert.throws(() => chooseBotMove(view, { random: () => value }), /azar/);
 });
 
+test('all levels vary comparable card choices and replay exactly with the same random seed', () => {
+  for (const difficulty of ['easy', 'medium', 'hard', 'expert']) {
+    const view = fixture({ difficulty, hand: ['hearts-K', 'hearts-Q', 'hearts-J'] });
+    const first = rng(367), replay = rng(367);
+    const selected = new Set();
+    for (let index = 0; index < 60; index += 1) {
+      const choice = chooseBotMove(view, { random: first });
+      assert.deepEqual(choice, chooseBotMove(view, { random: replay }));
+      assertLegal(view, choice);
+      selected.add(choice.cardId);
+    }
+    assert.equal(selected.size, 3, `${difficulty} must vary card ranks, not only identical-suit capture paths.`);
+    for (const value of [-1, 1, NaN, Infinity]) assert.throws(() => chooseBotMove(view, { random: () => value }), /azar/);
+  }
+});
+
+test('random variation never trades away an immediate win at any difficulty', () => {
+  for (const difficulty of ['easy', 'medium', 'hard', 'expert']) {
+    const view = fixture({ difficulty, hand: ['hearts-K', 'hearts-4'], table: ['spades-4', 'spades-K'], scores: [38, 0], lastPlay: { playerId: 1, cardId: 'spades-4', round: 1, deal: 1 } });
+    for (const sample of [0, 0.1, 0.5, 0.9, 0.999999]) assert.equal(chooseBotMove(view, { random: () => sample }).cardId, 'hearts-4');
+  }
+});
+
+test('stronger difficulties retain a clear point gain while easy can choose another legal card', () => {
+  const view = fixture({ hand: ['hearts-K', 'hearts-4'], table: ['spades-4'] });
+  for (const difficulty of ['medium', 'hard', 'expert']) {
+    view.difficulty = difficulty;
+    for (const sample of [0, 0.5, 0.999999]) assert.equal(chooseBotMove(view, { random: () => sample }).cardId, 'hearts-4');
+  }
+  view.difficulty = 'easy';
+  assert.equal(chooseBotMove(view, { random: () => 0 }).cardId, 'hearts-K');
+  assert.equal(chooseBotMove(view, { random: () => 0.999999 }).cardId, 'hearts-4');
+});
+
 test('medium is the backwards-compatible default and prioritizes reaching forty', () => {
   const view = fixture({ hand: ['hearts-K', 'hearts-4'], table: ['spades-4', 'spades-K'], scores: [38, 0], lastPlay: { playerId: 1, cardId: 'spades-4', round: 1, deal: 1, fromRonda: false } });
   const chosen = chooseBotMove(view);
@@ -48,10 +82,10 @@ test('medium is the backwards-compatible default and prioritizes reaching forty'
   assert.deepEqual(chooseBotMove(view), chosen);
 });
 
-test('medium and hard take a caída a ronda even below forty points', () => {
+test('all levels take a caída a ronda even below forty points', () => {
   const view = fixture({ hand: ['hearts-K', 'hearts-7'], table: ['spades-7', 'spades-K'], lastPlay: { playerId: 1, cardId: 'spades-7', round: 1, deal: 1, fromRonda: true } });
   assert.equal(legalMoves(view, 0).find((move) => move.cardId === 'hearts-7').winsGame, true);
-  for (const difficulty of ['medium', 'hard']) {
+  for (const difficulty of ['easy', 'medium', 'hard', 'expert']) {
     view.difficulty = difficulty;
     assert.equal(chooseBotMove(view).cardId, 'hearts-7');
   }
@@ -72,9 +106,9 @@ test('hard considers replies to the remaining table rather than only immediate c
     hand: ['hearts-2', 'clubs-K', 'diamonds-J', 'diamonds-5', 'hearts-6'],
     table: ['spades-J', 'diamonds-2', 'spades-Q', 'hearts-J', 'spades-2', 'hearts-4'], scores: [10, 10],
   });
-  const medium = chooseBotMove(view);
+  const medium = chooseBotMove(view, { random: () => 0 });
   view.difficulty = 'hard';
-  const hard = chooseBotMove(view);
+  const hard = chooseBotMove(view, { random: () => 0 });
   assert.equal(medium.cardId, 'diamonds-J');
   assert.equal(hard.cardId, 'hearts-6');
   assert.deepEqual(hard.captureIds, ['diamonds-2', 'hearts-4']);
@@ -82,13 +116,15 @@ test('hard considers replies to the remaining table rather than only immediate c
   assertLegal(view, hard);
 });
 
-test('hard protects a ronda from a possible immediate losing fall, at either seat', () => {
+test('hard and expert protect a ronda from a possible immediate losing fall, at either seat', () => {
   const ronda = { rank: '7', cardIds: ['hearts-7', 'clubs-7', 'diamonds-7'] };
   for (const seat of [0, 1]) {
     const view = fixture({ hand: [...ronda.cardIds, 'hearts-K', 'hearts-Q'], ronda, seat });
-    assert(ronda.cardIds.includes(chooseBotMove(view).cardId));
-    view.difficulty = 'hard';
-    assert(!ronda.cardIds.includes(chooseBotMove(view).cardId));
+    assert(ronda.cardIds.includes(chooseBotMove(view, { random: () => 0 }).cardId));
+    for (const difficulty of ['hard', 'expert']) {
+      view.difficulty = difficulty;
+      for (const sample of [0, 0.5, 0.999999]) assert(!ronda.cardIds.includes(chooseBotMove(view, { random: () => sample }).cardId));
+    }
     // If the fourth copy is visible, there is no unknown card that can cause
     // that falling loss; the bot may safely capture with its ronda instead.
     view.table = [card('spades-7')];
