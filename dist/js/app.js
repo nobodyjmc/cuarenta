@@ -2,6 +2,7 @@ import { createDeck, DEFAULT_BOT_NAME, legalMoves } from './engine.js';
 import { chooseBotMove } from './bot.js';
 import { cardSvg, cardBackSvg, cardLabel } from './cards.js';
 import { LocalSession, loadPreferences, savePreferences } from './session.js';
+import { createTutorialLessons } from './tutorial.js';
 
 const app = document.querySelector('#app');
 const modal = document.querySelector('#modal');
@@ -36,7 +37,13 @@ let selectedMoveIndex = 0;
 let botTimer = null;
 let toastTimer = null;
 let tutorialStep = 0;
-let tutorialRevealed = false;
+let tutorialLessons = [];
+let tutorialComboPoints = null;
+let tutorialCardId = null;
+const tutorialCaptures = new Set();
+const tutorialSolved = new Map();
+let tutorialFeedback = '';
+let tutorialComplete = false;
 let modalKind = null;
 let lastFocus = null;
 let audioContext = null;
@@ -70,9 +77,9 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<
 const demoCard = (rank, suit) => ({ id: `${rank}-${suit}`, rank, suit });
 const getView = () => session.view(viewer);
 
-function cardMarkup(card, { back = false, selected = false, highlight = false, interactive = false, last = false } = {}) {
+function cardMarkup(card, { back = false, selected = false, highlight = false, interactive = false, last = false, action = 'select-card' } = {}) {
   const tag = interactive ? 'button' : 'div';
-  return `<${tag} class="playing-card ${back ? 'card-back' : ''} ${selected ? 'selected' : ''} ${highlight ? 'highlight' : ''} ${last ? 'last-card' : ''}" ${interactive ? `type="button" data-action="select-card" data-card="${esc(card.id)}" aria-label="${esc(cardLabel(card))}" aria-pressed="${selected}"` : `aria-label="${back ? 'Carta oculta' : esc(cardLabel(card))}" role="img"`}>${back ? cardBackSvg() : cardSvg(card)}</${tag}>`;
+  return `<${tag} class="playing-card ${back ? 'card-back' : ''} ${selected ? 'selected' : ''} ${highlight ? 'highlight' : ''} ${last ? 'last-card' : ''}" ${interactive ? `type="button" data-action="${action}" data-card="${esc(card.id)}" aria-label="${esc(cardLabel(card))}${last ? ' · Última carta rival' : ''}" aria-pressed="${selected}"` : `aria-label="${back ? 'Carta oculta' : esc(cardLabel(card))}" role="img"`}>${back ? cardBackSvg() : cardSvg(card)}</${tag}>`;
 }
 
 function shell(content) {
@@ -267,7 +274,6 @@ function scheduleBot(delay = 0) {
 }
 
 function showPlayImpact(view, move) {
-  if (document.hidden || prefs.reducedMotion || systemReducedMotion.matches) return 0;
   const win = view.status === 'finished';
   const roundWin = win && ['ronda-victory', 'ronda-fall'].includes(view.lastEvent?.kind);
   if (!win && !move?.fall) return 0;
@@ -279,6 +285,11 @@ function showPlayImpact(view, move) {
     ? (locked ? undefined : view.rondas?.[view.winner]?.cardIds[0])
     : view.lastEvent?.kind === 'four-kind' ? undefined : move?.cardId;
   const card = impactCards.get(cardId);
+  return renderImpact(app.querySelector('.game-table'), kind, caption, card);
+}
+
+function renderImpact(target, kind, caption, card) {
+  if (!target || document.hidden || prefs.reducedMotion || systemReducedMotion.matches) return 0;
   const impact = document.createElement('div');
   impact.className = `play-impact play-impact--${kind}`;
   impact.setAttribute('aria-hidden', 'true');
@@ -292,7 +303,7 @@ function showPlayImpact(view, move) {
     </span>
     <span class="impact-card">${cardMarkup(card, { back: !card })}</span>
     <span class="impact-caption">${caption}</span>`;
-  app.querySelector('.game-table').append(impact);
+  target.append(impact);
   setTimeout(() => impact.remove(), 870);
   return 870;
 }
@@ -396,21 +407,148 @@ function rateBot(rating) {
   toast(saved ? `Gracias por tu valoración. ${adjustment}` : 'Gracias por tu valoración; no se pudieron guardar los ajustes en este navegador.');
 }
 
-const lessons = [
-  { ronda: true, title: 'Tres iguales, una ronda.', text: 'Al recibir tres cartas del mismo valor sumas 2 puntos. Se cobra automáticamente en cada reparto, también desde 30 o 38.', hand: ['5', 'hearts'], table: [['5', 'clubs'], ['5', 'diamonds']], take: [0, 1], result: 'Recibiste tres cincos en tu mano: ronda, +2 puntos. Conservas las cartas para jugarlas después.' },
-  { title: 'A la ronda se le cae.', text: 'Si el rival juega una carta de su ronda y le caes inmediatamente por igualdad, ganas la partida. Puede ser cualquiera de sus tres cartas originales.', hand: ['5', 'hearts'], table: [['5', 'clubs'], ['K', 'spades']], take: [0], result: 'El rival acaba de soltar un 5 de su ronda. Lo recoges con tu 5: ¡chica ganada, aunque todavía no tengas 40!' },
-  { title: 'Igual con igual.', text: 'Juega una carta del mismo valor para recoger la de la mesa. Te llevas las dos.', hand: ['5', 'hearts'], table: [['5', 'clubs'], ['K', 'spades']], take: [0], result: 'Tu 5 recoge el otro 5. El rey se queda en la mesa.' },
-  { title: 'Las cuentas sí importan.', text: 'Las cartas numéricas pueden recoger una suma de dos o más cartas. Las figuras no participan en sumas.', hand: ['7', 'hearts'], table: [['3', 'clubs'], ['4', 'diamonds'], ['K', 'spades']], take: [0, 1], result: '3 + 4 = 7. Te llevas las tres cartas.' },
-  { title: 'Sigue la escalera.', text: 'Después de una captura, recoge un valor consecutivo a la vez. Después del 7 viene la J.', hand: ['7', 'hearts'], table: [['7', 'clubs'], ['J', 'diamonds'], ['K', 'spades']], take: [0, 1], result: 'Recoges 7 y J. El rey se queda: falta la Q.' },
-  { title: '¡Dos por la caída!', text: 'Si igualas la carta que acaba de dejar tu rival, cobras 2 puntos. Debe ser la del turno anterior y del mismo reparto.', hand: ['4', 'hearts'], table: [['4', 'clubs'], ['K', 'spades']], take: [0], result: 'El rival acaba de jugar el 4. Le caes con tu 4: +2 puntos.' },
-  { title: 'La mesa, limpiecita.', text: 'Una captura que no deja cartas en la mesa es limpia: 2 puntos. Caída y limpia juntas dependen de la variante elegida.', hand: ['7', 'hearts'], table: [['3', 'clubs'], ['4', 'diamonds']], take: [0, 1], result: '3 + 4 = 7. No queda ninguna carta: limpia, +2 puntos.' },
-  { title: 'El cierre tiene su truco.', text: 'Al acabar las 40 cartas se cuenta el cartón, que solo puede llevarte hasta 30 puntos. Desde 38 puedes cerrar con una caída o con los 2 puntos de una nueva ronda.', hand: ['A', 'hearts'], table: [['A', 'clubs']], take: [0], result: 'Si estabas en 38 y el rival acaba de jugar el as: caída, 40 y ¡chica ganada!' },
-];
+function resetTutorialAttempt() {
+  tutorialCardId = null;
+  tutorialCaptures.clear();
+  tutorialFeedback = '';
+}
 
-function showTutorial() {
-  const l = lessons[tutorialStep];
-  const savedLegacy = screen === 'game' && legacyRules(getView());
-  showModal('tutorial', `${modalHeader(l.title, `APRENDE JUGANDO · ${tutorialStep + 1} DE ${lessons.length}`)}<p class="modal-intro">${l.text}</p>${savedLegacy ? '<p class="legacy-note">Este tutorial explica las reglas nuevas. Tu partida anterior conserva el perfil V1: consulta «Reglas de esta mesa».</p>' : ''}${l.ronda ? `<div class="lesson-board"><span class="lesson-label">EN TU MANO AL REPARTIR</span><div class="lesson-table">${[...l.table,l.hand].map(([rank,suit]) => cardMarkup(demoCard(rank,suit),{highlight:tutorialRevealed})).join('')}</div></div>` : `<div class="lesson-board"><span class="lesson-label">EN LA MESA</span><div class="lesson-table">${l.table.map(([rank, suit], i) => `<div class="${tutorialRevealed && l.take.includes(i) ? 'lesson-taken' : ''}">${cardMarkup(demoCard(rank, suit), { highlight: tutorialRevealed && l.take.includes(i) })}</div>`).join('')}</div><span class="lesson-label">TU CARTA</span><div class="lesson-hand">${cardMarkup(demoCard(...l.hand), { selected: tutorialRevealed })}</div></div>`}<div class="lesson-explanation">${tutorialRevealed ? l.result : l.ronda ? 'Las tres cartas tienen el mismo valor: esta mano contiene una ronda.' : 'Observa la mesa y piensa qué cartas puedes recoger.'}</div><div class="lesson-navigation"><button class="button outline" data-action="lesson-prev" ${tutorialStep === 0 ? 'disabled' : ''}>${icon('back')} Atrás</button>${!tutorialRevealed ? `<button class="button primary" data-action="lesson-show">Ver la jugada ${icon('play')}</button>` : `<button class="button primary" data-action="lesson-next">${tutorialStep === lessons.length - 1 ? 'Listo para jugar' : 'Siguiente'} ${icon('arrow')}</button>`}</div>`);
+function openTutorial(restart = false) {
+  const points = (screen === 'game' ? getView()?.rules.comboPoints : comboPoints) ?? 2;
+  if (restart || points !== tutorialComboPoints) {
+    tutorialLessons = createTutorialLessons(points);
+    tutorialComboPoints = points;
+    tutorialSolved.clear();
+    tutorialStep = 0;
+    tutorialComplete = false;
+    resetTutorialAttempt();
+  }
+  showTutorial('#modal-title');
+}
+
+function showTutorial(focus, keepScroll = false) {
+  const scroll = modal.open && modalKind === 'tutorial' ? modal.scrollTop : 0;
+  const lesson = tutorialLessons[tutorialStep];
+  const total = tutorialLessons.length;
+  if (tutorialComplete) {
+    showModal('tutorial', `${modalHeader('¡Listo para la mesa!', 'RETO COMPLETADO')}<div class="tutorial-game"><div class="winner-symbol">${icon('trophy')}</div><p class="tutorial-feedback" data-tone="correct">${total} de ${total} retos resueltos. Ya puedes poner en práctica las capturas, las rondas y el cierre.</p><div class="lesson-navigation tutorial-actions"><button class="button outline" data-action="tutorial-restart">Repetir retos</button><button class="button primary" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button></div></div>`);
+  } else {
+    const answer = tutorialSolved.get(tutorialStep);
+    const play = lesson.type === 'play';
+    const selected = answer?.cardId ?? tutorialCardId;
+    const taken = new Set(answer?.captureIds ?? tutorialCaptures);
+    const board = lesson.hand.length || lesson.table.length ? `<div class="lesson-board tutorial-board${answer ? ' is-solved' : ''}">
+      <p class="tutorial-zone-label">${lesson.lastCardId ? 'MESA · ÚLTIMA CARTA MARCADA' : 'EN LA MESA'}</p>
+      <div class="tutorial-table">${lesson.table.map(card => cardMarkup(card, {
+        selected: taken.has(card.id), highlight: taken.has(card.id), last: card.id === lesson.lastCardId,
+        interactive: play && !!tutorialCardId && !answer, action: 'tutorial-capture',
+      })).join('') || '<span class="tutorial-empty">Mesa vacía</span>'}</div>
+      <p class="tutorial-zone-label">TU MANO</p>
+      <div class="tutorial-hand">${lesson.hand.map(card => cardMarkup(card, {
+        selected: card.id === selected, interactive: play && !answer, action: 'tutorial-card',
+      })).join('') || '<span class="tutorial-empty">Sin cartas</span>'}</div>
+    </div>` : '';
+    const choices = !play && !answer ? `<div class="tutorial-capture-options">${lesson.choices.map(choice =>
+      `<button type="button" class="button outline" data-action="tutorial-answer" data-answer="${esc(choice.id)}">${esc(choice.label)}</button>`
+    ).join('')}</div>` : '';
+    const scores = answer?.after?.scores ?? lesson.scores;
+    const gained = scores && lesson.scores ? scores[0] - lesson.scores[0] : 0;
+    const score = Array.isArray(scores) ? `<p class="tutorial-scoreline">Tú <strong>${esc(scores[0])}</strong>${gained > 0 ? ` <span class="tutorial-score-gain">+${gained}</span>` : ''} · Rival <strong>${esc(scores[1])}</strong></p>` : '';
+    const progress = tutorialLessons.map((item, index) =>
+      `<button type="button" data-action="tutorial-step" data-step="${index}" data-solved="${tutorialSolved.has(index)}" aria-label="${index + 1}. ${esc(item.title)}${tutorialSolved.has(index) ? ', resuelto' : ''}" ${index === tutorialStep ? 'aria-current="step"' : ''} ${index > tutorialSolved.size ? 'disabled' : ''}>${index + 1}</button>`
+    ).join('');
+    const feedback = answer ? lesson.explanation : tutorialFeedback || (play
+      ? (tutorialCardId ? 'Marca las cartas que recogerías y confirma tu jugada.' : 'Primero toca una carta de tu mano.')
+      : 'Elige una respuesta para seguir.');
+    const tone = answer ? 'correct' : tutorialFeedback ? 'retry' : 'neutral';
+    const savedLegacy = screen === 'game' && legacyRules(getView());
+    const goal = lesson.goal && lesson.goal !== lesson.prompt ? `<p class="tutorial-goal">${esc(lesson.goal)}</p>` : '';
+    const setup = tutorialStep === 0 ? '<details class="tutorial-setup"><summary>Cómo se reparte y se juega</summary><p>Se juega entre dos con 40 cartas: A, 2, 3, 4, 5, 6, 7, J, Q y K de cada palo. Reciben cinco cartas cada uno y empieza quien no reparte. Juegan una carta por turno. Tras cuatro repartos se cuenta el cartón y se cambia de repartidor. La meta es llegar a 40 puntos, salvo las victorias inmediatas que practicarás más adelante.</p></details>' : '';
+    showModal('tutorial', `${modalHeader(esc(lesson.title), `APRENDE JUGANDO · ${tutorialStep + 1} DE ${total}`)}
+      <div class="tutorial-game">
+        <nav class="tutorial-progress" aria-label="Lecciones">${progress}</nav>
+        ${setup}
+        <p class="modal-intro">${esc(lesson.prompt)}</p>${goal}
+        ${savedLegacy ? '<p class="legacy-note">Estos retos usan las reglas V2. Tu partida guardada conserva el reglamento V1.</p>' : ''}
+        ${score}${board}${choices}
+        <div class="tutorial-feedback" id="tutorial-feedback" data-tone="${tone}" role="status" tabindex="-1">${answer ? `<strong>${icon('check')} ¡Bien jugado!</strong> ` : ''}${esc(feedback)}</div>
+        <div class="lesson-navigation tutorial-actions">
+          <button type="button" class="button outline" data-action="tutorial-prev" ${tutorialStep === 0 ? 'disabled' : ''}>${icon('back')} Anterior</button>
+          ${answer
+            ? `<button type="button" class="button primary" data-action="tutorial-next">${tutorialStep + 1 === total ? 'Terminar práctica' : 'Siguiente reto'} ${icon('arrow')}</button>`
+            : play ? `<button type="button" class="button primary" data-action="tutorial-play" ${tutorialCardId ? '' : 'disabled'}>Confirmar jugada ${icon('arrow')}</button>` : ''}
+        </div>
+      </div>`);
+  }
+  const progressStrip = modal.querySelector('.tutorial-progress');
+  const currentStep = progressStrip?.querySelector('[aria-current="step"]');
+  if (currentStep) progressStrip.scrollLeft = currentStep.offsetLeft - (progressStrip.clientWidth - currentStep.offsetWidth) / 2;
+  if (focus === '#modal-title') modal.querySelector(focus).tabIndex = -1;
+  modal.scrollTop = focus === '#modal-title' ? 0 : scroll;
+  if (focus) modal.querySelector(focus)?.focus({ preventScroll: keepScroll || focus !== '#tutorial-feedback' });
+}
+
+function selectTutorialStep(step) {
+  if (!Number.isInteger(step) || step < 0 || step >= tutorialLessons.length || step > tutorialSolved.size) return;
+  tutorialStep = step;
+  resetTutorialAttempt();
+  showTutorial('#modal-title');
+}
+
+function selectTutorialCard(cardId, fromTable) {
+  const lesson = tutorialLessons[tutorialStep];
+  if (!lesson || lesson.type !== 'play' || tutorialSolved.has(tutorialStep)) return;
+  if (fromTable) {
+    if (!tutorialCardId || !lesson.table.some(card => card.id === cardId)) return;
+    if (tutorialCaptures.has(cardId)) tutorialCaptures.delete(cardId);
+    else tutorialCaptures.add(cardId);
+  } else {
+    if (!lesson.hand.some(card => card.id === cardId)) return;
+    if (tutorialCardId !== cardId) tutorialCaptures.clear();
+    tutorialCardId = cardId;
+  }
+  tutorialFeedback = '';
+  const action = fromTable ? 'tutorial-capture' : 'tutorial-card';
+  showTutorial(`[data-action="${action}"][data-card="${CSS.escape(cardId)}"]`);
+}
+
+function checkTutorialAnswer(answerId) {
+  const lesson = tutorialLessons[tutorialStep];
+  if (!lesson || tutorialSolved.has(tutorialStep)) return;
+  if (lesson.type === 'play' && !tutorialCardId) return;
+  const answer = lesson.type === 'play' ? lesson.choices.find(choice =>
+    choice.cardId === tutorialCardId &&
+    choice.captureIds.length === tutorialCaptures.size &&
+    choice.captureIds.every(id => tutorialCaptures.has(id))
+  ) : lesson.choices.find(choice => choice.id === answerId);
+  if (!answer?.correct) {
+    tutorialFeedback = answer?.feedback || 'Esa combinación no cumple el reto. Revisa el valor de tu carta y marca solo las que corresponden.';
+    showTutorial('#tutorial-feedback');
+    return;
+  }
+  tutorialSolved.set(tutorialStep, answer);
+  const animated = !prefs.reducedMotion && !systemReducedMotion.matches && (lesson.hand.length || lesson.table.length);
+  showTutorial('#tutorial-feedback', animated);
+  const event = answer.after?.event?.kind;
+  const special = event === 'ronda-fall' || event === 'ronda-victory';
+  const win = answer.after?.status === 'finished';
+  const fall = answer.after?.move?.fall || event === 'fall' || event === 'fall-clean';
+  const label = special ? '¡Ronda ganadora!' : win ? '¡Cierre perfecto!' : fall ? '¡Caída!' : '¡Bien jugado!';
+  const board = modal.querySelector('.tutorial-board');
+  const duration = renderImpact(board, special ? 'ronda' : win ? 'win' : 'fall', label, impactCards.get(answer.cardId));
+  if (duration && (board.offsetTop < modal.scrollTop || board.offsetTop + board.offsetHeight > modal.scrollTop + modal.clientHeight)) {
+    modal.scrollTop = Math.max(0, board.offsetTop - 12);
+  }
+}
+
+function advanceTutorial() {
+  if (!tutorialSolved.has(tutorialStep)) return;
+  if (tutorialStep + 1 < tutorialLessons.length) {
+    selectTutorialStep(tutorialStep + 1);
+    return;
+  }
+  tutorialComplete = true;
+  showTutorial('#modal-title');
 }
 
 function showRoundSummary() {
@@ -459,10 +597,14 @@ function handleAction(target) {
   else if (action === 'feedback-rating') rateBot(target.dataset.rating);
   else if (action === 'skip-feedback') { completeBotFeedback(getView()?.id); showResult(); }
   else if (action === 'reset-feedback') { prefs.feedbackChallenge = 0; savePreferences(prefs); showSettings(); }
-  else if (action === 'tutorial') { tutorialStep = 0; tutorialRevealed = false; showTutorial(); }
-  else if (action === 'lesson-show') { tutorialRevealed = true; showTutorial(); }
-  else if (action === 'lesson-prev') { tutorialStep = Math.max(0, tutorialStep - 1); tutorialRevealed = false; showTutorial(); }
-  else if (action === 'lesson-next') { if (tutorialStep === lessons.length - 1) closeModal(); else { tutorialStep++; tutorialRevealed = false; showTutorial(); } }
+  else if (action === 'tutorial') openTutorial();
+  else if (action === 'tutorial-restart') openTutorial(true);
+  else if (action === 'tutorial-step') selectTutorialStep(Number(target.dataset.step));
+  else if (action === 'tutorial-prev') selectTutorialStep(tutorialStep - 1);
+  else if (action === 'tutorial-next') advanceTutorial();
+  else if (action === 'tutorial-card') selectTutorialCard(target.dataset.card, false);
+  else if (action === 'tutorial-capture') selectTutorialCard(target.dataset.card, true);
+  else if (action === 'tutorial-play' || action === 'tutorial-answer') checkTutorialAnswer(target.dataset.answer);
   else if (action === 'close-modal') closeModal();
   else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound(2); render(); }
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);

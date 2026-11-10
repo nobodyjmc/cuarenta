@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.6.0
+# Cuarenta · Versión 0.7.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -33,6 +33,8 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 
 Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo en **Preferencias → Reducir movimiento**. El aviso y las cartas de una ronda solo aparecen en la vista de quien la recibe. Los puntos se suman al marcador.
 
+En **Aprender a jugar**, resuelve retos con cartas y preguntas de puntuación. Elige tu carta, marca las que recogerías y confirma. Puedes repetir una jugada hasta resolverla y volver a los retos completados. La práctica usa la variante de puntos elegida para caída y limpia y conserva tu partida guardada.
+
 El archivo contiene todo el juego: no necesita instalación, conexión, cuentas ni recursos externos. Para volver, abre el mismo archivo en el mismo navegador. Si este permite el almacenamiento local, aparece **Continuar partida**. El guardado de archivos locales depende del navegador; mover el HTML, usar modo privado o borrar los datos puede impedir recuperar la partida. El juego avisa si no puede guardar.
 
 La interfaz se adapta a celulares, tabletas y escritorio, y sigue la preferencia de apariencia clara u oscura del sistema. En esta entrega se revisó el diseño en ventanas de 360, 390 y 1366 px; falta validarla en teléfonos Android/iPhone físicos. Algunos móviles no ejecutan HTML desde su visor de archivos: esto todavía no es una aplicación instalable de tienda.
@@ -52,7 +54,7 @@ Para una sesión de servidor con cierre visible, ejecuta `node scripts/serve.mjs
 - Baraja de 40 cartas, capturas por igualdad y suma, escalera, caída, limpia, ronda, cartón, límite de 30 por cartón y cierre desde 38.
 - Elección previa de caída y limpia juntas por 2 o 4 puntos; reglas fijas durante la partida.
 - Opciones de captura explícitas, marcador, registro de jugadas, conteo al acabar cada ciclo y revancha.
-- Guardado automático, recuperación, tutorial de ocho ejemplos, reglas consultables, sonidos opcionales, reducción de movimiento y velocidad de la máquina.
+- Guardado automático, recuperación, minijuego de aprendizaje, reglas consultables, sonidos opcionales, reducción de movimiento y velocidad de la máquina.
 - Diseño de inspiración Apple con tipografía del sistema, azul de acción, jerarquía simple, cartas protagonistas, apariencia clara u oscura automática, controles táctiles y diseño adaptable.
 
 ## Presentación: versión 0.3
@@ -96,6 +98,7 @@ El resto de reglas permanece: cartón limitado a 30, 2 al siguiente repartidor e
 | `dist/js/session.js` | Sesión en un dispositivo, validación del guardado y persistencia local. |
 | `dist/js/cards.js` | Baraja vectorial, reversos y etiquetas de accesibilidad. |
 | `dist/js/app.js` | Pantallas, interacción, tutorial y flujo de la partida. |
+| `dist/js/tutorial.js` | Retos de aprendizaje y comprobación de jugadas con el motor. |
 | `dist/styles.css` | Estilo y adaptación a tamaños de pantalla. |
 | `scripts/serve.mjs` | Servidor estático opcional limitado a loopback. |
 | `scripts/build-standalone.mjs` | Empaqueta los módulos y estilos en un HTML sin dependencias. |

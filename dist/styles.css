@@ -1713,3 +1713,247 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
     animation: none;
   }
 }
+
+/* Interactive lessons share the cards and felt of the main table. */
+.tutorial-game {
+  display: grid;
+  gap: 12px;
+}
+
+.tutorial-progress,
+.tutorial-capture-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tutorial-progress {
+  position: relative;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding: 4px;
+  scrollbar-width: thin;
+}
+
+.tutorial-progress button {
+  flex: 0 0 auto;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tutorial-progress button:hover:not(:disabled),
+.tutorial-capture-options .button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.tutorial-progress button[data-solved="true"] {
+  border-color: #4e9475;
+  box-shadow: inset 0 -3px #4e9475;
+}
+
+.tutorial-progress button:is([aria-current="step"], [aria-pressed="true"]),
+.tutorial-capture-options .button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.tutorial-board {
+  display: grid;
+  grid-template-areas: var(--tutorial-zones, "table-label" "table-cards" "hand-label" "hand-cards");
+  grid-template-columns: var(--tutorial-columns, minmax(0, 1fr));
+  align-items: start;
+  gap: 8px 12px;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 0;
+  padding: clamp(12px, 3vw, 20px);
+  border: 1px solid #588473;
+  background: radial-gradient(ellipse at 50% 32%, #285b4c, #163a31 85%);
+  box-shadow: inset 0 0 0 3px #173e35;
+  color: #fff;
+}
+
+.tutorial-zone-label {
+  color: #d8e7c9;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .05em;
+}
+
+.tutorial-zone-label:first-of-type {
+  grid-area: table-label;
+}
+
+.tutorial-zone-label:nth-of-type(2) {
+  grid-area: hand-label;
+}
+
+.tutorial-table,
+.tutorial-hand {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(6px, 1.8vw, 10px);
+  min-width: 0;
+  padding: 7px 3px;
+}
+
+.tutorial-table {
+  grid-area: table-cards;
+}
+
+.tutorial-hand {
+  grid-area: hand-cards;
+}
+
+.tutorial-board .playing-card {
+  width: clamp(44px, 13vmin, 58px);
+  box-shadow: var(--shadow-card);
+}
+
+.tutorial-table .last-card::after {
+  content: 'ÚLTIMA';
+  position: absolute;
+  right: 0;
+  bottom: -5px;
+  left: 0;
+  border-radius: 4px;
+  background: #ffdb82;
+  color: #202119;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.tutorial-scoreline,
+.tutorial-goal {
+  font-size: 14px;
+}
+
+.tutorial-setup {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  font-size: 14px;
+}
+
+.tutorial-setup summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.tutorial-setup p {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+.tutorial-score-gain {
+  padding: 2px 6px;
+  border-radius: 8px;
+  background: #215a45;
+  color: #fff;
+}
+
+.tutorial-empty {
+  color: #d8e7c9;
+  font-size: 13px;
+}
+
+.tutorial-hand button.playing-card {
+  touch-action: manipulation;
+}
+
+.tutorial-board .playing-card:is(.highlight, .selected, [aria-pressed="true"]) {
+  outline: 2px solid #ffdb82;
+  outline-offset: 2px;
+}
+
+.tutorial-hand button.playing-card:focus-visible {
+  outline: 2px solid var(--accent-focus);
+  outline-offset: 4px;
+}
+
+.tutorial-capture-options .button,
+.tutorial-actions .button {
+  min-height: 44px;
+  white-space: normal;
+}
+
+.tutorial-feedback {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--pearl);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.tutorial-feedback[data-tone="correct"] {
+  border-color: #4e9475;
+}
+
+.tutorial-feedback[data-tone="retry"] {
+  border-color: #b8894b;
+}
+
+.tutorial-feedback strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tutorial-feedback strong .icon {
+  width: 16px;
+  height: 16px;
+}
+
+.tutorial-actions {
+  flex-wrap: wrap;
+}
+
+.tutorial-actions .button {
+  flex: 1 1 auto;
+}
+
+.is-rotated-view .tutorial-game {
+  --tutorial-zones: "table-label hand-label" "table-cards hand-cards";
+  --tutorial-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .tutorial-game {
+    --tutorial-zones: "table-label hand-label" "table-cards hand-cards";
+    --tutorial-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tutorial-board.is-solved .tutorial-table .playing-card {
+    animation: tutorial-capture 450ms ease-out;
+  }
+
+  .tutorial-feedback[data-tone="correct"] {
+    animation: tutorial-feedback-glow 550ms ease-out;
+  }
+}
+
+@keyframes tutorial-capture {
+  0%, 100% { transform: translateY(0); }
+  38% { transform: translateY(-5px) scale(1.05); }
+}
+
+@keyframes tutorial-feedback-glow {
+  from { box-shadow: 0 0 0 4px #63ad8a50; }
+  to { box-shadow: 0 0 0 0 #63ad8a00; }
+}
