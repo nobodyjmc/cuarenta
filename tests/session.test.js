@@ -90,19 +90,19 @@ test('preferences accept booleans only, clamp local bot feedback, and tolerate u
   assert.equal(savePreferences({ sound: true, reducedMotion: true, quickBot: 'true', feedbackMode: 'false', feedbackChallenge: '3', tableLayout: 'diagonal' }, storage), true);
   assert.deepEqual(loadPreferences(storage), {
     sound: true, reducedMotion: true, quickBot: false, feedbackMode: false,
-    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', feltColor: '#287458',
+    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', tableCity: 'quito',
     music: false, musicVolume: .32, musicTrack: 'juramento',
   });
   assert.equal(savePreferences({ feedbackMode: true, feedbackChallenge: 9, tableLayout: 'vertical' }, storage), true);
   assert.deepEqual(loadPreferences(storage), {
     sound: false, reducedMotion: false, quickBot: false, feedbackMode: true,
-    feedbackChallenge: 3, tableLayout: 'vertical', feltTheme: 'quito', feltColor: '#287458',
+    feedbackChallenge: 3, tableLayout: 'vertical', feltTheme: 'quito', tableCity: 'quito',
     music: false, musicVolume: .32, musicTrack: 'juramento',
   });
   assert.equal(savePreferences({}, { setItem() { throw Error('blocked'); } }), false);
   assert.deepEqual(loadPreferences({ getItem() { throw Error('blocked'); } }), {
     sound: false, reducedMotion: false, quickBot: false, feedbackMode: true,
-    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', feltColor: '#287458',
+    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', tableCity: 'quito',
     music: false, musicVolume: .32, musicTrack: 'juramento',
   });
 });
@@ -132,22 +132,23 @@ test('music preferences restore an enabled track independently of sound effects 
   assert.equal(invalid.musicTrack, 'juramento');
 });
 
-test('felt preferences preserve a custom color through preset changes and reject invalid values', () => {
+test('city and palette choices are restored independently, and a legacy custom color becomes a preset', () => {
   const storage = memoryStorage();
-  assert.equal(savePreferences({ feltTheme: 'custom', feltColor: '#B06AEF' }, storage), true);
+  assert.equal(savePreferences({ feltTheme: 'custom', feltColor: '#B06AEF', tableCity: 'cuenca' }, storage), true);
   const custom = loadPreferences(storage);
-  assert.equal(custom.feltTheme, 'custom');
-  assert.equal(custom.feltColor, '#b06aef');
+  assert.equal(custom.feltTheme, 'violeta');
+  assert.equal(custom.tableCity, 'cuenca');
+  assert.equal(Object.hasOwn(custom, 'feltColor'), false);
 
-  assert.equal(savePreferences({ ...custom, feltTheme: 'borgona' }, storage), true);
+  assert.equal(savePreferences({ ...custom, feltTheme: 'cobre' }, storage), true);
   const preset = loadPreferences(storage);
-  assert.equal(preset.feltTheme, 'borgona');
-  assert.equal(preset.feltColor, '#b06aef');
+  assert.equal(preset.feltTheme, 'cobre');
+  assert.equal(preset.tableCity, 'cuenca');
 
-  assert.equal(savePreferences({ feltTheme: 'unknown', feltColor: 'var(--custom)' }, storage), true);
+  assert.equal(savePreferences({ feltTheme: 'custom', feltColor: 'var(--custom)', tableCity: 'unknown' }, storage), true);
   const invalid = loadPreferences(storage);
   assert.equal(invalid.feltTheme, 'quito');
-  assert.equal(invalid.feltColor, '#287458');
+  assert.equal(invalid.tableCity, 'quito');
 });
 
 function roundRandom() {

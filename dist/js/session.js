@@ -1,19 +1,47 @@
 import { createGame, applyMove, advanceRound, publicView, assertInvariant } from './engine.js';
+import { TABLE_CITIES } from './table-art.js';
 
 const SAVE_KEY = 'cuarenta.local.game.v1';
 const PREFS_KEY = 'cuarenta.local.preferences.v1';
 const DEFAULT_FELT_THEME = 'quito';
-const DEFAULT_FELT_COLOR = '#287458';
+const DEFAULT_TABLE_CITY = 'quito';
+const TABLE_CITY_IDS = new Set(TABLE_CITIES.map(({ id }) => id));
 const DEFAULT_MUSIC_VOLUME = .32;
 const DEFAULT_MUSIC_TRACK = 'juramento';
 const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'reminiscencias'];
 
-export const FELT_THEMES = Object.freeze(['quito', 'borgona', 'azul', 'carbon', 'custom']);
+const FELT_SWATCHES = {
+  quito: '#2c6a54',
+  borgona: '#87394f',
+  azul: '#1555a6',
+  carbon: '#565862',
+  violeta: '#63478d',
+  cobre: '#834829',
+  oceano: '#216a75',
+  oliva: '#61632b',
+};
+export const FELT_THEMES = Object.freeze(Object.keys(FELT_SWATCHES));
 
-export function normalizeFeltColor(value) {
-  return typeof value === 'string' && value.length === 7 && /^#[0-9a-f]{6}$/i.test(value)
-    ? value.toLowerCase()
-    : DEFAULT_FELT_COLOR;
+// Convert the former custom color to one of the current presets on load.
+function resolveFeltTheme(theme, color) {
+  if (FELT_THEMES.includes(theme)) return theme;
+  if (theme !== 'custom' || typeof color !== 'string' || !/^#[\da-f]{6}$/i.test(color) || color.length !== 7) {
+    return DEFAULT_FELT_THEME;
+  }
+  const channels = hex => [1, 3, 5].map(offset => Number.parseInt(hex.slice(offset, offset + 2), 16));
+  const rgb = channels(color);
+  if (Math.max(...rgb) - Math.min(...rgb) < 16) return 'carbon';
+
+  let nearest = DEFAULT_FELT_THEME;
+  let shortestDistance = Infinity;
+  for (const [preset, swatch] of Object.entries(FELT_SWATCHES)) {
+    const distance = channels(swatch).reduce((sum, channel, i) => sum + (channel - rgb[i]) ** 2, 0);
+    if (distance < shortestDistance) {
+      shortestDistance = distance;
+      nearest = preset;
+    }
+  }
+  return nearest;
 }
 
 function validateSavedState(state) {
@@ -98,7 +126,7 @@ export function loadPreferences(storage) {
     feedbackChallenge: 0,
     tableLayout: 'horizontal',
     feltTheme: DEFAULT_FELT_THEME,
-    feltColor: DEFAULT_FELT_COLOR,
+    tableCity: DEFAULT_TABLE_CITY,
   };
   try {
     const saved = JSON.parse((storage ?? globalThis.localStorage).getItem(PREFS_KEY) || '{}');
@@ -114,8 +142,8 @@ export function loadPreferences(storage) {
       feedbackMode: saved.feedbackMode === undefined ? true : saved.feedbackMode === true,
       feedbackChallenge,
       tableLayout: saved.tableLayout === 'vertical' ? 'vertical' : 'horizontal',
-      feltTheme: FELT_THEMES.includes(saved.feltTheme) ? saved.feltTheme : DEFAULT_FELT_THEME,
-      feltColor: normalizeFeltColor(saved.feltColor),
+      feltTheme: resolveFeltTheme(saved.feltTheme, saved.feltColor),
+      tableCity: TABLE_CITY_IDS.has(saved.tableCity) ? saved.tableCity : DEFAULT_TABLE_CITY,
     };
   } catch { return fallback; }
 }

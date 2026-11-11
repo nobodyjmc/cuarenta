@@ -4,7 +4,7 @@ import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url';
 
 export const APP_ID = 'cuarenta-local';
-export const APP_VERSION = '0.9.3';
+export const APP_VERSION = '0.10.0';
 export const DEFAULT_PORT = 4173;
 const DEFAULT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const MIME_TYPES = {
