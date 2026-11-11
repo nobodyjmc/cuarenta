@@ -39,6 +39,31 @@ test('portable HTML inlines assets and isolates module scopes with aliases', asy
   assert.equal(context.privateName, undefined);
 });
 
+test('music is embedded in the portable game and points to local MP3s in the web builds', async (t) => {
+  const files = ['nuestro-juramento.mp3', 'reminiscencias.mp3'];
+  const paths = files.map((name) => `./assets/${name}`);
+  const samples = [Buffer.from('ID3 sample A'), Buffer.from('ID3 sample B')];
+  const root = await fixture(t, {
+    'app.js': 'import { tracks } from "./music.js";\nglobalThis.result = tracks;',
+    'music.js': `export const tracks = ${JSON.stringify(paths)};`,
+  });
+  for (const [index, name] of files.entries()) await writeFile(join(root, 'dist', 'assets', name), samples[index]);
+
+  const variants = {
+    inline: samples.map((sample) => `data:audio/mpeg;base64,${sample.toString('base64')}`),
+    adjacent: paths,
+    dist: files.map((name) => `./dist/assets/${name}`),
+  };
+  for (const [audioMode, expected] of Object.entries(variants)) {
+    const result = await buildStandalone({ projectRoot: root, audioMode });
+    assert.deepEqual(result.audioAssets, files);
+    const html = await readFile(result.path, 'utf8');
+    const context = createContext({});
+    new Script(/<script>([\s\S]*?)<\/script>/.exec(html)[1]).runInContext(context);
+    assert.deepEqual(Array.from(context.result), expected);
+  }
+});
+
 test('named export lists retain explicit aliases', async (t) => {
   const root = await fixture(t, {
     'engine.js': 'const points = 40;\nexport { points as score };',

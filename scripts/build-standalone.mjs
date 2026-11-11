@@ -1,4 +1,4 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, realpath, stat, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
@@ -6,6 +6,15 @@ import { Script } from 'node:vm';
 const PROJECT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const IDENTIFIER = '[A-Za-z_$][\\w$]*';
 const NAME_PAIR = new RegExp(`^(${IDENTIFIER})(?:\\s+as\\s+(${IDENTIFIER}))?$`);
+const MUSIC_FILES = ['nuestro-juramento.mp3', 'reminiscencias.mp3'];
+const MUSIC_LITERAL = /(['"])(\.\/assets\/[a-z0-9-]+\.mp3)\1/g;
+
+function assertInside(root, target, specifier) {
+  const inside = relative(root, target);
+  if (inside === '' || inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside)) {
+    throw new Error(`El recurso sale de dist: ${specifier}`);
+  }
+}
 
 function localPath(root, from, specifier) {
   if (!specifier.startsWith('./') && !specifier.startsWith('../')) {
@@ -13,11 +22,28 @@ function localPath(root, from, specifier) {
   }
   if (/[?#%\\]/u.test(specifier)) throw new Error(`Ruta de recurso no admitida: ${specifier}`);
   const target = resolve(dirname(from), specifier);
-  const inside = relative(root, target);
-  if (inside === '' || inside === '..' || inside.startsWith(`..${sep}`) || isAbsolute(inside)) {
-    throw new Error(`El recurso sale de dist: ${specifier}`);
-  }
+  assertInside(root, target, specifier);
   return target;
+}
+
+async function bundleMusic(source, root, entryHtml, audioMode) {
+  const paths = new Set([...source.matchAll(MUSIC_LITERAL)].map((match) => match[2]));
+  const references = MUSIC_FILES.map((file) => `./assets/${file}`);
+  if (paths.size !== references.length || references.some((path) => !paths.has(path))) {
+    throw new Error('El reproductor debe referenciar los dos MP3 incluidos.');
+  }
+  const realRoot = await realpath(root);
+  const urls = new Map();
+  for (const specifier of references) {
+    const asset = await realpath(localPath(root, entryHtml, specifier));
+    assertInside(realRoot, asset, specifier);
+    if (!(await stat(asset)).isFile()) throw new Error(`Pista de musica invalida: ${specifier}`);
+    let url = specifier;
+    if (audioMode === 'inline') url = `data:audio/mpeg;base64,${(await readFile(asset)).toString('base64')}`;
+    if (audioMode === 'dist') url = `./dist/${specifier.slice(2)}`;
+    urls.set(specifier, url);
+  }
+  return source.replace(MUSIC_LITERAL, (_, _quote, specifier) => JSON.stringify(urls.get(specifier)));
 }
 
 function pairs(names) {
@@ -39,7 +65,8 @@ function attributes(tag) {
  * Not supported: cycles, live mutable exports, dynamic imports, re-exports, packages.
  * Modules retain isolated lexical scopes; every named import must actually exist.
  */
-export async function buildStandalone({ projectRoot = PROJECT_ROOT, outputFile } = {}) {
+export async function buildStandalone({ projectRoot = PROJECT_ROOT, outputFile, audioMode = 'inline' } = {}) {
+  if (!['inline', 'adjacent', 'dist'].includes(audioMode)) throw new Error('Modo de audio no soportado.');
   const root = resolve(projectRoot, 'dist');
   const entryHtml = resolve(root, 'index.html');
   let html = await readFile(entryHtml, 'utf8');
@@ -58,6 +85,7 @@ export async function buildStandalone({ projectRoot = PROJECT_ROOT, outputFile }
     if (modules.has(path)) return modules.get(path);
     visiting.add(path);
     let source = await readFile(path, 'utf8');
+    if (moduleId(path) === 'js/music.js') source = await bundleMusic(source, root, entryHtml, audioMode);
     const exports = new Map();
     const imports = [];
     if (/\bimport\s*(?:\(|\.\s*meta\b)/u.test(source)) throw new Error(`Importacion dinamica o import.meta no soportado: ${moduleId(path)}`);
@@ -143,7 +171,8 @@ export async function buildStandalone({ projectRoot = PROJECT_ROOT, outputFile }
   }
   const destination = outputFile ? resolve(outputFile) : resolve(projectRoot, 'Jugar_Cuarenta.html');
   await writeFile(destination, html, 'utf8');
-  return { path: destination, bytes: Buffer.byteLength(html), modules: modules.size };
+  const audioAssets = modules.has(resolve(root, 'js', 'music.js')) ? [...MUSIC_FILES] : [];
+  return { path: destination, bytes: Buffer.byteLength(html), modules: modules.size, audioAssets };
 }
 
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);

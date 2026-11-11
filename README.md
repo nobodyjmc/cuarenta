@@ -1,10 +1,10 @@
-# Cuarenta · Versión 0.9.2
+# Cuarenta · Versión 0.9.3
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
 ## Versión para probar en línea
 
-Esta versión está preparada para GitHub Pages. En cada cambio de `main`, GitHub Actions ejecuta las pruebas, genera `site/index.html` y publica ese directorio. El comando `npm run prepare:pages` también genera `index.html`, el archivo principal para abrir localmente o publicar desde la raíz si se elige ese método. Para subir el proyecto y activar Pages, sigue [SUBIR_A_GITHUB.md](SUBIR_A_GITHUB.md). El enlace público aparecerá en **Settings → Pages** después de completar el primer despliegue.
+Esta versión está preparada para GitHub Pages. En cada cambio de `main`, GitHub Actions ejecuta las pruebas, genera `site/index.html` y publica ese directorio junto con `site/assets/`. El comando `npm run prepare:pages` también genera el `index.html` de la raíz, que usa las pistas de `dist/assets/`. Para subir el proyecto y activar Pages, sigue [SUBIR_A_GITHUB.md](SUBIR_A_GITHUB.md). El enlace público aparecerá en **Settings → Pages** después de completar el primer despliegue.
 
 ### Guía rápida para el grupo
 
@@ -24,7 +24,7 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 
 ## Jugar ahora
 
-1. Abre **index.html** con doble clic en un navegador moderno de escritorio.
+1. Abre **Jugar_Cuarenta.html** con doble clic en un navegador moderno de escritorio.
 2. Elige **Contra la máquina** o **Pasar el dispositivo**.
 3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. Puedes cambiar el nombre de **Don Julio** en **Nombre del bot (opcional)**. Escoge **2** o **4 puntos** por caída y limpia juntas y pulsa **Repartir cartas**.
 4. Selecciona una carta y confirma la jugada. Si admite varias capturas, cambia entre las opciones antes de confirmar.
@@ -35,7 +35,7 @@ Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo 
 
 En **Preferencias → Color de la mesa** puedes elegir Verde Quito, Borgoña, Azul noche o Carbón, o usar el selector para crear tu propio color. La vista previa se actualiza al instante; la elección se guarda en el navegador y se aplica al inicio, a las partidas y al tutorial. Las cartas se animan al repartir y al entrar a la mesa; las capturas muestran cuántas cartas se recogieron. El juego respeta la reducción de movimiento del sistema y la de Preferencias.
 
-Pulsa la nota musical o activa **Preferencias → Música de fondo** para escuchar *Faroles de Quito* o *Patio de la Ronda*. Son dos pasillos instrumentales originales generados en el dispositivo con Web Audio. El volumen de la música se ajusta por separado de los efectos de las cartas. La música se pausa al salir de la pestaña. La pista, el volumen y la activación se guardan en el navegador.
+Pulsa la nota musical o activa **Preferencias → Música de fondo** para escuchar las versiones instrumentales de *Nuestro Juramento* y *Reminiscencias*. La pista elegida se repite durante la partida y su volumen se ajusta por separado de los efectos de las cartas. La música se pausa al salir de la pestaña. La pista, el volumen y la activación se guardan en el navegador.
 
 Una captura por suma empieza con **exactamente dos cartas numéricas** de la mesa. Por ejemplo, un 6 recoge 2 + 4; A + 2 + 3 no vale aunque dé 6. Después de la suma puedes recoger las cartas consecutivas de la escalera. El motor y el tutorial aplican la misma regla, con las opciones de ronda y caída propias de esta mesa. La mecánica de suma de dos cartas está descrita en el [reglamento del Torneo Internacional de Cuarenta](https://es.scribd.com/document/612816076/REGLAS-DEL-TORNEO-DE-CUARENTA).
 
@@ -118,7 +118,7 @@ node scripts/build-standalone.mjs
 node scripts/serve.mjs
 ```
 
-Edita los archivos de `dist/` y vuelve a construir el HTML. No edites solo el HTML generado: los cambios se perderían en el siguiente empaquetado. `dist/index.html` usa módulos y debe abrirse mediante el servidor; los archivos autocontenidos para abrir con doble clic son **index.html** y **Jugar_Cuarenta.html** (este último se genera con `npm run build`).
+Edita los archivos de `dist/` y vuelve a construir el HTML. No edites solo el HTML generado: los cambios se perderían en el siguiente empaquetado. `dist/index.html` usa módulos y debe abrirse mediante el servidor. Para jugar sin conexión en un solo archivo, ejecuta `npm run build` y abre **Jugar_Cuarenta.html** con doble clic.
 
 ## Evolución a dispositivos cercanos
 

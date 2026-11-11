@@ -5,8 +5,8 @@ const PREFS_KEY = 'cuarenta.local.preferences.v1';
 const DEFAULT_FELT_THEME = 'quito';
 const DEFAULT_FELT_COLOR = '#287458';
 const DEFAULT_MUSIC_VOLUME = .32;
-const DEFAULT_MUSIC_TRACK = 'faroles';
-const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'patio'];
+const DEFAULT_MUSIC_TRACK = 'juramento';
+const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'reminiscencias'];
 
 export const FELT_THEMES = Object.freeze(['quito', 'borgona', 'azul', 'carbon', 'custom']);
 
@@ -107,7 +107,8 @@ export function loadPreferences(storage) {
       sound: saved.sound === true,
       music: saved.music === true,
       musicVolume: Number.isFinite(saved.musicVolume) ? Math.max(0, Math.min(1, saved.musicVolume)) : DEFAULT_MUSIC_VOLUME,
-      musicTrack: MUSIC_TRACK_IDS.includes(saved.musicTrack) ? saved.musicTrack : DEFAULT_MUSIC_TRACK,
+      musicTrack: saved.musicTrack === 'patio' ? 'reminiscencias' :
+        MUSIC_TRACK_IDS.includes(saved.musicTrack) ? saved.musicTrack : DEFAULT_MUSIC_TRACK,
       reducedMotion: saved.reducedMotion === true,
       quickBot: saved.quickBot === true,
       feedbackMode: saved.feedbackMode === undefined ? true : saved.feedbackMode === true,

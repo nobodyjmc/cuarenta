@@ -53,7 +53,7 @@ let tutorialComplete = false;
 let modalKind = null;
 let lastFocus = null;
 let audioContext = null;
-const tableMusic = new TableMusic({ getContext: getAudioContext });
+const tableMusic = new TableMusic({ audio: document.querySelector('#table-audio'), getContext: getAudioContext });
 let musicActivated = false;
 let musicAttempt = null;
 const FEEDBACK_MATCH_KEY = 'cuarenta.local.feedback.match.v1';
@@ -538,7 +538,7 @@ function musicSettings() {
   return `<section class="music-settings" aria-labelledby="music-settings-title">
     <h3 id="music-settings-title">Música de fondo</h3>
     <label class="preference-row music-toggle-row">
-      <span><strong>Reproducir música</strong><small>Pasillos instrumentales originales</small></span>
+      <span><strong>Reproducir música</strong><small>Versiones instrumentales</small></span>
       <input type="checkbox" id="music-enabled"${prefs.music ? ' checked' : ''}>
       <span class="switch" aria-hidden="true"></span>
     </label>
@@ -876,7 +876,7 @@ document.addEventListener('fullscreenchange', () => {
   updateGameOrientation();
 });
 function resumeMusic() {
-  if (musicActivated && prefs.music && audioContext?.state === 'running') startMusic();
+  if (musicActivated && prefs.music && (!audioContext || audioContext.state === 'running')) startMusic();
 }
 
 document.addEventListener('visibilitychange', () => {
