@@ -525,21 +525,21 @@ main{padding-top:22px}
 
 /* Apple-inspired web language. Local CSS only, with the game content preserved. */
 :root{
-  color-scheme:light dark;
-  --paper:#fff;
-  --panel:#fafafc;
-  --pearl:#f5f5f7;
-  --ink:#1d1d1f;
-  --muted:#636366;
-  --muted-soft:#7a7a7f;
-  --line:#e0e0e0;
-  --line-soft:#f0f0f0;
+  color-scheme:dark;
+  --paper:#080808;
+  --panel:#1c1c1e;
+  --pearl:#1d1d1f;
+  --ink:#f5f5f7;
+  --muted:#b8b8bd;
+  --muted-soft:#8e8e93;
+  --line:#38383a;
+  --line-soft:#2c2c2e;
   --accent:#0066cc;
   --accent-focus:#0071e3;
   --accent-dark:#2997ff;
-  --tile:#272729;
-  --tile-2:#2a2a2c;
-  --tile-3:#252527;
+  --tile:#1d1d1f;
+  --tile-2:#252527;
+  --tile-3:#2a2a2c;
   --shadow-card:0 3px 5px rgb(29 29 31 / .22);
   --radius-surface:18px;
   --radius-field:8px;
@@ -923,53 +923,38 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   .combo-choice>span{font-size:12px}
   .combo-choice button{font-size:12px;padding-right:10px;padding-left:10px}
 }
-@media(prefers-color-scheme:dark){
-  :root{
-    --paper:#000;
-    --panel:#1c1c1e;
-    --pearl:#1d1d1f;
-    --ink:#f5f5f7;
-    --muted:#b8b8bd;
-    --muted-soft:#8e8e93;
-    --line:#38383a;
-    --line-soft:#2c2c2e;
-    --tile:#1d1d1f;
-    --tile-2:#252527;
-    --tile-3:#2a2a2c;
-  }
-  body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
-  .topbar,.setup-panel,.action-panel,.score-panel,.history-panel,.help-tile,dialog{background:var(--panel);color:var(--ink);border-color:var(--line)}
-  .topbar{background:#000}
-  .intro,.breadcrumb,.breadcrumb button,.breadcrumb strong,.local-badge,.footer,.footer button,.difficulty-picker label,.name-fields>label,.combo-choice>span,.home-notes,.home-notes small,.score-name,.score-rule,.history-list,.action-copy small,.save-status,.rules-list p,.modal-intro,.preference-row small,.preferences-note,.lesson-explanation,.winner-subtitle{color:var(--muted)}
-  .setup-panel h2,.home-notes strong,.action-copy strong,.score-row>strong,.winner-name,dialog h2{color:var(--ink)}
-  .mode-option{background:var(--pearl);border-color:var(--line)}
-  .mode-option.chosen{background:var(--pearl);border-color:var(--accent-dark)}
-  .mode-icon{background:#2a2a2c;color:var(--ink)}
-  .chosen .mode-icon{background:#102a42;color:var(--accent-dark)}
-  .chosen .radio-dot{border-color:var(--accent-dark);background:var(--panel)}
-  .difficulty-picker select,.name-fields input{background:#1c1c1e;border-color:#8e8e93;color:var(--ink)}
-  .name-fields input::placeholder{color:#b8b8bd}
-  .combo-choice>div{background:#2a2a2c}
-  .combo-choice button{color:var(--muted)}
-  .combo-choice button.chosen{background:#3a3a3c;color:var(--accent-dark);box-shadow:none}
-  .button.outline,.resume-button,.icon-button{background:#2a2a2c;border-color:#48484a;color:var(--accent-dark)}
-  .button.outline:hover:not(:disabled),.icon-button:hover{background:#343436}
-  .rule-callout,.legacy-note,.ronda-notice,.difficulty-badge{background:#102338;border-color:#285074;color:#f5f5f7}
-  .home-notes{border-color:var(--line)}
-  .home-notes>button{border-color:var(--line)}
-  .game-table{background:#1c1c1e;color:var(--ink)}
-  .table-meta,.deck-label,.player-badge strong,.player-badge small,.hand-tip,.empty-table,.empty-table span,.empty-table small,.compact-score>span>span,.compact-score strong,.compact-score small{color:var(--ink)}
-  .action-panel{background:#1c1c1e}
-  .score-panel,.history-panel{background:var(--panel)}
-  .score-track{background:#38383a}
-  .ronda-notice strong{color:var(--accent-dark)}
-  .rule-scores,.round-results,.final-score,.round-results>div+div{background:#252527;border-color:var(--line)}
-  .rule-scores span,.round-results>div>span,.round-results p,.round-total,.final-score>div>span,.round-results strong,.rule-scores strong,.final-score strong{color:var(--ink)}
-  .winner-symbol{background:#102a42;color:var(--accent-dark)}
-  .lesson-explanation{color:var(--muted)}
-  .preferences-note{color:var(--muted)}
-  .rule-callout strong,.text-button{color:var(--accent-dark)}
-}
+body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
+.topbar,.setup-panel,.action-panel,.score-panel,.history-panel,.help-tile,dialog{background:var(--panel);color:var(--ink);border-color:var(--line)}
+.topbar{background:#000}
+.intro,.breadcrumb,.breadcrumb button,.breadcrumb strong,.local-badge,.footer,.footer button,.difficulty-picker label,.name-fields>label,.combo-choice>span,.home-notes,.home-notes small,.score-name,.score-rule,.history-list,.action-copy small,.save-status,.rules-list p,.modal-intro,.preference-row small,.preferences-note,.lesson-explanation,.winner-subtitle{color:var(--muted)}
+.setup-panel h2,.home-notes strong,.action-copy strong,.score-row>strong,.winner-name,dialog h2{color:var(--ink)}
+.mode-option{background:var(--pearl);border-color:var(--line)}
+.mode-option.chosen{background:var(--pearl);border-color:var(--accent-dark)}
+.mode-icon{background:#2a2a2c;color:var(--ink)}
+.chosen .mode-icon{background:#102a42;color:var(--accent-dark)}
+.chosen .radio-dot{border-color:var(--accent-dark);background:var(--panel)}
+.difficulty-picker select,.name-fields input{background:#1c1c1e;border-color:#8e8e93;color:var(--ink)}
+.name-fields input::placeholder{color:#b8b8bd}
+.combo-choice>div{background:#2a2a2c}
+.combo-choice button{color:var(--muted)}
+.combo-choice button.chosen{background:#3a3a3c;color:var(--accent-dark);box-shadow:none}
+.button.outline,.resume-button,.icon-button{background:#2a2a2c;border-color:#48484a;color:var(--accent-dark)}
+.button.outline:hover:not(:disabled),.icon-button:hover{background:#343436}
+.rule-callout,.legacy-note,.ronda-notice,.difficulty-badge{background:#102338;border-color:#285074;color:#f5f5f7}
+.home-notes{border-color:var(--line)}
+.home-notes>button{border-color:var(--line)}
+.game-table{background:#1c1c1e;color:var(--ink)}
+.table-meta,.deck-label,.player-badge strong,.player-badge small,.hand-tip,.empty-table,.empty-table span,.empty-table small,.compact-score>span>span,.compact-score strong,.compact-score small{color:var(--ink)}
+.action-panel{background:#1c1c1e}
+.score-panel,.history-panel{background:var(--panel)}
+.score-track{background:#38383a}
+.ronda-notice strong{color:var(--accent-dark)}
+.rule-scores,.round-results,.final-score,.round-results>div+div{background:#252527;border-color:var(--line)}
+.rule-scores span,.round-results>div>span,.round-results p,.round-total,.final-score>div>span,.round-results strong,.rule-scores strong,.final-score strong{color:var(--ink)}
+.winner-symbol{background:#102a42;color:var(--accent-dark)}
+.lesson-explanation{color:var(--muted)}
+.preferences-note{color:var(--muted)}
+.rule-callout strong,.text-button{color:var(--accent-dark)}
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
@@ -1956,10 +1941,9 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 :root {
   --metro-contours: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20720%20480%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.25%22%20stroke-opacity%3D%22.63%22%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(0%200)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-4%2010)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-8%2020)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-12%2030)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-16%2040)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-20%2050)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-24%2060)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-28%2070)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(0%200)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(3%209)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(6%2018)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(9%2027)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(12%2036)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(15%2045)%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(1.000)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.895)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.790)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.685)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.580)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.475)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.370)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22%20stroke-opacity%3D%22.48%22%3E%3Cpath%20d%3D%22M-28%20252c75%2027%20107%2024%20173-13%2056-32%2098-44%20157-18%2085%2037%20107%2010%20166-18%2053-26%2095-39%20146-20%2030%2011%2067%2040%20129%2027%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
   --metro-geometry: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20720%20480%22%3E%3Cg%20stroke%3D%22%23031a37%22%20stroke-opacity%3D%22.38%22%20stroke-width%3D%226%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20fill%3D%22%2349cfff%22%20fill-opacity%3D%22.12%22%20d%3D%22M-12%207h179l76%2091-68%2075H70l-82-70Z%22%2F%3E%3Cpath%20fill%3D%22%2364d4ff%22%20fill-opacity%3D%22.08%22%20d%3D%22m391-14%2099%2026%2055%2076-38%2053-108-21-68-76Z%22%2F%3E%3Cpath%20fill%3D%22%2352ceff%22%20fill-opacity%3D%22.13%22%20d%3D%22m722%20149-81%2010-65%2068%2037%2079%20113%2034Z%22%2F%3E%3Cpath%20fill%3D%22%23052749%22%20fill-opacity%3D%22.12%22%20d%3D%22m-14%20304%2098-50%2085%2062-30%2084-70%2088H-14Z%22%2F%3E%3Cpath%20fill%3D%22%234ccaff%22%20fill-opacity%3D%22.13%22%20d%3D%22m341%20444%20102-83%2077%2020%2064%20108H317Z%22%2F%3E%3Cpath%20fill%3D%22none%22%20d%3D%22m-10%20201%2088-30%2091%2040%2047-17%2065-65%2079%2011%2067%2062%2086-27%2042-88%20171-9M18%20487l85-90%2095%206%2059-63%205-58%2066-29%2071%2025%2042%2083m-21-161%2060%2055%2098-15m-51%20246%2047-102%20156%2012%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23052c56%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.62%22%20stroke-width%3D%222%22%3E%3Ccircle%20cx%3D%22169%22%20cy%3D%22211%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22281%22%20cy%3D%22129%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22427%22%20cy%3D%22202%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22480%22%20cy%3D%22255%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22198%22%20cy%3D%22403%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22615%22%20cy%3D%22306%22%20r%3D%225%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23ff684f%22%20fill-opacity%3D%22.77%22%20stroke%3D%22%23082548%22%20stroke-width%3D%223%22%20stroke-opacity%3D%22.35%22%3E%3Cpath%20d%3D%22m31%2087%2015-14%2010%2016Z%22%2F%3E%3Cpath%20d%3D%22m651%2099%2022%201-9%2014Z%22%2F%3E%3Cpath%20d%3D%22m129%20361%2012-11%208%2014Z%22%2F%3E%3Cpath%20d%3D%22m557%20438%2015-15%209%2018Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-  --metro-page: linear-gradient(148deg, #dbeaff, #eff6ff 48%, #f6f8fc);
-  --metro-page-veil: linear-gradient(120deg, #f6fbff32, #f7fbff68);
-  --metro-bar: #f3f8fced;
-  --metro-panel-shadow: 0 16px 36px -28px #23457465;
+  --metro-page-veil: linear-gradient(120deg, #080808a6, #080808cb);
+  --metro-bar: #101012;
+  --metro-panel-shadow: 0 16px 36px -24px #0009;
   --felt-quito: #2c6a54;
   --felt-borgona: #87394f;
   --felt-azul: #1555a6;
@@ -1986,37 +1970,28 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   background:
     var(--metro-page-veil),
     var(--metro-contours) center top / 820px 547px repeat,
-    var(--metro-page);
+    var(--paper);
 }
 
 .app-shell > .main-shell { background: transparent; }
 
 .sidebar {
   background:
-    linear-gradient(110deg, #0a4483c9, #03182de8),
-    var(--metro-geometry) left center / 440px auto,
-    #0a4385;
-  box-shadow: 0 1px 0 #61a9ea69, 0 4px 20px #06183b2e;
+    linear-gradient(#101012e6, #101012e6),
+    var(--metro-contours) left center / 440px auto,
+    #101012;
+  box-shadow: 0 1px 0 #ffffff26, 0 4px 20px #0005;
 }
 
-.sidebar .nav-item { color: #daeaff; }
+.sidebar .nav-item { color: #dedee2; }
 .sidebar .nav-item.active {
-  background: #9cd7ff26;
-  box-shadow: inset 0 -2px #91cbff;
+  background: #ffffff16;
+  box-shadow: inset 0 -2px #ffffffab;
   color: #fff;
 }
-.sidebar .nav-item:hover { background: #9cd7ff34; }
+.sidebar .nav-item:hover { background: #ffffff20; }
 .topbar { background: var(--metro-bar); }
 .setup-panel { box-shadow: var(--metro-panel-shadow); }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --metro-page: linear-gradient(148deg, #132c55, #0a1830 53%, #111622);
-    --metro-page-veil: linear-gradient(120deg, #071429b5, #091221dc);
-    --metro-bar: #0b1832ed;
-    --metro-panel-shadow: 0 16px 36px -24px #0009;
-  }
-}
 
 :root[data-felt="borgona"] { --felt-center: var(--felt-borgona); --felt-edge: #30152a; }
 :root[data-felt="azul"] { --felt-center: var(--felt-azul); --felt-edge: #082348; }
@@ -2572,35 +2547,20 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 /* Lobby controls share the palette and contours of the table. */
 .setup-panel {
-  --setup-surface: #fbfdff;
-  --setup-control: #f0f5fb;
-  --setup-field: #fff;
-  --setup-line: #c6d5e6;
-  --setup-selected: #e4f4ff;
-  --setup-signal: #005f94;
-  --setup-ticket: #fff0d5;
-  --setup-ticket-ink: #6a3618;
-  --setup-shadow: 0 16px 36px -24px #1d4b835c;
+  --setup-surface: #141416;
+  --setup-control: #202023;
+  --setup-field: #101012;
+  --setup-line: #3b3b40;
+  --setup-selected: #202a32;
+  --setup-signal: #a6ddff;
+  --setup-ticket: #382b24;
+  --setup-ticket-ink: #ffdbb3;
   gap: 0;
   justify-content: flex-start;
   padding: clamp(14px, 2vw, 22px);
   background: var(--setup-surface);
   border-color: var(--setup-line);
-  box-shadow: var(--setup-shadow);
-}
-
-@media (prefers-color-scheme: dark) {
-  .setup-panel {
-    --setup-surface: #101c2b;
-    --setup-control: #15263a;
-    --setup-field: #0d1726;
-    --setup-line: #344c68;
-    --setup-selected: #133451;
-    --setup-signal: #82d9ff;
-    --setup-ticket: #412e27;
-    --setup-ticket-ink: #ffdbb3;
-    --setup-shadow: 0 16px 36px -24px #000b;
-  }
+  box-shadow: var(--metro-panel-shadow);
 }
 
 .setup-header {
@@ -2613,12 +2573,12 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   margin-bottom: 16px;
   padding: 12px 14px;
   overflow: hidden;
-  border: 1px solid #7dc7ee55;
+  border: 1px solid #ffffff38;
   border-radius: 14px;
   background:
-    linear-gradient(110deg, #072640e8 8%, #0c3f70c7 55%, #0c53885c),
+    linear-gradient(110deg, #171719ef 8%, #222225cb 55%, #22222585),
     var(--metro-contours) right 45% / 420px auto,
-    #145a96;
+    #29292c;
 }
 
 .setup-header::after {
@@ -2854,37 +2814,21 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 /* Marcador y actividad de la partida */
 .game-aside {
-  --aside-surface: #f9fcff;
-  --aside-header: #eaf4ff;
-  --aside-header-veil: #eaf4ff73;
-  --aside-border: #c8daef;
-  --aside-row: #f1f6fc;
-  --aside-current: #e8f3ff;
-  --aside-accent: #154f96;
-  --aside-warm: #9c422e;
-  --aside-track: #d9e5f2;
-  --aside-blue-fill: #2c74c4;
-  --aside-warm-fill: #bf624a;
+  --aside-surface: #141416;
+  --aside-header: #242427;
+  --aside-header-veil: #242427b8;
+  --aside-border: #3b3b40;
+  --aside-row: #1e1e21;
+  --aside-current: #25272a;
+  --aside-accent: #cfe6fa;
+  --aside-warm: #ffc1a5;
+  --aside-track: #38383d;
+  --aside-blue-fill: #66b7ff;
+  --aside-warm-fill: #ff9a75;
   align-self: start;
   align-items: start;
   align-content: start;
   gap: 12px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .game-aside {
-    --aside-surface: #111d30;
-    --aside-header: #183151;
-    --aside-header-veil: #183151b8;
-    --aside-border: #395677;
-    --aside-row: #17263b;
-    --aside-current: #1a3455;
-    --aside-accent: #b0d7ff;
-    --aside-warm: #ffc1a5;
-    --aside-track: #344962;
-    --aside-blue-fill: #66b7ff;
-    --aside-warm-fill: #ff9a75;
-  }
 }
 
 .game-aside .score-panel,

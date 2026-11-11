@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.10.1
+# Cuarenta · Versión 0.10.2
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
