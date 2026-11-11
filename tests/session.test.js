@@ -115,8 +115,6 @@ test('music preferences restore an enabled track independently of sound effects 
   assert.equal(quietMusic.music, true);
   assert.equal(quietMusic.musicVolume, 0);
   assert.equal(quietMusic.musicTrack, 'patio');
-  assert.equal(savePreferences({ ...quietMusic, musicTrack: 'local' }, storage), true);
-  assert.equal(loadPreferences(storage).musicTrack, 'local');
 
   assert.equal(savePreferences({ ...quietMusic, musicVolume: 1.5 }, storage), true);
   assert.equal(loadPreferences(storage).musicVolume, 1);

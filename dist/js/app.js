@@ -1,10 +1,9 @@
 import { createDeck, DEFAULT_BOT_NAME, legalMoves } from './engine.js';
 import { chooseBotMove } from './bot.js';
 import { cardSvg, cardBackSvg, cardLabel } from './cards.js';
-import { LocalSession, FELT_THEMES, LOCAL_MUSIC_TRACK, loadPreferences, normalizeFeltColor, savePreferences } from './session.js';
+import { LocalSession, FELT_THEMES, loadPreferences, normalizeFeltColor, savePreferences } from './session.js';
 import { createTutorialLessons } from './tutorial.js';
 import { MUSIC_TRACKS, TableMusic } from './music.js';
-import { LocalMusic, readLocalTrack, saveLocalTrack } from './local-music.js';
 
 const app = document.querySelector('#app');
 const modal = document.querySelector('#modal');
@@ -55,8 +54,6 @@ let modalKind = null;
 let lastFocus = null;
 let audioContext = null;
 const tableMusic = new TableMusic({ getContext: getAudioContext });
-const localMusic = new LocalMusic({ getContext: getAudioContext });
-let localTrackRevision = 0;
 let musicActivated = false;
 let musicAttempt = null;
 const FEEDBACK_MATCH_KEY = 'cuarenta.local.feedback.match.v1';
@@ -296,43 +293,29 @@ function playSound(points = 0) {
   } catch { /* Sound never interrupts the game. */ }
 }
 
-function activeMusicPlayer() {
-  return prefs.musicTrack === LOCAL_MUSIC_TRACK ? localMusic : tableMusic;
-}
-
-function musicMessage(message) {
-  const status = modal.open && modal.querySelector('#music-status');
-  if (status) {
-    status.textContent = message;
-    status.hidden = !message;
-  } else if (message) toast(message);
-}
-
 function startMusic(reportError = false) {
   const trackId = prefs.musicTrack;
   if (!prefs.music || document.hidden || musicAttempt?.trackId === trackId) return;
-  const player = activeMusicPlayer();
-  if (player === localMusic && !localMusic.file) return;
-  (player === localMusic ? tableMusic : localMusic).pause();
   musicActivated = true;
   const attempt = { trackId };
   musicAttempt = attempt;
-  musicMessage('');
-  void player.start({ trackId, volume: prefs.musicVolume }).then(played => {
+  const status = modal.querySelector('#music-status');
+  if (status) { status.hidden = true; status.textContent = ''; }
+  void tableMusic.start({ trackId, volume: prefs.musicVolume }).then(played => {
     if (musicAttempt !== attempt) return;
     musicAttempt = null;
     if (played || !reportError) return;
     toggleMusic(false);
-    musicMessage(player === localMusic
-      ? 'No se pudo iniciar la pista. Toca Reproducir música o elige otro archivo.'
-      : 'No se pudo iniciar la música. Toca la nota musical para volver a activarla.');
+    const message = 'No se pudo iniciar la música. Toca la nota musical para volver a activarla.';
+    const currentStatus = modal.open && modal.querySelector('#music-status');
+    if (currentStatus) { currentStatus.textContent = message; currentStatus.hidden = false; }
+    else toast(message);
   });
 }
 
 function pauseMusic() {
   musicAttempt = null;
   tableMusic.pause();
-  localMusic.pause();
 }
 
 function toggleMusic(enabled) {
@@ -345,53 +328,6 @@ function toggleMusic(enabled) {
   if (checkbox) checkbox.checked = enabled;
   if (enabled) startMusic(true);
   else pauseMusic();
-}
-
-function refreshLocalTrackControls() {
-  const picker = modal.querySelector('#music-track');
-  if (!picker) return;
-  picker.querySelector(`option[value="${LOCAL_MUSIC_TRACK}"]`).disabled = !localMusic.file;
-  picker.value = prefs.musicTrack;
-  const name = modal.querySelector('#music-file-name');
-  name.textContent = localMusic.file?.name ?? '';
-  name.hidden = !localMusic.file;
-  modal.querySelector('[data-action="clear-local-music"]').hidden = !localMusic.file;
-}
-
-async function setLocalTrack(file) {
-  if (file && !localMusic.load(file)) {
-    musicMessage('Elige un archivo MP3, M4A o WAV de hasta 20 MB.');
-    return;
-  }
-  const revision = ++localTrackRevision;
-  if (file) {
-    prefs.musicTrack = LOCAL_MUSIC_TRACK;
-  } else {
-    localMusic.clear();
-    if (prefs.musicTrack === LOCAL_MUSIC_TRACK) prefs.musicTrack = MUSIC_TRACKS[0].id;
-  }
-  musicAttempt = null;
-  refreshLocalTrackControls();
-  if (!savePreferences(prefs)) musicMessage('No se pudo guardar la selección de pista.');
-  else musicMessage('');
-  if (prefs.music) startMusic(true);
-  const saved = await saveLocalTrack(file);
-  if (!saved && revision === localTrackRevision && !modal.querySelector('#music-status')?.textContent) {
-    musicMessage(file
-      ? 'El archivo está listo. Este navegador te pedirá elegirlo otra vez cuando vuelvas.'
-      : 'Se quitó la pista. El navegador no pudo borrar la copia guardada.');
-  }
-}
-
-async function restoreLocalTrack() {
-  const file = await readLocalTrack();
-  if (localTrackRevision) return;
-  if (file) localMusic.load(file);
-  if (prefs.musicTrack === LOCAL_MUSIC_TRACK && !localMusic.file) {
-    prefs.musicTrack = MUSIC_TRACKS[0].id;
-    toggleMusic(false);
-  }
-  refreshLocalTrackControls();
 }
 
 function cancelBot() { clearTimeout(botTimer); botTimer = null; }
@@ -599,27 +535,19 @@ function musicSettings() {
   const tracks = MUSIC_TRACKS.map(({ id, title }) =>
     `<option value="${esc(id)}"${id === prefs.musicTrack ? ' selected' : ''}>${esc(title)}</option>`
   ).join('');
-  const file = localMusic.file;
   return `<section class="music-settings" aria-labelledby="music-settings-title">
     <h3 id="music-settings-title">Música de fondo</h3>
     <label class="preference-row music-toggle-row">
-      <span><strong>Reproducir música</strong></span>
+      <span><strong>Reproducir música</strong><small>Pasillos instrumentales originales</small></span>
       <input type="checkbox" id="music-enabled"${prefs.music ? ' checked' : ''}>
       <span class="switch" aria-hidden="true"></span>
     </label>
     <div class="music-options">
-      <label for="music-track">Pista<select id="music-track">${tracks}<option value="${LOCAL_MUSIC_TRACK}" ${prefs.musicTrack === LOCAL_MUSIC_TRACK ? 'selected' : ''} ${file ? '' : 'disabled'}>Mi archivo de audio</option></select></label>
+      <label for="music-track">Pista<select id="music-track">${tracks}</select></label>
       <div class="music-volume">
         <label for="music-volume">Volumen</label><output id="music-level" for="music-volume">${volume}%</output>
         <input type="range" id="music-volume" min="0" max="100" value="${volume}">
       </div>
-    </div>
-    <div class="music-file-control">
-      <label for="music-file">Archivo de audio de tu dispositivo</label>
-      <input id="music-file" type="file" accept=".mp3,.m4a,.wav,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav" aria-describedby="music-file-note">
-      <small id="music-file-note">MP3, M4A o WAV. Se queda en este navegador.</small>
-      <small id="music-file-name" ${file ? '' : 'hidden'}>${esc(file?.name ?? '')}</small>
-      <button type="button" class="button text-button" data-action="clear-local-music" ${file ? '' : 'hidden'}>Quitar mi archivo</button>
     </div>
     <p class="music-status" id="music-status" role="status" hidden></p>
   </section>`;
@@ -871,7 +799,6 @@ function handleAction(target) {
   else if (action === 'tutorial-play' || action === 'tutorial-answer') checkTutorialAnswer(target.dataset.answer);
   else if (action === 'close-modal') closeModal();
   else if (action === 'music') toggleMusic(!prefs.music);
-  else if (action === 'clear-local-music') void setLocalTrack(null);
   else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound(2); render(); }
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);
   else if (action === 'round-summary') showRoundSummary();
@@ -883,8 +810,8 @@ document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
   if (button && !button.disabled) handleAction(button);
   // A remembered setting can resume after the first user gesture on this page.
-  if (event.isTrusted && prefs.music && !activeMusicPlayer().isPlaying &&
-      !event.target.closest('[data-action="music"], .music-toggle-row, .music-file-control, #music-track')) startMusic();
+  if (event.isTrusted && prefs.music && !tableMusic.isPlaying &&
+      !event.target.closest('[data-action="music"], .music-toggle-row, #music-track')) startMusic();
 });
 document.addEventListener('input', event => {
   if (event.target.id === 'player-name') draftNames.player = event.target.value;
@@ -893,7 +820,7 @@ document.addEventListener('input', event => {
   else if (event.target.id === 'music-volume') {
     const volume = event.target.valueAsNumber;
     prefs.musicVolume = volume / 100;
-    activeMusicPlayer().setVolume(prefs.musicVolume);
+    tableMusic.setVolume(prefs.musicVolume);
     modal.querySelector('#music-level').value = `${volume}%`;
   }
 });
@@ -908,22 +835,14 @@ document.addEventListener('submit', event => {
   } else startGame(options);
 });
 document.addEventListener('change', event => {
-  if (event.target.id === 'music-file') {
-    const file = event.target.files[0];
-    if (file) void setLocalTrack(file);
-    event.target.value = '';
-    return;
-  }
   if (event.target.id === 'music-enabled') {
     toggleMusic(event.target.checked);
     return;
   }
   if (event.target.id === 'music-track' || event.target.id === 'music-volume') {
     if (event.target.id === 'music-track') {
-      const trackId = event.target.value;
-      const supported = trackId === LOCAL_MUSIC_TRACK ? localMusic.file : MUSIC_TRACKS.some(track => track.id === trackId);
-      if (!supported) return;
-      prefs.musicTrack = trackId;
+      if (!MUSIC_TRACKS.some(track => track.id === event.target.value)) return;
+      prefs.musicTrack = event.target.value;
       if (prefs.music) startMusic(true);
     }
     if (!savePreferences(prefs)) toast('No se pudo guardar la configuración de música.');
@@ -957,7 +876,7 @@ document.addEventListener('fullscreenchange', () => {
   updateGameOrientation();
 });
 function resumeMusic() {
-  if (musicActivated && prefs.music && (prefs.musicTrack === LOCAL_MUSIC_TRACK || audioContext?.state === 'running')) startMusic();
+  if (musicActivated && prefs.music && audioContext?.state === 'running') startMusic();
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -967,5 +886,4 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', () => { cancelBot(); pauseMusic(); });
 window.addEventListener('pageshow', event => { if (event.persisted) resumeMusic(); });
 render();
-void restoreLocalTrack();
 if (session.warning) toast(session.warning);

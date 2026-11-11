@@ -2559,49 +2559,6 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   font-size: 13px;
 }
 
-.music-file-control {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  font-size: 13px;
-}
-
-.music-file-control input {
-  max-width: 100%;
-  min-height: 44px;
-  padding-block: 6px;
-  font: inherit;
-  color: var(--ink);
-}
-
-.music-file-control input::file-selector-button {
-  margin-right: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  color: var(--ink);
-  font: inherit;
-  cursor: pointer;
-}
-
-.music-file-control small {
-  color: var(--muted);
-  overflow-wrap: anywhere;
-}
-
-.music-file-control .button {
-  justify-self: start;
-  padding-inline: 8px;
-}
-
-.music-file-control [hidden] {
-  display: none;
-}
-
 </style>
 </head>
 <body>
@@ -3375,8 +3332,7 @@ const DEFAULT_FELT_THEME = 'quito';
 const DEFAULT_FELT_COLOR = '#287458';
 const DEFAULT_MUSIC_VOLUME = .32;
 const DEFAULT_MUSIC_TRACK = 'faroles';
-const LOCAL_MUSIC_TRACK = 'local';
-const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'patio', LOCAL_MUSIC_TRACK];
+const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'patio'];
 
 const FELT_THEMES = Object.freeze(['quito', 'borgona', 'azul', 'carbon', 'custom']);
 
@@ -3494,7 +3450,7 @@ function savePreferences(preferences, storage) {
   catch { return false; }
 }
 
-return Object.freeze({ "LOCAL_MUSIC_TRACK": LOCAL_MUSIC_TRACK, "FELT_THEMES": FELT_THEMES, "normalizeFeltColor": normalizeFeltColor, "LocalSession": LocalSession, "loadPreferences": loadPreferences, "savePreferences": savePreferences });
+return Object.freeze({ "FELT_THEMES": FELT_THEMES, "normalizeFeltColor": normalizeFeltColor, "LocalSession": LocalSession, "loadPreferences": loadPreferences, "savePreferences": savePreferences });
 })();
 
 __cuarentaModules["js/tutorial.js"] = (() => {
@@ -4098,210 +4054,13 @@ class TableMusic {
 return Object.freeze({ "MUSIC_TRACKS": MUSIC_TRACKS, "TableMusic": TableMusic });
 })();
 
-__cuarentaModules["js/local-music.js"] = (() => {
-
-const MAX_BYTES = 20 * 1024 * 1024;
-const AUDIO_TYPES = new Set([
-  'audio/mpeg', 'audio/mp3', 'audio/mp4', 'audio/m4a', 'audio/x-m4a',
-  'audio/wav', 'audio/wave', 'audio/x-wav', 'audio/vnd.wave',
-]);
-const AUDIO_EXTENSION = /\.(mp3|m4a|wav)$/i;
-const STORAGE_NAME = 'cuarenta-local-music';
-const STORE_NAME = 'tracks';
-const TRACK_KEY = 'local';
-
-function isAudioFile(file) {
-  return file instanceof Blob && file.size > 0 && file.size <= MAX_BYTES &&
-    (AUDIO_TYPES.has(file.type.toLowerCase()) || AUDIO_EXTENSION.test(file.name ?? ''));
-}
-
-class LocalMusic {
-  #getContext;
-  #file = null;
-  #audio = null;
-  #url = null;
-  #context = null;
-  #source = null;
-  #gain = null;
-  #volume = .35;
-  #request = 0;
-
-  constructor({ getContext } = {}) {
-    this.#getContext = getContext;
-  }
-
-  get file() {
-    return this.#file;
-  }
-
-  get isPlaying() {
-    return Boolean(this.#audio && !this.#audio.paused && !this.#audio.ended &&
-      (!this.#context || this.#context.state === 'running'));
-  }
-
-  load(file) {
-    if (!isAudioFile(file)) return false;
-    let audio;
-    let url;
-    try {
-      audio = new Audio();
-      url = URL.createObjectURL(file);
-      audio.loop = true;
-      audio.preload = 'metadata';
-      audio.src = url;
-    } catch {
-      if (url) URL.revokeObjectURL(url);
-      return false;
-    }
-    this.clear();
-    this.#file = file;
-    this.#audio = audio;
-    this.#url = url;
-    this.setVolume(this.#volume);
-    return true;
-  }
-
-  async start({ volume = this.#volume } = {}) {
-    const audio = this.#audio;
-    if (!audio) return false;
-    const request = ++this.#request;
-    this.#connectGain();
-    this.setVolume(volume);
-    try {
-      // Invoke both APIs within the gesture that started playback.
-      const context = this.#context;
-      const resume = context && context.state !== 'running'
-        ? Promise.resolve(context.resume()).catch(() => {}) : undefined;
-      await Promise.all([audio.play(), resume]);
-      if (request !== this.#request) return false;
-      if (this.isPlaying) return true;
-    } catch {
-      // A codec error or denied gesture must not interrupt the game.
-    }
-    if (request === this.#request) audio.pause();
-    return false;
-  }
-
-  pause() {
-    this.#request += 1;
-    this.#audio?.pause();
-  }
-
-  setVolume(volume) {
-    if (!Number.isFinite(volume)) return;
-    this.#volume = Math.max(0, Math.min(1, volume));
-    if (this.#gain) {
-      const now = this.#context.currentTime;
-      this.#gain.gain.cancelScheduledValues(now);
-      this.#gain.gain.setTargetAtTime(this.#volume, now, .035);
-    } else if (this.#audio) {
-      this.#audio.muted = this.#volume === 0;
-      this.#audio.volume = this.#volume;
-    }
-  }
-
-  clear() {
-    this.pause();
-    this.#source?.disconnect();
-    this.#gain?.disconnect();
-    if (this.#audio) {
-      this.#audio.removeAttribute('src');
-      this.#audio.load();
-    }
-    if (this.#url) URL.revokeObjectURL(this.#url);
-    this.#file = null;
-    this.#audio = null;
-    this.#url = null;
-    this.#context = null;
-    this.#source = null;
-    this.#gain = null;
-  }
-
-  #connectGain() {
-    if (this.#gain) return;
-    let gain;
-    try {
-      const context = this.#getContext?.();
-      if (!context || context.state === 'closed' || !context.createMediaElementSource) return;
-      gain = context.createGain();
-      gain.gain.value = this.#volume;
-      gain.connect(context.destination);
-      const source = context.createMediaElementSource(this.#audio);
-      source.connect(gain);
-      this.#audio.volume = 1;
-      this.#audio.muted = false;
-      this.#context = context;
-      this.#source = source;
-      this.#gain = gain;
-    } catch {
-      gain?.disconnect();
-    }
-  }
-}
-
-function openTrackStore() {
-  return new Promise((resolve, reject) => {
-    const request = globalThis.indexedDB.open(STORAGE_NAME, 1);
-    let blocked = false;
-    request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
-    request.onblocked = () => {
-      blocked = true;
-      reject(new Error('No se pudo abrir el almacenamiento de música.'));
-    };
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => {
-      if (blocked) request.result.close();
-      else resolve(request.result);
-    };
-  });
-}
-
-async function trackTransaction(mode, operation) {
-  const database = await openTrackStore();
-  try {
-    return await new Promise((resolve, reject) => {
-      const transaction = database.transaction(STORE_NAME, mode);
-      const request = operation(transaction.objectStore(STORE_NAME));
-      transaction.oncomplete = () => resolve(request.result);
-      transaction.onabort = () => reject(transaction.error);
-    });
-  } finally {
-    database.close();
-  }
-}
-
-async function readLocalTrack() {
-  try {
-    const file = await trackTransaction('readonly', store => store.get(TRACK_KEY));
-    return isAudioFile(file) ? file : null;
-  } catch {
-    return null;
-  }
-}
-
-async function saveLocalTrack(file) {
-  if (file !== null && !isAudioFile(file)) return false;
-  try {
-    await trackTransaction('readwrite', store => file === null
-      ? store.delete(TRACK_KEY) : store.put(file, TRACK_KEY));
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-return Object.freeze({ "LocalMusic": LocalMusic, "readLocalTrack": readLocalTrack, "saveLocalTrack": saveLocalTrack });
-})();
-
 __cuarentaModules["js/app.js"] = (() => {
 const { createDeck: createDeck, DEFAULT_BOT_NAME: DEFAULT_BOT_NAME, legalMoves: legalMoves } = __cuarentaModules["js/engine.js"];
 const { chooseBotMove: chooseBotMove } = __cuarentaModules["js/bot.js"];
 const { cardSvg: cardSvg, cardBackSvg: cardBackSvg, cardLabel: cardLabel } = __cuarentaModules["js/cards.js"];
-const { LocalSession: LocalSession, FELT_THEMES: FELT_THEMES, LOCAL_MUSIC_TRACK: LOCAL_MUSIC_TRACK, loadPreferences: loadPreferences, normalizeFeltColor: normalizeFeltColor, savePreferences: savePreferences } = __cuarentaModules["js/session.js"];
+const { LocalSession: LocalSession, FELT_THEMES: FELT_THEMES, loadPreferences: loadPreferences, normalizeFeltColor: normalizeFeltColor, savePreferences: savePreferences } = __cuarentaModules["js/session.js"];
 const { createTutorialLessons: createTutorialLessons } = __cuarentaModules["js/tutorial.js"];
 const { MUSIC_TRACKS: MUSIC_TRACKS, TableMusic: TableMusic } = __cuarentaModules["js/music.js"];
-const { LocalMusic: LocalMusic, readLocalTrack: readLocalTrack, saveLocalTrack: saveLocalTrack } = __cuarentaModules["js/local-music.js"];
-
 
 
 
@@ -4359,8 +4118,6 @@ let modalKind = null;
 let lastFocus = null;
 let audioContext = null;
 const tableMusic = new TableMusic({ getContext: getAudioContext });
-const localMusic = new LocalMusic({ getContext: getAudioContext });
-let localTrackRevision = 0;
 let musicActivated = false;
 let musicAttempt = null;
 const FEEDBACK_MATCH_KEY = 'cuarenta.local.feedback.match.v1';
@@ -4600,43 +4357,29 @@ function playSound(points = 0) {
   } catch { /* Sound never interrupts the game. */ }
 }
 
-function activeMusicPlayer() {
-  return prefs.musicTrack === LOCAL_MUSIC_TRACK ? localMusic : tableMusic;
-}
-
-function musicMessage(message) {
-  const status = modal.open && modal.querySelector('#music-status');
-  if (status) {
-    status.textContent = message;
-    status.hidden = !message;
-  } else if (message) toast(message);
-}
-
 function startMusic(reportError = false) {
   const trackId = prefs.musicTrack;
   if (!prefs.music || document.hidden || musicAttempt?.trackId === trackId) return;
-  const player = activeMusicPlayer();
-  if (player === localMusic && !localMusic.file) return;
-  (player === localMusic ? tableMusic : localMusic).pause();
   musicActivated = true;
   const attempt = { trackId };
   musicAttempt = attempt;
-  musicMessage('');
-  void player.start({ trackId, volume: prefs.musicVolume }).then(played => {
+  const status = modal.querySelector('#music-status');
+  if (status) { status.hidden = true; status.textContent = ''; }
+  void tableMusic.start({ trackId, volume: prefs.musicVolume }).then(played => {
     if (musicAttempt !== attempt) return;
     musicAttempt = null;
     if (played || !reportError) return;
     toggleMusic(false);
-    musicMessage(player === localMusic
-      ? 'No se pudo iniciar la pista. Toca Reproducir música o elige otro archivo.'
-      : 'No se pudo iniciar la música. Toca la nota musical para volver a activarla.');
+    const message = 'No se pudo iniciar la música. Toca la nota musical para volver a activarla.';
+    const currentStatus = modal.open && modal.querySelector('#music-status');
+    if (currentStatus) { currentStatus.textContent = message; currentStatus.hidden = false; }
+    else toast(message);
   });
 }
 
 function pauseMusic() {
   musicAttempt = null;
   tableMusic.pause();
-  localMusic.pause();
 }
 
 function toggleMusic(enabled) {
@@ -4649,53 +4392,6 @@ function toggleMusic(enabled) {
   if (checkbox) checkbox.checked = enabled;
   if (enabled) startMusic(true);
   else pauseMusic();
-}
-
-function refreshLocalTrackControls() {
-  const picker = modal.querySelector('#music-track');
-  if (!picker) return;
-  picker.querySelector(`option[value="${LOCAL_MUSIC_TRACK}"]`).disabled = !localMusic.file;
-  picker.value = prefs.musicTrack;
-  const name = modal.querySelector('#music-file-name');
-  name.textContent = localMusic.file?.name ?? '';
-  name.hidden = !localMusic.file;
-  modal.querySelector('[data-action="clear-local-music"]').hidden = !localMusic.file;
-}
-
-async function setLocalTrack(file) {
-  if (file && !localMusic.load(file)) {
-    musicMessage('Elige un archivo MP3, M4A o WAV de hasta 20 MB.');
-    return;
-  }
-  const revision = ++localTrackRevision;
-  if (file) {
-    prefs.musicTrack = LOCAL_MUSIC_TRACK;
-  } else {
-    localMusic.clear();
-    if (prefs.musicTrack === LOCAL_MUSIC_TRACK) prefs.musicTrack = MUSIC_TRACKS[0].id;
-  }
-  musicAttempt = null;
-  refreshLocalTrackControls();
-  if (!savePreferences(prefs)) musicMessage('No se pudo guardar la selección de pista.');
-  else musicMessage('');
-  if (prefs.music) startMusic(true);
-  const saved = await saveLocalTrack(file);
-  if (!saved && revision === localTrackRevision && !modal.querySelector('#music-status')?.textContent) {
-    musicMessage(file
-      ? 'El archivo está listo. Este navegador te pedirá elegirlo otra vez cuando vuelvas.'
-      : 'Se quitó la pista. El navegador no pudo borrar la copia guardada.');
-  }
-}
-
-async function restoreLocalTrack() {
-  const file = await readLocalTrack();
-  if (localTrackRevision) return;
-  if (file) localMusic.load(file);
-  if (prefs.musicTrack === LOCAL_MUSIC_TRACK && !localMusic.file) {
-    prefs.musicTrack = MUSIC_TRACKS[0].id;
-    toggleMusic(false);
-  }
-  refreshLocalTrackControls();
 }
 
 function cancelBot() { clearTimeout(botTimer); botTimer = null; }
@@ -4903,27 +4599,19 @@ function musicSettings() {
   const tracks = MUSIC_TRACKS.map(({ id, title }) =>
     `<option value="${esc(id)}"${id === prefs.musicTrack ? ' selected' : ''}>${esc(title)}</option>`
   ).join('');
-  const file = localMusic.file;
   return `<section class="music-settings" aria-labelledby="music-settings-title">
     <h3 id="music-settings-title">Música de fondo</h3>
     <label class="preference-row music-toggle-row">
-      <span><strong>Reproducir música</strong></span>
+      <span><strong>Reproducir música</strong><small>Pasillos instrumentales originales</small></span>
       <input type="checkbox" id="music-enabled"${prefs.music ? ' checked' : ''}>
       <span class="switch" aria-hidden="true"></span>
     </label>
     <div class="music-options">
-      <label for="music-track">Pista<select id="music-track">${tracks}<option value="${LOCAL_MUSIC_TRACK}" ${prefs.musicTrack === LOCAL_MUSIC_TRACK ? 'selected' : ''} ${file ? '' : 'disabled'}>Mi archivo de audio</option></select></label>
+      <label for="music-track">Pista<select id="music-track">${tracks}</select></label>
       <div class="music-volume">
         <label for="music-volume">Volumen</label><output id="music-level" for="music-volume">${volume}%</output>
         <input type="range" id="music-volume" min="0" max="100" value="${volume}">
       </div>
-    </div>
-    <div class="music-file-control">
-      <label for="music-file">Archivo de audio de tu dispositivo</label>
-      <input id="music-file" type="file" accept=".mp3,.m4a,.wav,audio/mpeg,audio/mp4,audio/x-m4a,audio/wav,audio/x-wav" aria-describedby="music-file-note">
-      <small id="music-file-note">MP3, M4A o WAV. Se queda en este navegador.</small>
-      <small id="music-file-name" ${file ? '' : 'hidden'}>${esc(file?.name ?? '')}</small>
-      <button type="button" class="button text-button" data-action="clear-local-music" ${file ? '' : 'hidden'}>Quitar mi archivo</button>
     </div>
     <p class="music-status" id="music-status" role="status" hidden></p>
   </section>`;
@@ -5175,7 +4863,6 @@ function handleAction(target) {
   else if (action === 'tutorial-play' || action === 'tutorial-answer') checkTutorialAnswer(target.dataset.answer);
   else if (action === 'close-modal') closeModal();
   else if (action === 'music') toggleMusic(!prefs.music);
-  else if (action === 'clear-local-music') void setLocalTrack(null);
   else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound(2); render(); }
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);
   else if (action === 'round-summary') showRoundSummary();
@@ -5187,8 +4874,8 @@ document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
   if (button && !button.disabled) handleAction(button);
   // A remembered setting can resume after the first user gesture on this page.
-  if (event.isTrusted && prefs.music && !activeMusicPlayer().isPlaying &&
-      !event.target.closest('[data-action="music"], .music-toggle-row, .music-file-control, #music-track')) startMusic();
+  if (event.isTrusted && prefs.music && !tableMusic.isPlaying &&
+      !event.target.closest('[data-action="music"], .music-toggle-row, #music-track')) startMusic();
 });
 document.addEventListener('input', event => {
   if (event.target.id === 'player-name') draftNames.player = event.target.value;
@@ -5197,7 +4884,7 @@ document.addEventListener('input', event => {
   else if (event.target.id === 'music-volume') {
     const volume = event.target.valueAsNumber;
     prefs.musicVolume = volume / 100;
-    activeMusicPlayer().setVolume(prefs.musicVolume);
+    tableMusic.setVolume(prefs.musicVolume);
     modal.querySelector('#music-level').value = `${volume}%`;
   }
 });
@@ -5212,22 +4899,14 @@ document.addEventListener('submit', event => {
   } else startGame(options);
 });
 document.addEventListener('change', event => {
-  if (event.target.id === 'music-file') {
-    const file = event.target.files[0];
-    if (file) void setLocalTrack(file);
-    event.target.value = '';
-    return;
-  }
   if (event.target.id === 'music-enabled') {
     toggleMusic(event.target.checked);
     return;
   }
   if (event.target.id === 'music-track' || event.target.id === 'music-volume') {
     if (event.target.id === 'music-track') {
-      const trackId = event.target.value;
-      const supported = trackId === LOCAL_MUSIC_TRACK ? localMusic.file : MUSIC_TRACKS.some(track => track.id === trackId);
-      if (!supported) return;
-      prefs.musicTrack = trackId;
+      if (!MUSIC_TRACKS.some(track => track.id === event.target.value)) return;
+      prefs.musicTrack = event.target.value;
       if (prefs.music) startMusic(true);
     }
     if (!savePreferences(prefs)) toast('No se pudo guardar la configuración de música.');
@@ -5261,7 +4940,7 @@ document.addEventListener('fullscreenchange', () => {
   updateGameOrientation();
 });
 function resumeMusic() {
-  if (musicActivated && prefs.music && (prefs.musicTrack === LOCAL_MUSIC_TRACK || audioContext?.state === 'running')) startMusic();
+  if (musicActivated && prefs.music && audioContext?.state === 'running') startMusic();
 }
 
 document.addEventListener('visibilitychange', () => {
@@ -5271,7 +4950,6 @@ document.addEventListener('visibilitychange', () => {
 window.addEventListener('pagehide', () => { cancelBot(); pauseMusic(); });
 window.addEventListener('pageshow', event => { if (event.persisted) resumeMusic(); });
 render();
-void restoreLocalTrack();
 if (session.warning) toast(session.warning);
 
 return Object.freeze({  });
