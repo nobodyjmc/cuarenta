@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.7.0
+# Cuarenta · Versión 0.8.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -32,6 +32,8 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 6. En el celular puedes jugar de pie o de lado. Desliza hacia abajo para ver el marcador detallado, el historial y las reglas.
 
 Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo en **Preferencias → Reducir movimiento**. El aviso y las cartas de una ronda solo aparecen en la vista de quien la recibe. Los puntos se suman al marcador.
+
+En **Preferencias → Color de la mesa** puedes elegir Verde Quito, Borgoña, Azul noche o Carbón, o usar el selector para crear tu propio color. La vista previa se actualiza al instante; la elección se guarda en el navegador y se aplica al inicio, a las partidas y al tutorial. Las cartas se animan al repartir y al entrar a la mesa; las capturas muestran cuántas cartas se recogieron. El juego respeta la reducción de movimiento del sistema y la de Preferencias.
 
 En **Aprender a jugar**, resuelve retos con cartas y preguntas de puntuación. Elige tu carta, marca las que recogerías y confirma. Puedes repetir una jugada hasta resolverla y volver a los retos completados. La práctica usa la variante de puntos elegida para caída y limpia y conserva tu partida guardada.
 

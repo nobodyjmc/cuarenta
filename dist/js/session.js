@@ -2,6 +2,16 @@ import { createGame, applyMove, advanceRound, publicView, assertInvariant } from
 
 const SAVE_KEY = 'cuarenta.local.game.v1';
 const PREFS_KEY = 'cuarenta.local.preferences.v1';
+const DEFAULT_FELT_THEME = 'quito';
+const DEFAULT_FELT_COLOR = '#287458';
+
+export const FELT_THEMES = Object.freeze(['quito', 'borgona', 'azul', 'carbon', 'custom']);
+
+export function normalizeFeltColor(value) {
+  return typeof value === 'string' && value.length === 7 && /^#[0-9a-f]{6}$/i.test(value)
+    ? value.toLowerCase()
+    : DEFAULT_FELT_COLOR;
+}
 
 function validateSavedState(state) {
   assertInvariant(state);
@@ -74,7 +84,16 @@ export class LocalSession {
 }
 
 export function loadPreferences(storage) {
-  const fallback = { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 0, tableLayout: 'horizontal' };
+  const fallback = {
+    sound: false,
+    reducedMotion: false,
+    quickBot: false,
+    feedbackMode: true,
+    feedbackChallenge: 0,
+    tableLayout: 'horizontal',
+    feltTheme: DEFAULT_FELT_THEME,
+    feltColor: DEFAULT_FELT_COLOR,
+  };
   try {
     const saved = JSON.parse((storage ?? globalThis.localStorage).getItem(PREFS_KEY) || '{}');
     const feedbackChallenge = Number.isInteger(saved.feedbackChallenge) ? Math.max(-3, Math.min(3, saved.feedbackChallenge)) : 0;
@@ -85,6 +104,8 @@ export function loadPreferences(storage) {
       feedbackMode: saved.feedbackMode === undefined ? true : saved.feedbackMode === true,
       feedbackChallenge,
       tableLayout: saved.tableLayout === 'vertical' ? 'vertical' : 'horizontal',
+      feltTheme: FELT_THEMES.includes(saved.feltTheme) ? saved.feltTheme : DEFAULT_FELT_THEME,
+      feltColor: normalizeFeltColor(saved.feltColor),
     };
   } catch { return fallback; }
 }

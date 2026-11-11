@@ -1957,3 +1957,379 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   from { box-shadow: 0 0 0 4px #63ad8a50; }
   to { box-shadow: 0 0 0 0 #63ad8a00; }
 }
+
+/* Felt colors are shared by the lobby, the game and the lessons. */
+:root {
+  --felt-quito: #32634d;
+  --felt-borgona: #713c4a;
+  --felt-azul: #315773;
+  --felt-carbon: #4a4a50;
+  --felt-center: #315b49;
+  --felt-edge: #102b23;
+  --felt-trim: #dbb776;
+  --felt-cream: #f9e5b8;
+  --felt-muted: #f1e7d6;
+  --felt-weave:
+    repeating-linear-gradient(118deg, #fff1 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(25deg, #0003 0 1px, transparent 1px 3px);
+  --felt-surface:
+    radial-gradient(ellipse at 48% 35%, var(--felt-center), var(--felt-edge) 88%);
+  --felt-frame:
+    inset 0 0 0 1px #d8b98272,
+    inset 0 0 0 5px #110e0c68,
+    inset 0 1px 42px #09060460,
+    0 14px 28px -18px #120d08a6;
+}
+
+:root[data-felt="borgona"] {
+  --felt-center: #633b46;
+  --felt-edge: #311923;
+}
+
+:root[data-felt="azul"] {
+  --felt-center: #2c4e67;
+  --felt-edge: #132839;
+}
+
+:root[data-felt="carbon"] {
+  --felt-center: #444348;
+  --felt-edge: #1f2024;
+}
+
+:root[data-felt="custom"] {
+  --felt-edge: #151d19;
+  /* The dark overlay keeps light text legible even with white selected. */
+  --felt-surface:
+    radial-gradient(ellipse at 48% 35%, #050b0abb, #050b0ad9 88%),
+    var(--felt-custom, var(--felt-quito));
+}
+
+@supports (color: color-mix(in srgb, white, black)) {
+  :root[data-felt="custom"] {
+    --felt-edge: color-mix(in srgb, var(--felt-custom, var(--felt-quito)) 15%, #050b0a);
+    --felt-trim: color-mix(in srgb, var(--felt-custom, var(--felt-quito)) 22%, #f8d38e);
+  }
+}
+
+.hero-table-inner,
+.game-table,
+.tutorial-board {
+  background: var(--felt-surface);
+  box-shadow: var(--felt-frame);
+  color: #fff9ef;
+}
+
+.tutorial-board {
+  border-color: #b2976866;
+}
+
+.hero-table-inner::before,
+.game-table::before,
+.tutorial-board::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    var(--quito-skyline, none) center 63% / 93% auto no-repeat,
+    var(--felt-weave);
+  opacity: .64;
+  background-blend-mode: normal, soft-light, soft-light;
+}
+
+.hero-table-inner::before {
+  background-position: center 70%, center, center;
+}
+
+.hero-table-inner::after,
+.game-table::after {
+  display: block;
+  inset: 7px;
+  border: 1px solid #debd854d;
+  border-radius: calc(var(--radius-surface) - 7px);
+  box-shadow: inset 0 0 0 1px #130e0c24;
+}
+
+.game-table.is-own-turn::after {
+  border-color: var(--felt-trim);
+  opacity: .72;
+}
+
+.game-table :is(.table-meta, .table-meta i, .deck-label, .hand-tip, .player-badge small, .empty-table small),
+.tutorial-board :is(.tutorial-zone-label, .tutorial-empty) {
+  color: var(--felt-muted);
+  text-shadow: 0 1px 2px #050906ad;
+}
+
+.game-table .turn-dot {
+  background: var(--felt-cream);
+  box-shadow: 0 0 0 3px #f8d38e2e;
+}
+
+.game-table.is-own-turn .hand-tip {
+  color: var(--felt-cream);
+  font-weight: 700;
+}
+
+.game-table.is-own-turn .avatar-self {
+  border-color: var(--felt-trim);
+  background: #ffdc9326;
+  color: var(--felt-cream);
+}
+
+.game-table .own-hand button.selected,
+.game-table .table-cards > .playing-card.highlight {
+  outline-color: var(--felt-cream);
+  box-shadow: 0 9px 18px #0006, 0 0 15px #f8d38e40;
+}
+
+.game-table .privacy-curtain {
+  background: var(--felt-surface);
+}
+
+.hero-bottom {
+  align-items: center;
+}
+
+.felt-shortcut {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: var(--pearl);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.felt-shortcut .icon {
+  width: 17px;
+  height: 17px;
+  color: var(--accent-focus);
+}
+
+.felt-settings {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.felt-settings :is(legend, #felt-settings-title) {
+  padding: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.felt-settings > p {
+  margin: -5px 0 1px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.felt-preview {
+  display: grid;
+  place-items: center;
+  min-height: 48px;
+  padding: 8px 14px;
+  border: 1px solid var(--felt-trim);
+  border-radius: 10px;
+  background: var(--felt-surface);
+  box-shadow: inset 0 0 0 3px #100c0a68, inset 0 0 18px #0004;
+  color: var(--felt-cream);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.felt-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(5px, 1.5vw, 8px);
+}
+
+.felt-option {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 6px;
+  min-width: 0;
+  min-height: 65px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--pearl);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.felt-option[aria-pressed="true"],
+.felt-custom-control[data-active="true"] {
+  border-color: var(--accent-focus);
+  box-shadow: inset 0 0 0 1px var(--accent-focus);
+}
+
+.felt-swatch {
+  display: block;
+  width: 100%;
+  height: 25px;
+  border-radius: 6px;
+  background: linear-gradient(150deg, #fff2, #0003), var(--swatch-color, var(--felt-quito));
+  box-shadow: inset 0 0 0 1px #eed19785, inset 0 0 0 3px #100c0a35;
+}
+
+.felt-swatch[data-felt-option="borgona"] { --swatch-color: var(--felt-borgona); }
+.felt-swatch[data-felt-option="azul"] { --swatch-color: var(--felt-azul); }
+.felt-swatch[data-felt-option="carbon"] { --swatch-color: var(--felt-carbon); }
+.felt-swatch[data-felt-option="custom"] { --swatch-color: var(--felt-custom, var(--felt-quito)); }
+
+.felt-custom-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--pearl);
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.felt-use-custom {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 9px;
+  min-height: 44px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  text-align: start;
+}
+
+.felt-use-custom .icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--accent-focus);
+}
+
+.felt-use-custom small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.felt-custom-control input[type="color"] {
+  flex: none;
+  width: 58px;
+  height: 44px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--pearl);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .felt-option:hover,
+  .felt-shortcut:hover {
+    border-color: var(--accent-focus);
+  }
+}
+
+.capture-receipt {
+  position: absolute;
+  z-index: 4;
+  top: 39%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 32px);
+  width: max-content;
+  padding: 7px 12px;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--felt-trim);
+  border-radius: 999px;
+  background: var(--felt-edge);
+  box-shadow: 0 6px 20px #0007;
+  color: var(--felt-cream);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.capture-receipt .icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+}
+
+.is-compact-play .capture-receipt {
+  top: 41%;
+  padding: 4px 9px;
+  font-size: 11px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .game-table.is-dealing :is(.own-hand, .opponent-hand) > .playing-card {
+    --deal-offset: -30px;
+    animation: felt-deal 440ms cubic-bezier(.21, .8, .25, 1) var(--deal-delay, 0ms) both;
+  }
+
+  .game-table.is-dealing .opponent-hand > .playing-card {
+    --deal-offset: 25px;
+  }
+
+  .game-table.is-dealing .playing-card:nth-child(2) { --deal-delay: 55ms; }
+  .game-table.is-dealing .playing-card:nth-child(3) { --deal-delay: 110ms; }
+  .game-table.is-dealing .playing-card:nth-child(4) { --deal-delay: 165ms; }
+  .game-table.is-dealing .playing-card:nth-child(5) { --deal-delay: 220ms; }
+
+  .hero-fan {
+    animation: felt-welcome 520ms ease-out both;
+  }
+
+  .game-table.is-fresh-play .table-cards > .last-card {
+    animation: felt-play 300ms ease-out both;
+  }
+
+  .capture-receipt {
+    animation: felt-receipt 610ms ease-out both;
+  }
+}
+
+@keyframes felt-deal {
+  from { opacity: 0; translate: -16px var(--deal-offset); rotate: -10deg; scale: .78; }
+  68% { opacity: 1; translate: 0 2px; rotate: 2deg; scale: 1.025; }
+  to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; }
+}
+
+@keyframes felt-welcome {
+  from { opacity: 0; translate: 0 12px; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+@keyframes felt-play {
+  from { opacity: .3; translate: 0 -11px; rotate: -6deg; scale: .9; }
+  70% { opacity: 1; translate: 0 2px; rotate: 1deg; scale: 1.035; }
+  to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; }
+}
+
+@keyframes felt-receipt {
+  from { opacity: 0; translate: 0 6px; }
+  22%, 78% { opacity: 1; translate: 0 0; }
+  to { opacity: 0; translate: 0 -9px; }
+}

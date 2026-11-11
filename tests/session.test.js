@@ -88,11 +88,38 @@ test('storage failure does not interrupt a match and private projections stay de
 test('preferences accept booleans only, clamp local bot feedback, and tolerate unavailable storage', () => {
   const storage = memoryStorage();
   assert.equal(savePreferences({ sound: true, reducedMotion: true, quickBot: 'true', feedbackMode: 'false', feedbackChallenge: '3', tableLayout: 'diagonal' }, storage), true);
-  assert.deepEqual(loadPreferences(storage), { sound: true, reducedMotion: true, quickBot: false, feedbackMode: false, feedbackChallenge: 0, tableLayout: 'horizontal' });
+  assert.deepEqual(loadPreferences(storage), {
+    sound: true, reducedMotion: true, quickBot: false, feedbackMode: false,
+    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', feltColor: '#287458',
+  });
   assert.equal(savePreferences({ feedbackMode: true, feedbackChallenge: 9, tableLayout: 'vertical' }, storage), true);
-  assert.deepEqual(loadPreferences(storage), { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 3, tableLayout: 'vertical' });
+  assert.deepEqual(loadPreferences(storage), {
+    sound: false, reducedMotion: false, quickBot: false, feedbackMode: true,
+    feedbackChallenge: 3, tableLayout: 'vertical', feltTheme: 'quito', feltColor: '#287458',
+  });
   assert.equal(savePreferences({}, { setItem() { throw Error('blocked'); } }), false);
-  assert.deepEqual(loadPreferences({ getItem() { throw Error('blocked'); } }), { sound: false, reducedMotion: false, quickBot: false, feedbackMode: true, feedbackChallenge: 0, tableLayout: 'horizontal' });
+  assert.deepEqual(loadPreferences({ getItem() { throw Error('blocked'); } }), {
+    sound: false, reducedMotion: false, quickBot: false, feedbackMode: true,
+    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', feltColor: '#287458',
+  });
+});
+
+test('felt preferences preserve a custom color through preset changes and reject invalid values', () => {
+  const storage = memoryStorage();
+  assert.equal(savePreferences({ feltTheme: 'custom', feltColor: '#B06AEF' }, storage), true);
+  const custom = loadPreferences(storage);
+  assert.equal(custom.feltTheme, 'custom');
+  assert.equal(custom.feltColor, '#b06aef');
+
+  assert.equal(savePreferences({ ...custom, feltTheme: 'borgona' }, storage), true);
+  const preset = loadPreferences(storage);
+  assert.equal(preset.feltTheme, 'borgona');
+  assert.equal(preset.feltColor, '#b06aef');
+
+  assert.equal(savePreferences({ feltTheme: 'unknown', feltColor: 'var(--custom)' }, storage), true);
+  const invalid = loadPreferences(storage);
+  assert.equal(invalid.feltTheme, 'quito');
+  assert.equal(invalid.feltColor, '#287458');
 });
 
 function roundRandom() {

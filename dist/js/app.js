@@ -1,7 +1,7 @@
 import { createDeck, DEFAULT_BOT_NAME, legalMoves } from './engine.js';
 import { chooseBotMove } from './bot.js';
 import { cardSvg, cardBackSvg, cardLabel } from './cards.js';
-import { LocalSession, loadPreferences, savePreferences } from './session.js';
+import { LocalSession, FELT_THEMES, loadPreferences, normalizeFeltColor, savePreferences } from './session.js';
 import { createTutorialLessons } from './tutorial.js';
 
 const app = document.querySelector('#app');
@@ -15,6 +15,7 @@ let difficulty = 'medium';
 const draftNames = { player: '', solo: '', pass: '' };
 const difficultyNames = { easy: 'Fácil', medium: 'Medio', hard: 'Difícil', expert: 'Experto' };
 const tableLayouts = { horizontal: 'Horizontal', vertical: 'Vertical' };
+const feltNames = { quito: 'Verde Quito', borgona: 'Borgoña', azul: 'Azul noche', carbon: 'Carbón', custom: 'Mi propio color' };
 const landscapeGame = window.matchMedia('(orientation: landscape) and (max-width: 1199px) and (max-height: 850px), (orientation: landscape) and (max-width: 1400px) and (pointer: coarse)');
 const mobileView = window.matchMedia('(pointer: coarse), (max-width: 600px)');
 const systemReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -36,6 +37,8 @@ let selectedId = null;
 let selectedMoveIndex = 0;
 let botTimer = null;
 let toastTimer = null;
+let renderedDeal = '';
+let pendingCardArrival = false;
 let tutorialStep = 0;
 let tutorialLessons = [];
 let tutorialComboPoints = null;
@@ -71,6 +74,7 @@ const iconPaths = {
   spark: '<path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/>',
   eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
   trophy: '<path d="M7 3h10v7a5 5 0 0 1-10 0zM7 5H3v3c0 3 2 5 5 5m9-8h4v3c0 3-2 5-5 5M12 15v6m-5 0h10"/>',
+  palette: '<path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.5-3.3 1.2 1.2 0 0 1 .9-2H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3Z"/><circle cx="7.5" cy="11" r=".8"/><circle cx="11" cy="7.3" r=".8"/><circle cx="16" cy="9" r=".8"/>',
 };
 const icon = (name, className = '') => `<svg class="icon ${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name] || iconPaths.cards}</svg>`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -100,7 +104,7 @@ function renderHome() {
   const opponentDefault = mode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2';
   app.innerHTML = shell(`<section class="welcome-heading"><div><p class="eyebrow">EL JUEGO QUE NOS REÚNE</p><h1>El Cuarenta de siempre.</h1><p class="intro">Baraja, reparte y disfruta. La próxima buena mano empieza aquí.</p></div></section>
     <section class="lobby-layout" aria-label="Preparar una partida">
-      <div class="hero-table"><div class="hero-table-inner"><div class="hero-fan" aria-hidden="true">${cardMarkup(demoCard('A', 'hearts'))}${cardMarkup(demoCard('7', 'clubs'))}${cardMarkup(demoCard('K', 'diamonds'))}</div></div><div class="hero-bottom"><span>Un poquito de suerte.</span><span>Mucho de saber jugar.</span></div></div>
+      <div class="hero-table"><div class="hero-table-inner"><div class="hero-fan" aria-hidden="true">${cardMarkup(demoCard('A', 'hearts'))}${cardMarkup(demoCard('7', 'clubs'))}${cardMarkup(demoCard('K', 'diamonds'))}</div></div><div class="hero-bottom"><span>Tu mesa de Cuarenta</span><button type="button" class="felt-shortcut" data-action="felt-settings">${icon('palette')} Cambiar color de mesa</button></div></div>
       <div class="setup-panel"><h2>¿Cómo jugamos?</h2><div class="mode-options" role="group" aria-label="Modo de juego"><button class="mode-option ${mode === 'solo' ? 'chosen' : ''}" data-action="mode" data-mode="solo" aria-pressed="${mode === 'solo'}"><span class="mode-icon">${icon('bot')}</span><span><strong>Contra la máquina</strong><small>Juega contra ${DEFAULT_BOT_NAME}.</small></span><span class="radio-dot"></span></button><button class="mode-option ${mode === 'pass' ? 'chosen' : ''}" data-action="mode" data-mode="pass" aria-pressed="${mode === 'pass'}"><span class="mode-icon">${icon('people')}</span><span><strong>Pasar el dispositivo</strong><small>Dos personas, una misma mesa.</small></span><span class="radio-dot"></span></button></div>
       <form id="new-game-form">${mode === 'solo' ? `<div class="difficulty-picker"><label for="bot-difficulty">Nivel de la máquina</label><select id="bot-difficulty" name="difficulty" aria-describedby="difficulty-note">${Object.entries(difficultyNames).map(([key,label]) => `<option value="${key}" ${difficulty === key ? 'selected' : ''}>${label}</option>`).join('')}</select><p class="difficulty-note" id="difficulty-note">${difficultyNotes[difficulty]}</p></div>` : ''}<div class="name-fields"><label>Tu nombre<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="Tú" value="${esc(draftNames.player)}"></label><label>${opponentLabel}<input id="opponent-name" name="opponent" autocomplete="off" maxlength="20" placeholder="${opponentDefault}" value="${esc(draftNames[mode])}"></label></div><div class="combo-choice"><span>Caída y limpia juntas ${icon('spark')}</span><div role="group" aria-label="Puntos de caída y limpia"><button type="button" class="${comboPoints === 2 ? 'chosen' : ''}" data-action="combo" data-points="2" aria-pressed="${comboPoints === 2}">2 puntos</button><button type="button" class="${comboPoints === 4 ? 'chosen' : ''}" data-action="combo" data-points="4" aria-pressed="${comboPoints === 4}">4 puntos</button></div></div>${tableLayoutPicker()}<button class="button primary start-button" type="submit">Repartir cartas ${icon('arrow')}</button></form>
       ${canResume ? `<button class="button resume-button" data-action="resume">${icon('play')} Continuar partida · ${saved.players[0].score} a ${saved.players[1].score}</button>` : ''}
@@ -205,6 +209,16 @@ function renderGame() {
   else if (chosen?.winsGame) instruction = 'Esta jugada completa los 40 puntos.';
   app.innerHTML = shell(`<div class="game-heading"><div><p class="eyebrow">${mode === 'solo' ? `TÚ CONTRA ${esc(other.name)}` : 'UNA MESA PARA DOS'}</p><h1>Que hablen las cartas.</h1>${mode === 'solo' ? `<span class="difficulty-badge">Mesa ${difficultyNames[v.difficulty || 'medium'].toLowerCase()}</span>` : ''}</div><div class="game-heading-actions">${tableLayoutPicker()}<button class="button outline small-button" data-action="new">${icon('cards')} Nueva partida</button></div></div><div class="game-layout"><section class="game-column"><div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta"><div class="table-meta"><span>CICLO ${v.round} <i>·</i> REPARTO ${v.deal}/4</span><span class="deck-label">${icon('cards')} ${v.deckCount} por repartir</span></div><div class="opponent-zone">${playerBadge(other, false, v.turn === other.id)}<div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${Array.from({ length: other.handCount }, () => cardMarkup(null, { back: true })).join('')}</div></div><div class="table-center"><span class="felt-watermark" aria-hidden="true">40</span><div class="table-cards" aria-label="Cartas sobre la mesa">${v.table.length ? v.table.map(c => cardMarkup(c, { highlight: captureIds.includes(c.id), last: v.lastPlay?.cardId === c.id })).join('') : '<div class="empty-table"><span>La mesa está limpia.</span><small>Una carta puede cambiarlo todo.</small></div>'}</div></div><div class="own-zone">${!locked && v.rondas?.[viewer] && me.hand?.some(c => v.rondas[viewer].cardIds.includes(c.id)) ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(v.rondas[viewer].rank)} · +2 al repartir</div>` : ''}<div class="own-label">${playerBadge(me, true, v.turn === me.id)}<span class="hand-tip">${myTurn ? 'ELIGE TU CARTA' : 'TU MANO'}</span></div><div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${locked ? Array.from({ length: me.handCount }, () => cardMarkup(null, { back: true })).join('') : (me.hand || []).map(c => cardMarkup(c, { interactive: myTurn, selected: c.id === selectedId })).join('')}</div></div>${locked ? `<div class="privacy-curtain"><div class="privacy-icon">${icon('eye')}</div><p class="eyebrow">CAMBIO DE TURNO</p><h2>Pasa el dispositivo a<br>${esc(v.players[v.turn].name)}.</h2><p>Tu mano solo aparece cuando estés listo.</p><button class="button gold" data-action="reveal">Soy ${esc(v.players[v.turn].name)} · Ver mi mano ${icon('arrow')}</button></div>` : ''}</div><div class="action-panel"><div class="action-copy"><span class="action-dot ${myTurn ? 'ready' : ''}"></span><div><strong>${esc(instruction)}</strong><small>${chosen ? moveDescription(chosen) : myTurn ? 'Haz clic o toca una carta. Después confirma la jugada.' : 'Sin prisa. Aquí se juega a gusto.'}</small></div></div><div class="move-controls">${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}${v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>' : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>' : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${chosen?.captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`}</div></div><div class="save-status">${icon(session.warning ? 'shield' : 'check')} ${esc(session.warning || 'Partida guardada en este navegador')}${mode === 'pass' ? '<span>Las manos se ocultan entre turnos.</span>' : ''}</div></section><aside class="game-aside" aria-label="Marcador e historial">${scorePanel(v)}<section class="history-panel"><div class="panel-label">ASÍ VA LA PARTIDA <span>Últimas jugadas</span></div><ol class="history-list">${visibleHistory.slice(-7).reverse().map((e, i) => `<li class="${i === 0 ? 'latest' : ''}"><span class="history-icon">${icon(e.points ? 'spark' : 'cards')}</span><span>${esc(e.text)}</span></li>`).join('') || '<li>La baraja está lista. ¡A jugar!</li>'}</ol></section><button class="help-tile" data-action="rules">${icon('book')}<span>¿Una duda con las reglas?<small>El reglamento de esta mesa</small></span>${icon('arrow')}</button></aside></div>`);
   updateGameOrientation();
+  const table = app.querySelector('.game-table');
+  const dealKey = `${v.id}/${v.round}/${v.deal}`;
+  // In pass-and-play, deal the visible hand only after the player unlocks it.
+  if (!locked && v.status === 'playing' && renderedDeal !== dealKey) {
+    renderedDeal = dealKey;
+    table.classList.add('is-dealing');
+  }
+  table.classList.toggle('is-own-turn', myTurn);
+  table.classList.toggle('is-fresh-play', pendingCardArrival);
+  pendingCardArrival = false;
   app.querySelector('.table-meta').insertAdjacentHTML('afterend', `<div class="compact-score" aria-label="Puntuación actual">${v.players.map(p => `<span><span>${esc(p.name)}</span><strong>${p.score}<small> / 40</small></strong></span>`).join('')}</div>`);
 }
 
@@ -220,6 +234,7 @@ function moveDescription(move) {
 
 function render() {
   document.documentElement.classList.toggle('reduce-motion', prefs.reducedMotion);
+  applyFelt();
   if (screen === 'home') {
     renderHome();
     updateGameOrientation();
@@ -264,11 +279,15 @@ function scheduleBot(delay = 0) {
   botTimer = setTimeout(() => {
     if (session.revision !== revision || screen !== 'game' || document.hidden || modal.open) return;
     try {
-      const move = chooseBotMove(session.view(1), {
+      const botView = session.view(1);
+      const command = chooseBotMove(botView, {
         feedbackChallenge: prefs.feedbackMode ? prefs.feedbackChallenge : 0,
       });
+      const move = command && legalMoves(botView, 1).find(candidate =>
+        candidate.cardId === command.cardId && candidate.captureIds.length === command.captureIds.length &&
+        candidate.captureIds.every(id => command.captureIds.includes(id)));
       if (!move) throw new Error('No se pudo resolver el turno de la máquina.');
-      session.dispatch({ type: 'PLAY', move }); afterMove(move);
+      session.dispatch({ type: 'PLAY', move: command }); afterMove(move);
     } catch (error) { toast(error.message); render(); }
   }, Math.max(delay, prefs.quickBot || prefs.reducedMotion ? 280 : 1000));
 }
@@ -313,7 +332,8 @@ function presentGameStatus(move) {
   if (!view || modal.open) return;
   const delay = showPlayImpact(view, move);
   if (view.status === 'playing') {
-    scheduleBot(delay);
+    const dealing = app.querySelector('.game-table.is-dealing') && !prefs.reducedMotion && !systemReducedMotion.matches;
+    scheduleBot(Math.max(delay, dealing ? 660 : 0));
     return;
   }
   const showStatus = () => {
@@ -332,7 +352,16 @@ function afterMove(move) {
   if (v.mode === 'pass' && v.status === 'playing') locked = true;
   const message = locked && v.lastEvent?.kind === 'ronda' ? 'Nuevo reparto.' : v.lastEvent?.text;
   announce(message || 'Jugada realizada.'); playSound(move.points);
+  pendingCardArrival = !locked && move.captureIds.length === 0;
   render();
+  if (!locked && v.status === 'playing' && !move.fall && move.captureIds.length) {
+    const receipt = document.createElement('span');
+    receipt.className = 'capture-receipt';
+    receipt.setAttribute('aria-hidden', 'true');
+    receipt.innerHTML = `${icon('cards')} ${move.clean ? '¡Limpia! · ' : ''}+${move.captureIds.length + 1} cartas`;
+    app.querySelector('.table-center').append(receipt);
+    setTimeout(() => receipt.remove(), prefs.reducedMotion || systemReducedMotion.matches ? 950 : 620);
+  }
   presentGameStatus(move);
 }
 
@@ -381,9 +410,52 @@ function showRules() {
   showModal('rules', `${modalHeader('Las reglas, sobre la mesa.', old ? 'PERFIL LOCAL V1 · PARTIDA ANTERIOR' : 'PERFIL LOCAL V2 · RONDA GANADORA')}<p class="modal-intro">Una chica a 40 puntos, con 40 cartas y cinco cartas por reparto. Las reglas se fijan al comenzar.</p><div class="rule-scores"><div><strong>2</strong><span>Caída</span></div><div><strong>2</strong><span>Ronda</span></div><div><strong>${points}</strong><span>Caída y limpia</span></div></div>${old ? '' : '<p class="rule-callout">Caída a la ronda = victoria inmediata, sin necesitar 40 puntos.</p>'}<div class="rules-list"><details open><summary>Ronda: tres cartas iguales</summary><p>${rondaText} El valor de tu ronda solo se muestra en tu mano.</p></details>${old ? '' : '<details open><summary>Caída a la ronda: partida ganada</summary><p>Si tu rival juega una de las tres cartas originales de su ronda y tú la capturas por igualdad en el turno inmediato siguiente, ganas. Puede ser la primera, segunda o tercera carta de esa ronda. Debe ser el mismo reparto: recogerla por suma, incluirla en una escalera o capturarla más tarde no da esta victoria.</p></details>'}<details><summary>Capturas, caída y limpia</summary><p>Iguala una carta de la mesa o suma dos o más cartas numéricas para obtener el valor de la tuya. Elige una sola base de captura y completa su escalera: A, 2, 3, 4, 5, 6, 7, J, Q, K. Si falta un valor, termina. Las figuras no se suman. Caer a la carta del turno rival anterior da 2 puntos. La limpia deja la mesa vacía y da 2; juntas valen ${points}.</p></details><details><summary>Cartón y cartas que sobran</summary><p>20 cartas recogidas dan 6 puntos. Cada carta adicional suma uno, redondeando a par. El cartón solo suma hasta 30. En empate, 2 puntos al siguiente repartidor. Si ambos tienen menos de 20 sin empatar, nadie cobra. Las sobrantes se descartan.</p></details><details><summary>El cierre desde 38</summary><p>En las jugadas, desde 38 solo puntúa una caída, no una limpia. ${old ? '' : 'Una nueva ronda también suma sus 2 puntos y cierra la partida. La caída a una ronda gana con cualquier marcador.'} Cuatro iguales al repartir ganan automáticamente; si ambos los reciben, se repite ese reparto.</p></details><details><summary>Cuatro niveles, las mismas reglas</summary><p>Fácil elige jugadas legales al azar. Medio prioriza puntos y capturas. Difícil evalúa respuestas inmediatas y cuida sus cartas de ronda. Experto compara hasta 12 jugadas priorizadas y 8 respuestas probables del rival, y calcula una contra-jugada con las cartas que conserva. La retroalimentación local puede ampliar o reducir esta búsqueda. No recibe la mano rival ni el orden del mazo. Su búsqueda es heurística y no garantiza la victoria.</p></details><details><summary>Esta edición local</summary><p>Sin reloj ni penalizaciones por esperar. Juega contra la máquina o comparte el dispositivo, ocultando las manos entre turnos. El guardado pertenece a este navegador.</p></details></div><button class="button primary full-width" data-action="close-modal">Todo claro ${icon('check')}</button>`);
 }
 
-function showSettings() {
+function applyFelt() {
+  document.documentElement.dataset.felt = prefs.feltTheme;
+  document.documentElement.style.setProperty('--felt-custom', prefs.feltColor);
+}
+
+function refreshFeltPicker() {
+  for (const button of modal.querySelectorAll('[data-action="felt-theme"]')) {
+    button.setAttribute('aria-pressed', String(button.dataset.felt === prefs.feltTheme));
+  }
+  const custom = modal.querySelector('.felt-custom-control');
+  if (custom) custom.dataset.active = String(prefs.feltTheme === 'custom');
+  const value = modal.querySelector('#felt-color-value');
+  if (value) value.textContent = prefs.feltColor.toUpperCase();
+  const preview = modal.querySelector('#felt-active-name');
+  if (preview) preview.textContent = feltNames[prefs.feltTheme];
+}
+
+function setFelt(theme, color = prefs.feltColor, persist = true) {
+  if (!FELT_THEMES.includes(theme)) return;
+  prefs.feltTheme = theme;
+  prefs.feltColor = normalizeFeltColor(color);
+  applyFelt();
+  refreshFeltPicker();
+  if (persist && !savePreferences(prefs)) toast('No se pudo guardar el color en este navegador.');
+}
+
+function feltSettings() {
+  const presetButtons = FELT_THEMES.filter(theme => theme !== 'custom').map(theme =>
+    `<button type="button" class="felt-option" data-action="felt-theme" data-felt="${theme}" aria-pressed="${theme === prefs.feltTheme}"><span class="felt-swatch" data-felt-option="${theme}" aria-hidden="true"></span><span>${feltNames[theme]}</span></button>`
+  ).join('');
+  return `<section class="felt-settings" aria-labelledby="felt-settings-title">
+    <h3 id="felt-settings-title">Color de la mesa</h3>
+    <p>Elige un tapete o crea el tuyo.</p>
+    <div class="felt-preview"><span id="felt-active-name">${feltNames[prefs.feltTheme]}</span></div>
+    <div class="felt-options" role="group" aria-label="Paletas de la mesa">${presetButtons}</div>
+    <div class="felt-custom-control" data-active="${prefs.feltTheme === 'custom'}">
+      <button type="button" class="felt-use-custom" data-action="felt-theme" data-felt="custom" aria-pressed="${prefs.feltTheme === 'custom'}">${icon('palette')} <span><strong>Mi propio color</strong><small id="felt-color-value">${prefs.feltColor.toUpperCase()}</small></span></button>
+      <input type="color" id="felt-color" value="${prefs.feltColor}" aria-label="Elegir color personalizado">
+    </div>
+  </section>`;
+}
+
+function showSettings(focusFelt = false) {
   const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}<p class="modal-intro">Pequeños detalles para disfrutar la partida.</p><div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', 'Una experiencia más tranquila.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', 'Una experiencia más tranquila.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  if (focusFelt) modal.querySelector('[data-action="felt-theme"][aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 
 function shouldAskBotFeedback(v) {
@@ -594,6 +666,8 @@ function handleAction(target) {
   else if (action === 'next-round') { closeModal(false); try { session.dispatch({ type: 'NEXT_ROUND' }); locked = mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); } }
   else if (action === 'rules') showRules();
   else if (action === 'settings') showSettings();
+  else if (action === 'felt-settings') showSettings(true);
+  else if (action === 'felt-theme') setFelt(target.dataset.felt);
   else if (action === 'feedback-rating') rateBot(target.dataset.rating);
   else if (action === 'skip-feedback') { completeBotFeedback(getView()?.id); showResult(); }
   else if (action === 'reset-feedback') { prefs.feedbackChallenge = 0; savePreferences(prefs); showSettings(); }
@@ -620,6 +694,7 @@ document.addEventListener('click', event => {
 document.addEventListener('input', event => {
   if (event.target.id === 'player-name') draftNames.player = event.target.value;
   else if (event.target.id === 'opponent-name') draftNames[mode] = event.target.value;
+  else if (event.target.id === 'felt-color') setFelt('custom', event.target.value, false);
 });
 document.addEventListener('submit', event => {
   if (event.target.id !== 'new-game-form') return;
@@ -632,6 +707,10 @@ document.addEventListener('submit', event => {
   } else startGame(options);
 });
 document.addEventListener('change', event => {
+  if (event.target.id === 'felt-color') {
+    setFelt('custom', event.target.value);
+    return;
+  }
   if (event.target.id === 'bot-difficulty') {
     if (Object.hasOwn(difficultyNames, event.target.value)) difficulty = event.target.value;
     document.querySelector('#difficulty-note').textContent = difficultyNotes[difficulty];
