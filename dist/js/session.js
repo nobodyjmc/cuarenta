@@ -6,7 +6,8 @@ const DEFAULT_FELT_THEME = 'quito';
 const DEFAULT_FELT_COLOR = '#287458';
 const DEFAULT_MUSIC_VOLUME = .32;
 const DEFAULT_MUSIC_TRACK = 'faroles';
-const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'patio'];
+export const LOCAL_MUSIC_TRACK = 'local';
+const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'patio', LOCAL_MUSIC_TRACK];
 
 export const FELT_THEMES = Object.freeze(['quito', 'borgona', 'azul', 'carbon', 'custom']);
 
