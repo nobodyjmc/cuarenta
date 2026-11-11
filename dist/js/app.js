@@ -3,6 +3,7 @@ import { chooseBotMove } from './bot.js';
 import { cardSvg, cardBackSvg, cardLabel } from './cards.js';
 import { LocalSession, FELT_THEMES, loadPreferences, normalizeFeltColor, savePreferences } from './session.js';
 import { createTutorialLessons } from './tutorial.js';
+import { MUSIC_TRACKS, TableMusic } from './music.js';
 
 const app = document.querySelector('#app');
 const modal = document.querySelector('#modal');
@@ -52,6 +53,9 @@ let tutorialComplete = false;
 let modalKind = null;
 let lastFocus = null;
 let audioContext = null;
+const tableMusic = new TableMusic({ getContext: getAudioContext });
+let musicActivated = false;
+let musicAttempt = null;
 const FEEDBACK_MATCH_KEY = 'cuarenta.local.feedback.match.v1';
 let feedbackCompletedMatchId = (() => {
   try { return globalThis.localStorage?.getItem(FEEDBACK_MATCH_KEY) || ''; }
@@ -68,6 +72,7 @@ const iconPaths = {
   close: '<path d="m6 6 12 12M6 18 18 6"/>',
   sound: '<path d="m11 4-6 5H2v6h3l6 5zM15 8c3 2 3 6 0 8m3-11c5 4 5 10 0 14"/>',
   mute: '<path d="m11 4-6 5H2v6h3l6 5zM16 9l6 6m0-6-6 6"/>',
+  music: '<path d="M9 18V5l12-2v13M9 9l12-2"/><ellipse cx="6" cy="18" rx="3" ry="2.5"/><ellipse cx="18" cy="16" rx="3" ry="2.5"/>',
   person: '<circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/>',
   people: '<circle cx="9" cy="8" r="3"/><path d="M2 21v-3a7 7 0 0 1 14 0v3M17 4a4 4 0 0 1 0 8m2 3c3 1 3 3 3 6"/>',
   bot: '<rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2m8-2v2m-7 3h6M1 12v4m22-4v4"/>',
@@ -95,7 +100,7 @@ function shell(content) {
       <nav><button class="nav-item active" data-action="home">${icon('cards')}<span>La mesa</span></button><button class="nav-item" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button><button class="nav-item" data-action="settings">${icon('settings')}<span>Preferencias</span></button></nav>
       <div class="sidebar-bottom"><span class="ecuador-stripes" aria-hidden="true"><i></i><i></i><i></i></span><span>Una tradición ecuatoriana.<br>Una mesa para todos.</span></div>
     </aside>
-    <div class="main-shell"><header class="topbar"><div class="breadcrumb">${screen === 'home' ? 'Bienvenido a tu mesa' : `<button data-action="home">La mesa</button><span>/</span><strong>Partida local</strong>`}</div><div class="topbar-actions"><span class="local-badge"><i></i> En este dispositivo</span><button class="icon-button sound-toggle" data-action="sound" aria-label="${prefs.sound ? 'Desactivar' : 'Activar'} sonido" title="${prefs.sound ? 'Desactivar' : 'Activar'} sonido">${icon(prefs.sound ? 'sound' : 'mute')}</button><button class="icon-button mobile-settings" data-action="settings" aria-label="Preferencias">${icon('settings')}</button></div></header><main id="main" tabindex="-1">${content}</main><footer class="footer"><span>Hecho para disfrutar, carta a carta.</span><button data-action="rules">Reglas de esta mesa ${icon('arrow')}</button></footer></div>
+    <div class="main-shell"><header class="topbar"><div class="breadcrumb">${screen === 'home' ? 'Bienvenido a tu mesa' : `<button data-action="home">La mesa</button><span>/</span><strong>Partida local</strong>`}</div><div class="topbar-actions"><span class="local-badge"><i></i> En este dispositivo</span><button type="button" class="icon-button music-toggle" data-action="music" aria-label="Música de fondo" aria-pressed="${prefs.music}" title="${prefs.music ? 'Pausar' : 'Activar'} música de fondo">${icon('music')}</button><button class="icon-button sound-toggle" data-action="sound" aria-label="${prefs.sound ? 'Desactivar' : 'Activar'} sonido" title="${prefs.sound ? 'Desactivar' : 'Activar'} sonido">${icon(prefs.sound ? 'sound' : 'mute')}</button><button class="icon-button mobile-settings" data-action="settings" aria-label="Preferencias">${icon('settings')}</button></div></header><main id="main" tabindex="-1">${content}</main><footer class="footer"><span>Hecho para disfrutar, carta a carta.</span><button data-action="rules">Reglas de esta mesa ${icon('arrow')}</button></footer></div>
   </div>`;
 }
 
@@ -263,18 +268,66 @@ function toast(text) {
   toastTimer = setTimeout(() => { node.hidden = true; }, 4500);
 }
 
+function getAudioContext() {
+  if (!audioContext || audioContext.state === 'closed') {
+    const Context = window.AudioContext || window.webkitAudioContext;
+    if (!Context) return null;
+    audioContext = new Context();
+  }
+  return audioContext;
+}
+
 function playSound(points = 0) {
   if (!prefs.sound) return;
   try {
-    audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
-    if (audioContext.state === 'suspended') audioContext.resume();
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+    const context = getAudioContext();
+    if (!context) return;
+    if (context.state !== 'running') void context.resume().catch(() => {});
+    const osc = context.createOscillator();
+    const gain = context.createGain();
     osc.type = 'sine'; osc.frequency.value = points ? 660 : 350;
-    gain.gain.setValueAtTime(.035, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + .13);
-    osc.connect(gain); gain.connect(audioContext.destination); osc.start(); osc.stop(audioContext.currentTime + .14);
+    gain.gain.setValueAtTime(.035, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .13);
+    osc.connect(gain); gain.connect(context.destination); osc.start(); osc.stop(context.currentTime + .14);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   } catch { /* Sound never interrupts the game. */ }
+}
+
+function startMusic(reportError = false) {
+  const trackId = prefs.musicTrack;
+  if (!prefs.music || document.hidden || musicAttempt?.trackId === trackId) return;
+  musicActivated = true;
+  const attempt = { trackId };
+  musicAttempt = attempt;
+  const status = modal.querySelector('#music-status');
+  if (status) { status.hidden = true; status.textContent = ''; }
+  void tableMusic.start({ trackId, volume: prefs.musicVolume }).then(played => {
+    if (musicAttempt !== attempt) return;
+    musicAttempt = null;
+    if (played || !reportError) return;
+    toggleMusic(false);
+    const message = 'No se pudo iniciar la música. Toca la nota musical para volver a activarla.';
+    const currentStatus = modal.open && modal.querySelector('#music-status');
+    if (currentStatus) { currentStatus.textContent = message; currentStatus.hidden = false; }
+    else toast(message);
+  });
+}
+
+function pauseMusic() {
+  musicAttempt = null;
+  tableMusic.pause();
+}
+
+function toggleMusic(enabled) {
+  prefs.music = enabled;
+  if (!savePreferences(prefs)) toast('No se pudo guardar la preferencia de música.');
+  const button = app.querySelector('[data-action="music"]');
+  button.setAttribute('aria-pressed', String(enabled));
+  button.title = `${enabled ? 'Pausar' : 'Activar'} música de fondo`;
+  const checkbox = modal.querySelector('#music-enabled');
+  if (checkbox) checkbox.checked = enabled;
+  if (enabled) startMusic(true);
+  else pauseMusic();
 }
 
 function cancelBot() { clearTimeout(botTimer); botTimer = null; }
@@ -477,9 +530,32 @@ function feltSettings() {
   </section>`;
 }
 
+function musicSettings() {
+  const volume = Math.round(prefs.musicVolume * 100);
+  const tracks = MUSIC_TRACKS.map(({ id, title }) =>
+    `<option value="${esc(id)}"${id === prefs.musicTrack ? ' selected' : ''}>${esc(title)}</option>`
+  ).join('');
+  return `<section class="music-settings" aria-labelledby="music-settings-title">
+    <h3 id="music-settings-title">Música de fondo</h3>
+    <label class="preference-row music-toggle-row">
+      <span><strong>Reproducir música</strong><small>Pasillos instrumentales originales</small></span>
+      <input type="checkbox" id="music-enabled"${prefs.music ? ' checked' : ''}>
+      <span class="switch" aria-hidden="true"></span>
+    </label>
+    <div class="music-options">
+      <label for="music-track">Pista<select id="music-track">${tracks}</select></label>
+      <div class="music-volume">
+        <label for="music-volume">Volumen</label><output id="music-level" for="music-volume">${volume}%</output>
+        <input type="range" id="music-volume" min="0" max="100" value="${volume}">
+      </div>
+    </div>
+    <p class="music-status" id="music-status" role="status" hidden></p>
+  </section>`;
+}
+
 function showSettings(focusFelt = false) {
   const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
   if (focusFelt) modal.querySelector('[data-action="felt-theme"][aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 
@@ -722,6 +798,7 @@ function handleAction(target) {
   else if (action === 'tutorial-capture') selectTutorialCard(target.dataset.card, true);
   else if (action === 'tutorial-play' || action === 'tutorial-answer') checkTutorialAnswer(target.dataset.answer);
   else if (action === 'close-modal') closeModal();
+  else if (action === 'music') toggleMusic(!prefs.music);
   else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound(2); render(); }
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);
   else if (action === 'round-summary') showRoundSummary();
@@ -732,11 +809,20 @@ function handleAction(target) {
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
   if (button && !button.disabled) handleAction(button);
+  // A remembered setting can resume after the first user gesture on this page.
+  if (event.isTrusted && prefs.music && !tableMusic.isPlaying &&
+      !event.target.closest('[data-action="music"], .music-toggle-row, #music-track')) startMusic();
 });
 document.addEventListener('input', event => {
   if (event.target.id === 'player-name') draftNames.player = event.target.value;
   else if (event.target.id === 'opponent-name') draftNames[mode] = event.target.value;
   else if (event.target.id === 'felt-color') setFelt('custom', event.target.value, false);
+  else if (event.target.id === 'music-volume') {
+    const volume = event.target.valueAsNumber;
+    prefs.musicVolume = volume / 100;
+    tableMusic.setVolume(prefs.musicVolume);
+    modal.querySelector('#music-level').value = `${volume}%`;
+  }
 });
 document.addEventListener('submit', event => {
   if (event.target.id !== 'new-game-form') return;
@@ -749,6 +835,19 @@ document.addEventListener('submit', event => {
   } else startGame(options);
 });
 document.addEventListener('change', event => {
+  if (event.target.id === 'music-enabled') {
+    toggleMusic(event.target.checked);
+    return;
+  }
+  if (event.target.id === 'music-track' || event.target.id === 'music-volume') {
+    if (event.target.id === 'music-track') {
+      if (!MUSIC_TRACKS.some(track => track.id === event.target.value)) return;
+      prefs.musicTrack = event.target.value;
+      if (prefs.music) startMusic(true);
+    }
+    if (!savePreferences(prefs)) toast('No se pudo guardar la configuración de música.');
+    return;
+  }
   if (event.target.id === 'felt-color') {
     setFelt('custom', event.target.value);
     return;
@@ -776,7 +875,15 @@ document.addEventListener('fullscreenchange', () => {
   }
   updateGameOrientation();
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden) cancelBot(); else scheduleBot(); });
-window.addEventListener('pagehide', cancelBot);
+function resumeMusic() {
+  if (musicActivated && prefs.music && audioContext?.state === 'running') startMusic();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelBot(); pauseMusic(); }
+  else { scheduleBot(); resumeMusic(); }
+});
+window.addEventListener('pagehide', () => { cancelBot(); pauseMusic(); });
+window.addEventListener('pageshow', event => { if (event.persisted) resumeMusic(); });
 render();
 if (session.warning) toast(session.warning);

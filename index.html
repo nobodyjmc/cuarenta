@@ -2488,6 +2488,77 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   100% { opacity: 0; transform: translate(-50%, calc(-50% + var(--capture-travel))) rotate(18deg) scale(.46); }
 }
 
+.music-toggle[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent-focus);
+  background: var(--pearl);
+}
+
+.music-settings {
+  margin: 20px 0 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--pearl);
+}
+
+.music-settings h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.music-toggle-row {
+  padding: 10px 0;
+  min-height: 44px;
+}
+
+.music-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr));
+  align-items: end;
+  gap: 10px 14px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.music-options select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+.music-volume {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.music-volume output {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+#music-volume {
+  grid-column: 1 / -1;
+  min-height: 44px;
+  width: 100%;
+  margin: 4px 0 0;
+  accent-color: var(--accent);
+}
+
+.music-status {
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 13px;
+}
+
 </style>
 </head>
 <body>
@@ -3259,6 +3330,9 @@ const SAVE_KEY = 'cuarenta.local.game.v1';
 const PREFS_KEY = 'cuarenta.local.preferences.v1';
 const DEFAULT_FELT_THEME = 'quito';
 const DEFAULT_FELT_COLOR = '#287458';
+const DEFAULT_MUSIC_VOLUME = .32;
+const DEFAULT_MUSIC_TRACK = 'faroles';
+const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'patio'];
 
 const FELT_THEMES = Object.freeze(['quito', 'borgona', 'azul', 'carbon', 'custom']);
 
@@ -3341,6 +3415,9 @@ class LocalSession {
 function loadPreferences(storage) {
   const fallback = {
     sound: false,
+    music: false,
+    musicVolume: DEFAULT_MUSIC_VOLUME,
+    musicTrack: DEFAULT_MUSIC_TRACK,
     reducedMotion: false,
     quickBot: false,
     feedbackMode: true,
@@ -3354,6 +3431,9 @@ function loadPreferences(storage) {
     const feedbackChallenge = Number.isInteger(saved.feedbackChallenge) ? Math.max(-3, Math.min(3, saved.feedbackChallenge)) : 0;
     return {
       sound: saved.sound === true,
+      music: saved.music === true,
+      musicVolume: Number.isFinite(saved.musicVolume) ? Math.max(0, Math.min(1, saved.musicVolume)) : DEFAULT_MUSIC_VOLUME,
+      musicTrack: MUSIC_TRACK_IDS.includes(saved.musicTrack) ? saved.musicTrack : DEFAULT_MUSIC_TRACK,
       reducedMotion: saved.reducedMotion === true,
       quickBot: saved.quickBot === true,
       feedbackMode: saved.feedbackMode === undefined ? true : saved.feedbackMode === true,
@@ -3674,12 +3754,314 @@ function validateTutorialLessons(lessons) {
 return Object.freeze({ "createTutorialLessons": createTutorialLessons, "validateTutorialLessons": validateTutorialLessons });
 })();
 
+__cuarentaModules["js/music.js"] = (() => {
+
+// Original pieces for Cuarenta. Each row is one bar in 3/4; melody entries are
+// [beat, note, length in beats]. The bass and arpeggio accompany a requinto lead.
+const MUSIC_TRACKS = Object.freeze([
+  Object.freeze({ id: 'faroles', title: 'Faroles de Quito' }),
+  Object.freeze({ id: 'patio', title: 'Patio de la Ronda' }),
+]);
+
+const CHORDS = {
+  Dm: ['D2', 'A2', 'F3', 'A3', 'D4'],
+  Gm: ['G2', 'D3', 'G3', 'Bb3', 'D4'],
+  A7: ['A2', 'E3', 'G3', 'C#4', 'E4'],
+  Bb: ['Bb2', 'F3', 'Bb3', 'D4', 'F4'],
+  F: ['F2', 'C3', 'F3', 'A3', 'C4'],
+  C: ['C3', 'G3', 'C4', 'E4', 'G4'],
+  E7: ['E2', 'B2', 'G#3', 'D4', 'E4'],
+  G: ['G2', 'D3', 'G3', 'B3', 'D4'],
+  'D/F#': ['F#2', 'D3', 'A3', 'D4', 'F#4'],
+  Em: ['E2', 'B2', 'G3', 'B3', 'E4'],
+  D: ['D2', 'A2', 'F#3', 'A3', 'D4'],
+  Am: ['A2', 'E3', 'A3', 'C4', 'E4'],
+  Bm: ['B2', 'F#3', 'B3', 'D4', 'F#4'],
+};
+
+const SCORES = {
+  faroles: {
+    bpm: 108,
+    bars: [
+      ['Dm', [[.5, 'A4', .45], [1, 'F5', 1], [2, 'E5', .5], [2.5, 'D5', .5]]],
+      ['Gm', [[0, 'G5', .9], [1, 'D5', .72], [2, 'Bb4', .68]]],
+      ['A7', [[0, 'C#5', 1.2], [1.5, 'B4', .4], [2, 'A4', .85]]],
+      ['Dm', [[0, 'F4', .7], [.75, 'A4', .7], [1.5, 'D5', 1.4]]],
+      ['Bb', [[.25, 'D5', .7], [1, 'F5', .52], [1.6, 'D5', .42], [2.15, 'Bb4', .75]]],
+      ['Gm', [[0, 'G4', .9], [1, 'Bb4', .45], [1.5, 'D5', .95]]],
+      ['A7', [[0, 'E5', .63], [.75, 'G5', .45], [1.25, 'E5', .44], [1.8, 'C#5', .92]]],
+      ['Dm', [[0, 'D5', 2.4], [2.65, 'A4', .33]]],
+      ['F', [[0, 'C5', .75], [.8, 'F5', .6], [1.5, 'A5', 1.22]]],
+      ['C', [[0, 'G5', .9], [1.25, 'E5', .47], [1.75, 'G5', .45], [2.25, 'C5', .65]]],
+      ['Bb', [[.25, 'D5', 1], [1.25, 'F5', .66], [2, 'Bb5', .83]]],
+      ['A7', [[0, 'A5', .72], [.75, 'G5', .48], [1.25, 'E5', .45], [1.8, 'C#5', 1]]],
+      ['Dm', [[0, 'D5', .52], [.6, 'F5', .66], [1.35, 'A5', .9]]],
+      ['C', [[0, 'E5', 1.1], [1.25, 'D5', .45], [1.75, 'C5', .95]]],
+      ['Bb', [[.25, 'Bb4', .65], [1, 'F5', .85], [2, 'D5', .88]]],
+      ['A7', [[0, 'C#5', .64], [.75, 'A4', .48], [1.25, 'E5', 1.36]]],
+      ['Gm', [[0, 'D5', .62], [.75, 'Bb4', .45], [1.25, 'G4', 1.3]]],
+      ['Dm', [[.25, 'F4', .65], [1, 'A4', .85], [2, 'F5', .78]]],
+      ['E7', [[0, 'E5', .8], [1, 'D5', .65], [1.75, 'B4', .5], [2.3, 'G#4', .6]]],
+      ['A7', [[0, 'A4', .65], [.75, 'C#5', .63], [1.5, 'E5', 1.2]]],
+      ['Bb', [[0, 'F5', .92], [1.25, 'D5', .65], [2, 'C5', .48], [2.5, 'Bb4', .45]]],
+      ['Gm', [[0, 'G4', .95], [1.25, 'Bb4', .75], [2.25, 'D5', .56]]],
+      ['A7', [[0, 'E5', .62], [.75, 'G5', .48], [1.25, 'F5', .45], [1.75, 'C#5', .94]]],
+      ['Dm', [[0, 'D5', 2.7]]],
+    ],
+  },
+  patio: {
+    bpm: 116,
+    bars: [
+      ['G', [[.25, 'B4', .48], [.75, 'D5', .63], [1.5, 'G5', 1.25]]],
+      ['D/F#', [[0, 'F#5', .55], [.6, 'A5', .6], [1.35, 'D5', .82], [2.35, 'A4', .55]]],
+      ['Em', [[0, 'B4', .7], [.75, 'E5', .55], [1.5, 'G5', .58], [2.25, 'E5', .55]]],
+      ['D', [[0, 'F#5', .74], [.75, 'E5', .46], [1.25, 'D5', 1.36]]],
+      ['C', [[0, 'E5', .45], [.5, 'G5', .92], [1.5, 'E5', .65], [2.25, 'C5', .62]]],
+      ['Am', [[.25, 'A4', .55], [.85, 'C5', .62], [1.55, 'E5', 1.2]]],
+      ['D', [[0, 'F#5', .74], [.75, 'A5', .46], [1.25, 'F#5', .46], [1.75, 'D5', 1.16]]],
+      ['G', [[0, 'G5', 2.14], [2.4, 'D5', .49]]],
+      ['Bm', [[0, 'F#5', .58], [.65, 'D5', .66], [1.4, 'B4', 1.38]]],
+      ['Em', [[.25, 'B4', .47], [.75, 'G4', .66], [1.5, 'E5', 1.16]]],
+      ['C', [[0, 'C5', .52], [.6, 'E5', .68], [1.35, 'G5', .7], [2.15, 'C6', .6]]],
+      ['D', [[0, 'A5', 1], [1.25, 'F#5', .45], [1.75, 'D5', 1.12]]],
+      ['G', [[0, 'B4', .68], [.75, 'D5', .45], [1.25, 'G5', .62], [2, 'B5', .9]]],
+      ['C', [[0, 'G5', .92], [1.1, 'E5', .55], [1.75, 'C5', 1.03]]],
+      ['A7', [[.25, 'A4', .45], [.75, 'C#5', .55], [1.35, 'E5', .64], [2.1, 'G5', .76]]],
+      ['D', [[0, 'F#5', .78], [1, 'A5', .6], [1.75, 'D5', .92]]],
+      ['Em', [[0, 'E5', .75], [.85, 'G5', .55], [1.5, 'B5', 1.2]]],
+      ['C', [[0, 'C6', .71], [.75, 'G5', .44], [1.25, 'E5', 1.27]]],
+      ['Bm', [[.25, 'F#5', .66], [1, 'D5', .66], [1.75, 'B4', 1.05]]],
+      ['Em', [[0, 'G4', .6], [.65, 'B4', .62], [1.35, 'E5', 1.45]]],
+      ['Am', [[0, 'C5', .66], [.75, 'E5', .46], [1.25, 'A5', 1.35]]],
+      ['D', [[0, 'F#5', .5], [.55, 'E5', .4], [1, 'D5', .9], [2, 'A4', .76]]],
+      ['G', [[0, 'B4', .7], [.75, 'D5', .7], [1.5, 'G5', 1.27]]],
+      ['G', [[0, 'D5', .75], [.85, 'G4', 1.92]]],
+    ],
+  },
+};
+
+const SAMPLE_RATE = 22050;
+const PITCH_CLASS = { C: 0, 'C#': 1, D: 2, E: 4, F: 5, 'F#': 6, G: 7, 'G#': 8, A: 9, Bb: 10, B: 11 };
+const TIMBRES = {
+  lead: { partials: [1, .47, .31, .12, .09, .06, .033], decay: 2.9, attack: .0028 },
+  chord: { partials: [1, .49, .18, .13, .07, .035], decay: 3.4, attack: .004 },
+  bass: { partials: [1, .34, .14, .053], decay: 3.6, attack: .007 },
+};
+
+function noteFrequency(note) {
+  const midi = 12 * (1 + Number(note.at(-1))) + PITCH_CLASS[note.slice(0, -1)];
+  return 440 * 2 ** ((midi - 69) / 12);
+}
+
+function pluck(note, voice) {
+  const { partials, decay, attack } = TIMBRES[voice];
+  const frequency = noteFrequency(note);
+  const angular = 2 * Math.PI * frequency;
+  const samples = new Float32Array(Math.round(SAMPLE_RATE * 2));
+  for (let index = 0; index < partials.length; index += 1) {
+    const harmonic = index + 1;
+    const step = angular * harmonic * (1 + index * .00035) / SAMPLE_RATE;
+    const fade = Math.exp(-(decay + index * 3.15) / SAMPLE_RATE);
+    const stepCos = Math.cos(step);
+    const stepSin = Math.sin(step);
+    let cosine = Math.cos(index * .34);
+    let sine = Math.sin(index * .34);
+    let amplitude = partials[index];
+    for (let frame = 0; frame < samples.length; frame += 1) {
+      samples[frame] += sine * amplitude;
+      const nextSine = sine * stepCos + cosine * stepSin;
+      cosine = cosine * stepCos - sine * stepSin;
+      sine = nextSine;
+      amplitude *= fade;
+    }
+  }
+
+  const body = 2 * Math.PI * (voice === 'bass' ? 109 : 185) / SAMPLE_RATE;
+  for (let frame = 0; frame < samples.length; frame += 1) {
+    const time = frame / SAMPLE_RATE;
+    const resonance = Math.sin(frame * body) * .062 * Math.exp(-time * 23);
+    samples[frame] = (samples[frame] + resonance) * (1 - Math.exp(-time / attack));
+  }
+  return samples;
+}
+
+function makeLoop(context, score) {
+  const beat = 60 / score.bpm;
+  const length = Math.round(score.bars.length * 3 * beat * SAMPLE_RATE);
+  const buffer = context.createBuffer(1, length, SAMPLE_RATE);
+  const output = buffer.getChannelData(0);
+  const plucks = new Map();
+
+  function add(start, note, duration, level, voice) {
+    const key = `${voice}:${note}`;
+    if (!plucks.has(key)) plucks.set(key, pluck(note, voice));
+    const sample = plucks.get(key);
+    const first = Math.round(start * beat * SAMPLE_RATE);
+    const release = Math.round(duration * beat * SAMPLE_RATE);
+    const tail = Math.round(.14 * SAMPLE_RATE);
+    const end = Math.min(sample.length, release + tail);
+    for (let frame = 0; frame < end; frame += 1) {
+      const envelope = frame < release ? 1 : ((end - frame) / tail) ** 2;
+      let target = first + frame;
+      if (target >= length) target -= length;
+      output[target] += sample[frame] * envelope * level;
+    }
+  }
+
+  for (const [index, [harmony, melody]] of score.bars.entries()) {
+    const start = index * 3;
+    const [root, fifth, low, middle, high] = CHORDS[harmony];
+    const variation = 1 + .06 * Math.sin(index * 2.4);
+    add(start, root, .88, .21 * variation, 'bass');
+    add(start + .49, fifth, .47, .085, 'bass');
+    const brush = [[1.015, low, .09], [1.04, middle, .065], [1.07, high, .047]];
+    const answer = index % 4 === 3 ? [[2.03, middle, .062], [2.42, high, .045]]
+      : [[1.98, low, .075], [2.02, middle, .060], [2.06, high, .052]];
+    for (const [offset, note, level] of [...brush, ...answer]) {
+      add(start + offset, note, .57, level * variation, 'chord');
+    }
+    for (const [noteIndex, [offset, note, duration]] of melody.entries()) {
+      const accent = .27 + .032 * Math.cos(index + noteIndex * 1.6);
+      add(start + offset + .009, note, duration, accent, 'lead');
+    }
+  }
+
+  // Two quiet reflections suggest a small room. Wrap their tails so that the
+  // last beat and the first beat meet continuously when the buffer repeats.
+  const dry = new Float32Array(output);
+  const firstEcho = Math.round(.023 * SAMPLE_RATE);
+  const secondEcho = Math.round(.061 * SAMPLE_RATE);
+  let peak = 0;
+  for (let frame = 0; frame < length; frame += 1) {
+    output[frame] += dry[(frame + length - firstEcho) % length] * .105;
+    output[frame] += dry[(frame + length - secondEcho) % length] * .054;
+    peak = Math.max(peak, Math.abs(output[frame]));
+  }
+  const normalize = .68 / Math.max(peak, .68);
+  if (normalize < 1) {
+    for (let frame = 0; frame < length; frame += 1) output[frame] *= normalize;
+  }
+  return buffer;
+}
+
+function clampVolume(value) {
+  return Number.isFinite(value) ? Math.max(0, Math.min(1, value)) : .35;
+}
+
+class TableMusic {
+  #getContext;
+  #active = null;
+  #cache = null;
+  #paused = null;
+  #request = 0;
+  #volume = .35;
+
+  constructor({ getContext }) {
+    this.#getContext = getContext;
+  }
+
+  get isPlaying() {
+    return this.#active?.context.state === 'running';
+  }
+
+  async start({ trackId = MUSIC_TRACKS[0].id, volume = this.#volume } = {}) {
+    const track = MUSIC_TRACKS.find(({ id }) => id === trackId) ?? MUSIC_TRACKS[0];
+    const request = ++this.#request;
+    this.#volume = clampVolume(volume);
+    let source;
+    let gain;
+    try {
+      const context = this.#getContext();
+      // Resume before the first await so a user's click can unlock audio.
+      if (context.state !== 'running') await context.resume();
+      if (request !== this.#request || context.state !== 'running') return false;
+      if (this.#active?.context === context && this.#active.trackId === track.id) {
+        this.setVolume(this.#volume);
+        return true;
+      }
+
+      const cached = this.#cache;
+      const buffer = cached?.context === context && cached.trackId === track.id
+        ? cached.buffer : makeLoop(context, SCORES[track.id]);
+      this.#cache = { context, trackId: track.id, buffer };
+      source = context.createBufferSource();
+      gain = context.createGain();
+      source.buffer = buffer;
+      source.loop = true;
+      source.connect(gain);
+      gain.connect(context.destination);
+      source.onended = () => {
+        source.disconnect();
+        gain.disconnect();
+        if (this.#active?.source === source) this.#active = null;
+      };
+      const now = context.currentTime;
+      const offset = this.#paused?.trackId === track.id ? this.#paused.offset : 0;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(this.#volume, now + .12);
+      source.start(now, offset);
+      this.#stopActive();
+      this.#paused = null;
+      this.#active = { context, trackId: track.id, source, gain, startedAt: now, offset };
+      return true;
+    } catch {
+      source?.disconnect();
+      gain?.disconnect();
+      return false;
+    }
+  }
+
+  setVolume(volume) {
+    this.#volume = clampVolume(volume);
+    if (!this.#active) return;
+    const { gain, context } = this.#active;
+    const now = context.currentTime;
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(this.#volume, now, .035);
+  }
+
+  stop() {
+    this.#request += 1;
+    this.#paused = null;
+    this.#stopActive();
+  }
+
+  pause() {
+    this.#request += 1;
+    if (!this.#active) return;
+    const { context, trackId, source, startedAt, offset } = this.#active;
+    this.#paused = { trackId, offset: (offset + context.currentTime - startedAt) % source.buffer.duration };
+    this.#stopActive();
+  }
+
+  #stopActive() {
+    if (!this.#active) return;
+    const { source, gain, context } = this.#active;
+    this.#active = null;
+    const now = context.currentTime;
+    if (context.state === 'running') {
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setTargetAtTime(0, now, .018);
+      source.stop(now + .09);
+    } else {
+      source.stop(now);
+      source.disconnect();
+      gain.disconnect();
+    }
+  }
+}
+
+return Object.freeze({ "MUSIC_TRACKS": MUSIC_TRACKS, "TableMusic": TableMusic });
+})();
+
 __cuarentaModules["js/app.js"] = (() => {
 const { createDeck: createDeck, DEFAULT_BOT_NAME: DEFAULT_BOT_NAME, legalMoves: legalMoves } = __cuarentaModules["js/engine.js"];
 const { chooseBotMove: chooseBotMove } = __cuarentaModules["js/bot.js"];
 const { cardSvg: cardSvg, cardBackSvg: cardBackSvg, cardLabel: cardLabel } = __cuarentaModules["js/cards.js"];
 const { LocalSession: LocalSession, FELT_THEMES: FELT_THEMES, loadPreferences: loadPreferences, normalizeFeltColor: normalizeFeltColor, savePreferences: savePreferences } = __cuarentaModules["js/session.js"];
 const { createTutorialLessons: createTutorialLessons } = __cuarentaModules["js/tutorial.js"];
+const { MUSIC_TRACKS: MUSIC_TRACKS, TableMusic: TableMusic } = __cuarentaModules["js/music.js"];
+
 
 
 
@@ -3735,6 +4117,9 @@ let tutorialComplete = false;
 let modalKind = null;
 let lastFocus = null;
 let audioContext = null;
+const tableMusic = new TableMusic({ getContext: getAudioContext });
+let musicActivated = false;
+let musicAttempt = null;
 const FEEDBACK_MATCH_KEY = 'cuarenta.local.feedback.match.v1';
 let feedbackCompletedMatchId = (() => {
   try { return globalThis.localStorage?.getItem(FEEDBACK_MATCH_KEY) || ''; }
@@ -3751,6 +4136,7 @@ const iconPaths = {
   close: '<path d="m6 6 12 12M6 18 18 6"/>',
   sound: '<path d="m11 4-6 5H2v6h3l6 5zM15 8c3 2 3 6 0 8m3-11c5 4 5 10 0 14"/>',
   mute: '<path d="m11 4-6 5H2v6h3l6 5zM16 9l6 6m0-6-6 6"/>',
+  music: '<path d="M9 18V5l12-2v13M9 9l12-2"/><ellipse cx="6" cy="18" rx="3" ry="2.5"/><ellipse cx="18" cy="16" rx="3" ry="2.5"/>',
   person: '<circle cx="12" cy="8" r="4"/><path d="M4 22v-3a8 8 0 0 1 16 0v3"/>',
   people: '<circle cx="9" cy="8" r="3"/><path d="M2 21v-3a7 7 0 0 1 14 0v3M17 4a4 4 0 0 1 0 8m2 3c3 1 3 3 3 6"/>',
   bot: '<rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2m8-2v2m-7 3h6M1 12v4m22-4v4"/>',
@@ -3778,7 +4164,7 @@ function shell(content) {
       <nav><button class="nav-item active" data-action="home">${icon('cards')}<span>La mesa</span></button><button class="nav-item" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button><button class="nav-item" data-action="settings">${icon('settings')}<span>Preferencias</span></button></nav>
       <div class="sidebar-bottom"><span class="ecuador-stripes" aria-hidden="true"><i></i><i></i><i></i></span><span>Una tradición ecuatoriana.<br>Una mesa para todos.</span></div>
     </aside>
-    <div class="main-shell"><header class="topbar"><div class="breadcrumb">${screen === 'home' ? 'Bienvenido a tu mesa' : `<button data-action="home">La mesa</button><span>/</span><strong>Partida local</strong>`}</div><div class="topbar-actions"><span class="local-badge"><i></i> En este dispositivo</span><button class="icon-button sound-toggle" data-action="sound" aria-label="${prefs.sound ? 'Desactivar' : 'Activar'} sonido" title="${prefs.sound ? 'Desactivar' : 'Activar'} sonido">${icon(prefs.sound ? 'sound' : 'mute')}</button><button class="icon-button mobile-settings" data-action="settings" aria-label="Preferencias">${icon('settings')}</button></div></header><main id="main" tabindex="-1">${content}</main><footer class="footer"><span>Hecho para disfrutar, carta a carta.</span><button data-action="rules">Reglas de esta mesa ${icon('arrow')}</button></footer></div>
+    <div class="main-shell"><header class="topbar"><div class="breadcrumb">${screen === 'home' ? 'Bienvenido a tu mesa' : `<button data-action="home">La mesa</button><span>/</span><strong>Partida local</strong>`}</div><div class="topbar-actions"><span class="local-badge"><i></i> En este dispositivo</span><button type="button" class="icon-button music-toggle" data-action="music" aria-label="Música de fondo" aria-pressed="${prefs.music}" title="${prefs.music ? 'Pausar' : 'Activar'} música de fondo">${icon('music')}</button><button class="icon-button sound-toggle" data-action="sound" aria-label="${prefs.sound ? 'Desactivar' : 'Activar'} sonido" title="${prefs.sound ? 'Desactivar' : 'Activar'} sonido">${icon(prefs.sound ? 'sound' : 'mute')}</button><button class="icon-button mobile-settings" data-action="settings" aria-label="Preferencias">${icon('settings')}</button></div></header><main id="main" tabindex="-1">${content}</main><footer class="footer"><span>Hecho para disfrutar, carta a carta.</span><button data-action="rules">Reglas de esta mesa ${icon('arrow')}</button></footer></div>
   </div>`;
 }
 
@@ -3946,18 +4332,66 @@ function toast(text) {
   toastTimer = setTimeout(() => { node.hidden = true; }, 4500);
 }
 
+function getAudioContext() {
+  if (!audioContext || audioContext.state === 'closed') {
+    const Context = window.AudioContext || window.webkitAudioContext;
+    if (!Context) return null;
+    audioContext = new Context();
+  }
+  return audioContext;
+}
+
 function playSound(points = 0) {
   if (!prefs.sound) return;
   try {
-    audioContext ||= new (window.AudioContext || window.webkitAudioContext)();
-    if (audioContext.state === 'suspended') audioContext.resume();
-    const osc = audioContext.createOscillator();
-    const gain = audioContext.createGain();
+    const context = getAudioContext();
+    if (!context) return;
+    if (context.state !== 'running') void context.resume().catch(() => {});
+    const osc = context.createOscillator();
+    const gain = context.createGain();
     osc.type = 'sine'; osc.frequency.value = points ? 660 : 350;
-    gain.gain.setValueAtTime(.035, audioContext.currentTime);
-    gain.gain.exponentialRampToValueAtTime(.001, audioContext.currentTime + .13);
-    osc.connect(gain); gain.connect(audioContext.destination); osc.start(); osc.stop(audioContext.currentTime + .14);
+    gain.gain.setValueAtTime(.035, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .13);
+    osc.connect(gain); gain.connect(context.destination); osc.start(); osc.stop(context.currentTime + .14);
+    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   } catch { /* Sound never interrupts the game. */ }
+}
+
+function startMusic(reportError = false) {
+  const trackId = prefs.musicTrack;
+  if (!prefs.music || document.hidden || musicAttempt?.trackId === trackId) return;
+  musicActivated = true;
+  const attempt = { trackId };
+  musicAttempt = attempt;
+  const status = modal.querySelector('#music-status');
+  if (status) { status.hidden = true; status.textContent = ''; }
+  void tableMusic.start({ trackId, volume: prefs.musicVolume }).then(played => {
+    if (musicAttempt !== attempt) return;
+    musicAttempt = null;
+    if (played || !reportError) return;
+    toggleMusic(false);
+    const message = 'No se pudo iniciar la música. Toca la nota musical para volver a activarla.';
+    const currentStatus = modal.open && modal.querySelector('#music-status');
+    if (currentStatus) { currentStatus.textContent = message; currentStatus.hidden = false; }
+    else toast(message);
+  });
+}
+
+function pauseMusic() {
+  musicAttempt = null;
+  tableMusic.pause();
+}
+
+function toggleMusic(enabled) {
+  prefs.music = enabled;
+  if (!savePreferences(prefs)) toast('No se pudo guardar la preferencia de música.');
+  const button = app.querySelector('[data-action="music"]');
+  button.setAttribute('aria-pressed', String(enabled));
+  button.title = `${enabled ? 'Pausar' : 'Activar'} música de fondo`;
+  const checkbox = modal.querySelector('#music-enabled');
+  if (checkbox) checkbox.checked = enabled;
+  if (enabled) startMusic(true);
+  else pauseMusic();
 }
 
 function cancelBot() { clearTimeout(botTimer); botTimer = null; }
@@ -4160,9 +4594,32 @@ function feltSettings() {
   </section>`;
 }
 
+function musicSettings() {
+  const volume = Math.round(prefs.musicVolume * 100);
+  const tracks = MUSIC_TRACKS.map(({ id, title }) =>
+    `<option value="${esc(id)}"${id === prefs.musicTrack ? ' selected' : ''}>${esc(title)}</option>`
+  ).join('');
+  return `<section class="music-settings" aria-labelledby="music-settings-title">
+    <h3 id="music-settings-title">Música de fondo</h3>
+    <label class="preference-row music-toggle-row">
+      <span><strong>Reproducir música</strong><small>Pasillos instrumentales originales</small></span>
+      <input type="checkbox" id="music-enabled"${prefs.music ? ' checked' : ''}>
+      <span class="switch" aria-hidden="true"></span>
+    </label>
+    <div class="music-options">
+      <label for="music-track">Pista<select id="music-track">${tracks}</select></label>
+      <div class="music-volume">
+        <label for="music-volume">Volumen</label><output id="music-level" for="music-volume">${volume}%</output>
+        <input type="range" id="music-volume" min="0" max="100" value="${volume}">
+      </div>
+    </div>
+    <p class="music-status" id="music-status" role="status" hidden></p>
+  </section>`;
+}
+
 function showSettings(focusFelt = false) {
   const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
   if (focusFelt) modal.querySelector('[data-action="felt-theme"][aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 
@@ -4405,6 +4862,7 @@ function handleAction(target) {
   else if (action === 'tutorial-capture') selectTutorialCard(target.dataset.card, true);
   else if (action === 'tutorial-play' || action === 'tutorial-answer') checkTutorialAnswer(target.dataset.answer);
   else if (action === 'close-modal') closeModal();
+  else if (action === 'music') toggleMusic(!prefs.music);
   else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound(2); render(); }
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);
   else if (action === 'round-summary') showRoundSummary();
@@ -4415,11 +4873,20 @@ function handleAction(target) {
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
   if (button && !button.disabled) handleAction(button);
+  // A remembered setting can resume after the first user gesture on this page.
+  if (event.isTrusted && prefs.music && !tableMusic.isPlaying &&
+      !event.target.closest('[data-action="music"], .music-toggle-row, #music-track')) startMusic();
 });
 document.addEventListener('input', event => {
   if (event.target.id === 'player-name') draftNames.player = event.target.value;
   else if (event.target.id === 'opponent-name') draftNames[mode] = event.target.value;
   else if (event.target.id === 'felt-color') setFelt('custom', event.target.value, false);
+  else if (event.target.id === 'music-volume') {
+    const volume = event.target.valueAsNumber;
+    prefs.musicVolume = volume / 100;
+    tableMusic.setVolume(prefs.musicVolume);
+    modal.querySelector('#music-level').value = `${volume}%`;
+  }
 });
 document.addEventListener('submit', event => {
   if (event.target.id !== 'new-game-form') return;
@@ -4432,6 +4899,19 @@ document.addEventListener('submit', event => {
   } else startGame(options);
 });
 document.addEventListener('change', event => {
+  if (event.target.id === 'music-enabled') {
+    toggleMusic(event.target.checked);
+    return;
+  }
+  if (event.target.id === 'music-track' || event.target.id === 'music-volume') {
+    if (event.target.id === 'music-track') {
+      if (!MUSIC_TRACKS.some(track => track.id === event.target.value)) return;
+      prefs.musicTrack = event.target.value;
+      if (prefs.music) startMusic(true);
+    }
+    if (!savePreferences(prefs)) toast('No se pudo guardar la configuración de música.');
+    return;
+  }
   if (event.target.id === 'felt-color') {
     setFelt('custom', event.target.value);
     return;
@@ -4459,8 +4939,16 @@ document.addEventListener('fullscreenchange', () => {
   }
   updateGameOrientation();
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden) cancelBot(); else scheduleBot(); });
-window.addEventListener('pagehide', cancelBot);
+function resumeMusic() {
+  if (musicActivated && prefs.music && audioContext?.state === 'running') startMusic();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelBot(); pauseMusic(); }
+  else { scheduleBot(); resumeMusic(); }
+});
+window.addEventListener('pagehide', () => { cancelBot(); pauseMusic(); });
+window.addEventListener('pageshow', event => { if (event.persisted) resumeMusic(); });
 render();
 if (session.warning) toast(session.warning);
 

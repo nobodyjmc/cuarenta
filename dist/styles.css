@@ -2476,3 +2476,74 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   46% { opacity: .88; }
   100% { opacity: 0; transform: translate(-50%, calc(-50% + var(--capture-travel))) rotate(18deg) scale(.46); }
 }
+
+.music-toggle[aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent-focus);
+  background: var(--pearl);
+}
+
+.music-settings {
+  margin: 20px 0 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--pearl);
+}
+
+.music-settings h3 {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.music-toggle-row {
+  padding: 10px 0;
+  min-height: 44px;
+}
+
+.music-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 165px), 1fr));
+  align-items: end;
+  gap: 10px 14px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.music-options select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+.music-volume {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.music-volume output {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+#music-volume {
+  grid-column: 1 / -1;
+  min-height: 44px;
+  width: 100%;
+  margin: 4px 0 0;
+  accent-color: var(--accent);
+}
+
+.music-status {
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 13px;
+}
