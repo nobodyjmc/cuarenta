@@ -38,7 +38,9 @@ let selectedMoveIndex = 0;
 let botTimer = null;
 let toastTimer = null;
 let renderedDeal = '';
+let renderedTurn = '';
 let pendingCardArrival = false;
+let pendingPassMove = null;
 let tutorialStep = 0;
 let tutorialLessons = [];
 let tutorialComboPoints = null;
@@ -217,6 +219,11 @@ function renderGame() {
     table.classList.add('is-dealing');
   }
   table.classList.toggle('is-own-turn', myTurn);
+  const turnKey = `${v.id}/${v.revision}/${viewer}`;
+  if (myTurn && renderedTurn !== turnKey) {
+    renderedTurn = turnKey;
+    table.classList.add('is-fresh-turn');
+  }
   table.classList.toggle('is-fresh-play', pendingCardArrival);
   pendingCardArrival = false;
   app.querySelector('.table-meta').insertAdjacentHTML('afterend', `<div class="compact-score" aria-label="Puntuación actual">${v.players.map(p => `<span><span>${esc(p.name)}</span><strong>${p.score}<small> / 40</small></strong></span>`).join('')}</div>`);
@@ -287,7 +294,7 @@ function scheduleBot(delay = 0) {
         candidate.cardId === command.cardId && candidate.captureIds.length === command.captureIds.length &&
         candidate.captureIds.every(id => command.captureIds.includes(id)));
       if (!move) throw new Error('No se pudo resolver el turno de la máquina.');
-      session.dispatch({ type: 'PLAY', move: command }); afterMove(move);
+      session.dispatch({ type: 'PLAY', move: command }); afterMove(move, 1);
     } catch (error) { toast(error.message); render(); }
   }, Math.max(delay, prefs.quickBot || prefs.reducedMotion ? 280 : 1000));
 }
@@ -307,8 +314,10 @@ function showPlayImpact(view, move) {
   return renderImpact(app.querySelector('.game-table'), kind, caption, card);
 }
 
+const animateTable = () => !document.hidden && !prefs.reducedMotion && !systemReducedMotion.matches;
+
 function renderImpact(target, kind, caption, card) {
-  if (!target || document.hidden || prefs.reducedMotion || systemReducedMotion.matches) return 0;
+  if (!target || !animateTable()) return 0;
   const impact = document.createElement('div');
   impact.className = `play-impact play-impact--${kind}`;
   impact.setAttribute('aria-hidden', 'true');
@@ -323,8 +332,8 @@ function renderImpact(target, kind, caption, card) {
     <span class="impact-card">${cardMarkup(card, { back: !card })}</span>
     <span class="impact-caption">${caption}</span>`;
   target.append(impact);
-  setTimeout(() => impact.remove(), 870);
-  return 870;
+  setTimeout(() => impact.remove(), 1080);
+  return 1080;
 }
 
 function presentGameStatus(move) {
@@ -332,7 +341,7 @@ function presentGameStatus(move) {
   if (!view || modal.open) return;
   const delay = showPlayImpact(view, move);
   if (view.status === 'playing') {
-    const dealing = app.querySelector('.game-table.is-dealing') && !prefs.reducedMotion && !systemReducedMotion.matches;
+    const dealing = app.querySelector('.game-table.is-dealing') && animateTable();
     scheduleBot(Math.max(delay, dealing ? 660 : 0));
     return;
   }
@@ -346,29 +355,45 @@ function presentGameStatus(move) {
   else showStatus();
 }
 
-function afterMove(move) {
+function renderCapture(move, actor, center = app.querySelector('.table-center')) {
+  if (!center || !move || move.fall || !move.captureIds.length) return 0;
+  const receipt = document.createElement('span');
+  receipt.className = 'capture-receipt';
+  receipt.setAttribute('aria-hidden', 'true');
+  receipt.innerHTML = `${icon('cards')} ${move.clean ? '¡Limpia! · ' : ''}+${move.captureIds.length + 1} cartas`;
+  center.append(receipt);
+  const animated = animateTable();
+  if (animated) {
+    // Only the card that was publicly played is shown in the moving pile.
+    const stack = document.createElement('div');
+    stack.className = `capture-stack${actor !== viewer ? ' is-rival' : ''}`;
+    stack.setAttribute('aria-hidden', 'true');
+    stack.innerHTML = cardMarkup(impactCards.get(move.cardId));
+    center.append(stack);
+    setTimeout(() => stack.remove(), 900);
+  }
+  setTimeout(() => receipt.remove(), animated ? 900 : 950);
+  return animated ? 900 : 0;
+}
+
+function afterMove(move, actor) {
   selectedId = null; selectedMoveIndex = 0;
   const v = getView();
   if (v.mode === 'pass' && v.status === 'playing') locked = true;
+  pendingPassMove = locked ? { id: v.id, revision: v.revision, move, actor } : null;
   const message = locked && v.lastEvent?.kind === 'ronda' ? 'Nuevo reparto.' : v.lastEvent?.text;
   announce(message || 'Jugada realizada.'); playSound(move.points);
   pendingCardArrival = !locked && move.captureIds.length === 0;
   render();
-  if (!locked && v.status === 'playing' && !move.fall && move.captureIds.length) {
-    const receipt = document.createElement('span');
-    receipt.className = 'capture-receipt';
-    receipt.setAttribute('aria-hidden', 'true');
-    receipt.innerHTML = `${icon('cards')} ${move.clean ? '¡Limpia! · ' : ''}+${move.captureIds.length + 1} cartas`;
-    app.querySelector('.table-center').append(receipt);
-    setTimeout(() => receipt.remove(), prefs.reducedMotion || systemReducedMotion.matches ? 950 : 620);
-  }
-  presentGameStatus(move);
+  if (!locked && v.status === 'playing') renderCapture(move, actor);
+  presentGameStatus(locked ? undefined : move);
 }
 
 function startGame(options) {
   cancelBot(); closeModal(false);
   try {
     session.dispatch({ type: 'NEW_GAME', options });
+    pendingPassMove = null;
     screen = 'game'; mode = options.mode; difficulty = options.difficulty || 'medium'; viewer = 0; locked = mode === 'pass'; selectedId = null;
     render(); focusGame(); announce('Partida iniciada.');
     presentGameStatus();
@@ -407,7 +432,7 @@ function showRules() {
   const old = legacyRules(v);
   const points = v?.rules.comboPoints ?? comboPoints;
   const rondaText = old ? 'Tres iguales al repartir dan 2 puntos solo si tienes menos de 30. Esta partida guardada mantiene el perfil anterior, sin victoria por caída a la ronda.' : 'Tres cartas del mismo valor al repartir forman una ronda y suman 2 puntos automáticamente, incluso desde 30 o 38. Si esos puntos llevan a 40, ganas. Cuatro iguales tienen prioridad y ganan directamente. Si ambos alcanzan 40 por ronda en el mismo reparto, gana el asiento que empieza.';
-  showModal('rules', `${modalHeader('Las reglas, sobre la mesa.', old ? 'PERFIL LOCAL V1 · PARTIDA ANTERIOR' : 'PERFIL LOCAL V2 · RONDA GANADORA')}<p class="modal-intro">Una chica a 40 puntos, con 40 cartas y cinco cartas por reparto. Las reglas se fijan al comenzar.</p><div class="rule-scores"><div><strong>2</strong><span>Caída</span></div><div><strong>2</strong><span>Ronda</span></div><div><strong>${points}</strong><span>Caída y limpia</span></div></div>${old ? '' : '<p class="rule-callout">Caída a la ronda = victoria inmediata, sin necesitar 40 puntos.</p>'}<div class="rules-list"><details open><summary>Ronda: tres cartas iguales</summary><p>${rondaText} El valor de tu ronda solo se muestra en tu mano.</p></details>${old ? '' : '<details open><summary>Caída a la ronda: partida ganada</summary><p>Si tu rival juega una de las tres cartas originales de su ronda y tú la capturas por igualdad en el turno inmediato siguiente, ganas. Puede ser la primera, segunda o tercera carta de esa ronda. Debe ser el mismo reparto: recogerla por suma, incluirla en una escalera o capturarla más tarde no da esta victoria.</p></details>'}<details><summary>Capturas, caída y limpia</summary><p>Iguala una carta de la mesa o suma dos o más cartas numéricas para obtener el valor de la tuya. Elige una sola base de captura y completa su escalera: A, 2, 3, 4, 5, 6, 7, J, Q, K. Si falta un valor, termina. Las figuras no se suman. Caer a la carta del turno rival anterior da 2 puntos. La limpia deja la mesa vacía y da 2; juntas valen ${points}.</p></details><details><summary>Cartón y cartas que sobran</summary><p>20 cartas recogidas dan 6 puntos. Cada carta adicional suma uno, redondeando a par. El cartón solo suma hasta 30. En empate, 2 puntos al siguiente repartidor. Si ambos tienen menos de 20 sin empatar, nadie cobra. Las sobrantes se descartan.</p></details><details><summary>El cierre desde 38</summary><p>En las jugadas, desde 38 solo puntúa una caída, no una limpia. ${old ? '' : 'Una nueva ronda también suma sus 2 puntos y cierra la partida. La caída a una ronda gana con cualquier marcador.'} Cuatro iguales al repartir ganan automáticamente; si ambos los reciben, se repite ese reparto.</p></details><details><summary>Cuatro niveles, las mismas reglas</summary><p>Fácil elige jugadas legales al azar. Medio prioriza puntos y capturas. Difícil evalúa respuestas inmediatas y cuida sus cartas de ronda. Experto compara hasta 12 jugadas priorizadas y 8 respuestas probables del rival, y calcula una contra-jugada con las cartas que conserva. La retroalimentación local puede ampliar o reducir esta búsqueda. No recibe la mano rival ni el orden del mazo. Su búsqueda es heurística y no garantiza la victoria.</p></details><details><summary>Esta edición local</summary><p>Sin reloj ni penalizaciones por esperar. Juega contra la máquina o comparte el dispositivo, ocultando las manos entre turnos. El guardado pertenece a este navegador.</p></details></div><button class="button primary full-width" data-action="close-modal">Todo claro ${icon('check')}</button>`);
+  showModal('rules', `${modalHeader('Las reglas, sobre la mesa.', old ? 'PERFIL LOCAL V1 · PARTIDA ANTERIOR' : 'PERFIL LOCAL V2 · RONDA GANADORA')}<p class="modal-intro">Una chica a 40 puntos, con 40 cartas y cinco cartas por reparto. Las reglas se fijan al comenzar.</p><div class="rule-scores"><div><strong>2</strong><span>Caída</span></div><div><strong>2</strong><span>Ronda</span></div><div><strong>${points}</strong><span>Caída y limpia</span></div></div>${old ? '' : '<p class="rule-callout">Caída a la ronda = victoria inmediata, sin necesitar 40 puntos.</p>'}<div class="rules-list"><details open><summary>Ronda: tres cartas iguales</summary><p>${rondaText} El valor de tu ronda solo se muestra en tu mano.</p></details>${old ? '' : '<details open><summary>Caída a la ronda: partida ganada</summary><p>Si tu rival juega una de las tres cartas originales de su ronda y tú la capturas por igualdad en el turno inmediato siguiente, ganas. Puede ser la primera, segunda o tercera carta de esa ronda. Debe ser el mismo reparto: recogerla por suma, incluirla en una escalera o capturarla más tarde no da esta victoria.</p></details>'}<details><summary>Capturas, caída y limpia</summary><p>Iguala una carta de la mesa o suma exactamente dos cartas numéricas para obtener el valor de la tuya. Por ejemplo, con un 6 recoges 2 + 4; A + 2 + 3 no es una suma válida. Elige una sola base de captura y completa su escalera: A, 2, 3, 4, 5, 6, 7, J, Q, K. Si falta un valor, termina. Las figuras no se suman. Caer a la carta del turno rival anterior da 2 puntos. La limpia deja la mesa vacía y da 2; juntas valen ${points}.</p></details><details><summary>Cartón y cartas que sobran</summary><p>20 cartas recogidas dan 6 puntos. Cada carta adicional suma uno, redondeando a par. El cartón solo suma hasta 30. En empate, 2 puntos al siguiente repartidor. Si ambos tienen menos de 20 sin empatar, nadie cobra. Las sobrantes se descartan.</p></details><details><summary>El cierre desde 38</summary><p>En las jugadas, desde 38 solo puntúa una caída, no una limpia. ${old ? '' : 'Una nueva ronda también suma sus 2 puntos y cierra la partida. La caída a una ronda gana con cualquier marcador.'} Cuatro iguales al repartir ganan automáticamente; si ambos los reciben, se repite ese reparto.</p></details><details><summary>Cuatro niveles, las mismas reglas</summary><p>Fácil elige jugadas legales al azar. Medio prioriza puntos y capturas. Difícil evalúa respuestas inmediatas y cuida sus cartas de ronda. Experto compara hasta 12 jugadas priorizadas y 8 respuestas probables del rival, y calcula una contra-jugada con las cartas que conserva. La retroalimentación local puede ampliar o reducir esta búsqueda. No recibe la mano rival ni el orden del mazo. Su búsqueda es heurística y no garantiza la victoria.</p></details><details><summary>Esta edición local</summary><p>Sin reloj ni penalizaciones por esperar. Juega contra la máquina o comparte el dispositivo, ocultando las manos entre turnos. El guardado pertenece a este navegador.</p></details></div><button class="button primary full-width" data-action="close-modal">Todo claro ${icon('check')}</button>`);
 }
 
 function applyFelt() {
@@ -454,7 +479,7 @@ function feltSettings() {
 
 function showSettings(focusFelt = false) {
   const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', 'Una experiencia más tranquila.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
   if (focusFelt) modal.querySelector('[data-action="felt-theme"][aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 
@@ -507,17 +532,18 @@ function showTutorial(focus, keepScroll = false) {
   } else {
     const answer = tutorialSolved.get(tutorialStep);
     const play = lesson.type === 'play';
-    const selected = answer?.cardId ?? tutorialCardId;
-    const taken = new Set(answer?.captureIds ?? tutorialCaptures);
+    const hand = answer?.after?.hand ?? lesson.hand;
+    const table = answer?.after?.table ?? lesson.table;
+    const lastCard = answer ? (answer.after?.move?.kind === 'drop' ? answer.after.move.cardId : null) : lesson.lastCardId;
     const board = lesson.hand.length || lesson.table.length ? `<div class="lesson-board tutorial-board${answer ? ' is-solved' : ''}">
-      <p class="tutorial-zone-label">${lesson.lastCardId ? 'MESA · ÚLTIMA CARTA MARCADA' : 'EN LA MESA'}</p>
-      <div class="tutorial-table">${lesson.table.map(card => cardMarkup(card, {
-        selected: taken.has(card.id), highlight: taken.has(card.id), last: card.id === lesson.lastCardId,
+      <p class="tutorial-zone-label">${answer?.after?.move ? 'MESA DESPUÉS DE JUGAR' : lastCard ? 'MESA · ÚLTIMA CARTA MARCADA' : 'EN LA MESA'}</p>
+      <div class="tutorial-table">${table.map(card => cardMarkup(card, {
+        highlight: !answer && tutorialCaptures.has(card.id), selected: !answer && tutorialCaptures.has(card.id), last: card.id === lastCard,
         interactive: play && !!tutorialCardId && !answer, action: 'tutorial-capture',
       })).join('') || '<span class="tutorial-empty">Mesa vacía</span>'}</div>
       <p class="tutorial-zone-label">TU MANO</p>
-      <div class="tutorial-hand">${lesson.hand.map(card => cardMarkup(card, {
-        selected: card.id === selected, interactive: play && !answer, action: 'tutorial-card',
+      <div class="tutorial-hand">${hand.map(card => cardMarkup(card, {
+        selected: !answer && card.id === tutorialCardId, interactive: play && !answer, action: 'tutorial-card',
       })).join('') || '<span class="tutorial-empty">Sin cartas</span>'}</div>
     </div>` : '';
     const choices = !play && !answer ? `<div class="tutorial-capture-options">${lesson.choices.map(choice =>
@@ -599,15 +625,18 @@ function checkTutorialAnswer(answerId) {
     return;
   }
   tutorialSolved.set(tutorialStep, answer);
-  const animated = !prefs.reducedMotion && !systemReducedMotion.matches && (lesson.hand.length || lesson.table.length);
+  const animated = animateTable() && (lesson.hand.length || lesson.table.length);
   showTutorial('#tutorial-feedback', animated);
   const event = answer.after?.event?.kind;
   const special = event === 'ronda-fall' || event === 'ronda-victory';
   const win = answer.after?.status === 'finished';
-  const fall = answer.after?.move?.fall || event === 'fall' || event === 'fall-clean';
-  const label = special ? '¡Ronda ganadora!' : win ? '¡Cierre perfecto!' : fall ? '¡Caída!' : '¡Bien jugado!';
+  const move = answer.after?.move;
+  const fall = move?.fall;
+  const label = special ? '¡Ronda ganadora!' : win ? '¡Cierre perfecto!' : move?.clean ? '¡Caída y limpia!' : '¡Caída!';
   const board = modal.querySelector('.tutorial-board');
-  const duration = renderImpact(board, special ? 'ronda' : win ? 'win' : 'fall', label, impactCards.get(answer.cardId));
+  const duration = win || fall
+    ? renderImpact(board, special ? 'ronda' : win ? 'win' : 'fall', label, impactCards.get(move?.cardId))
+    : renderCapture(move, viewer, board);
   if (duration && (board.offsetTop < modal.scrollTop || board.offsetTop + board.offsetHeight > modal.scrollTop + modal.clientHeight)) {
     modal.scrollTop = Math.max(0, board.offsetTop - 12);
   }
@@ -637,7 +666,7 @@ function showResult() {
 
 function handleAction(target) {
   const action = target.dataset.action;
-  if (action === 'home') { cancelBot(); closeModal(false); screen = 'home'; selectedId = null; render(); }
+  if (action === 'home') { cancelBot(); closeModal(false); screen = 'home'; selectedId = null; pendingPassMove = null; render(); }
   else if (action === 'mode') {
     if (mode === target.dataset.mode) return;
     mode = target.dataset.mode;
@@ -654,13 +683,26 @@ function handleAction(target) {
   }
   else if (action === 'resume') { screen = 'game'; viewer = 0; locked = session.view(0).mode === 'pass'; render(); focusGame(); presentGameStatus(); }
   else if (action === 'table-layout') changeTableLayout(target.dataset.layout);
-  else if (action === 'reveal') { viewer = getView().turn; locked = false; render(); announce(`Turno de ${getView().players[viewer].name}.`); }
+  else if (action === 'reveal') {
+    const v = getView();
+    viewer = v.turn;
+    const effect = pendingPassMove?.id === v.id && pendingPassMove.revision === v.revision ? pendingPassMove : null;
+    pendingPassMove = null;
+    locked = false;
+    pendingCardArrival = Boolean(effect && !effect.move.captureIds.length);
+    render();
+    if (effect) {
+      renderCapture(effect.move, effect.actor);
+      presentGameStatus(effect.move);
+    }
+    announce(`Turno de ${v.players[viewer].name}.`);
+  }
   else if (action === 'select-card') { selectedId = target.dataset.card; selectedMoveIndex = 0; render(); document.querySelector(`[data-card="${CSS.escape(selectedId)}"]`)?.focus(); }
   else if (action === 'next-capture') { selectedMoveIndex++; const moves = legalMoves(getView(), viewer).filter(m => m.cardId === selectedId); selectedMoveIndex %= moves.length; render(); }
   else if (action === 'play') {
     const v = getView(); const move = legalMoves(v, viewer).filter(m => m.cardId === selectedId)[selectedMoveIndex];
     if (!move || locked) return;
-    try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(move); }
+    try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(move, viewer); }
     catch (error) { toast(error.message); selectedId = null; render(); }
   }
   else if (action === 'next-round') { closeModal(false); try { session.dispatch({ type: 'NEXT_ROUND' }); locked = mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); } }

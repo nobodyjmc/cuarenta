@@ -57,7 +57,12 @@ test('capture exercises cover sums, mandatory sequence, two valid bases and lega
   assert.equal(correct(byId(lessons, 'igualdad')).after.move.kind, 'match');
   assert.equal(correct(byId(lessons, 'igualdad')).after.score, 0);
   assert.equal(correct(byId(lessons, 'suma')).after.move.captureIds.length, 2);
-  assert.equal(correct(byId(lessons, 'suma-tres')).after.move.captureIds.length, 3);
+  const pairOnly = byId(lessons, 'suma-dos');
+  assert.deepEqual(correct(pairOnly).after.move.captureIds, ['hearts-2', 'hearts-4']);
+  const tripleSum = pairOnly.choices.find((choice) => choice.captureIds.length === 3);
+  assert.equal(tripleSum.legal, false);
+  assert.equal(tripleSum.correct, false);
+  assert.match(tripleSum.feedback, /Elige solo dos sumandos/);
   const ladder = correct(byId(lessons, 'escalera')).after;
   assert.deepEqual(ladder.move.captureIds.map((id) => id.split('-')[1]), ['7', 'J', 'Q', 'K']);
   assert.deepEqual(ladder.table.map((card) => card.rank), ['2']);

@@ -134,17 +134,14 @@ function basesFor(card, table) {
   const target = numeric(card);
   if (!target) return result;
   const candidates = table.filter((other) => numeric(other) > 0 && numeric(other) < target);
-  function visit(start, remaining, selected) {
-    if (remaining === 0) {
-      if (selected.length >= 2) result.push({ kind: 'sum', cards: selected.slice() });
-      return;
-    }
-    for (let i = start; i < candidates.length; i += 1) {
-      const value = numeric(candidates[i]);
-      if (value <= remaining) visit(i + 1, remaining - value, [...selected, candidates[i]]);
+  // The sum starts with two table cards. The subsequent ladder can add more.
+  for (let i = 0; i < candidates.length; i += 1) {
+    for (let j = i + 1; j < candidates.length; j += 1) {
+      if (numeric(candidates[i]) + numeric(candidates[j]) === target) {
+        result.push({ kind: 'sum', cards: [candidates[i], candidates[j]] });
+      }
     }
   }
-  visit(0, target, []);
   return result;
 }
 

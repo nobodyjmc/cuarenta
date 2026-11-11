@@ -127,14 +127,15 @@ export function createTutorialLessons(comboPoints = 2) {
     choice(h('Q'), [], false, 'Jugar Q', 'Las figuras no representan cantidades para sumar. Busca el 7.'),
   ]));
 
-  state = scenario(comboPoints, { hand: [h('6'), h('5')], table: [h('A'), h('2'), h('3'), h('Q')] });
+  state = scenario(comboPoints, { hand: [h('6'), h('5')], table: [h('A'), h('2'), h('3'), h('4'), h('Q')] });
   lessons.push(exercise(state, {
-    id: 'suma-tres', title: 'Una suma de tres cartas', prompt: 'En esta variante también puedes sumar tres o más cartas numéricas.', goal: 'Recoge A, 2 y 3 con una sola carta.',
-    explanation: 'A + 2 + 3 = 6. Una suma puede usar varias cartas, siempre que el total sea exactamente el valor jugado.', check: (_, move) => move.kind === 'sum' && move.captureIds.length === 3,
+    id: 'suma-dos', title: 'Suma solo dos cartas', prompt: 'Tienes un 6. Busca dos cartas de la mesa que sumen 6.', goal: 'Recoge el 2 y el 4 con tu 6.',
+    explanation: 'El 6 recoge 2 + 4. A + 2 + 3 también da 6, pero son tres sumandos. La suma usa exactamente dos cartas. Después puedes llevarte las que sigan en escalera.', check: (_, move) => move.kind === 'sum' && move.captureIds.length === 2,
   }, [
-    choice(h('6'), [h('A'), h('2'), h('3')], true, '6 recoge A + 2 + 3', 'Exacto: 1 + 2 + 3 = 6.'),
-    choice(h('5'), [h('2'), h('3')], false, '5 recoge 2 + 3', 'Es legal, pero el objetivo incluye también el as.'),
-    choice(h('6'), [h('2'), h('3')], false, '6 recoge 2 + 3', 'Dos más tres da cinco. Falta el as para llegar a seis.'),
+    choice(h('6'), [h('2'), h('4')], true, '6 recoge 2 + 4', 'Exacto. Dos cartas de la mesa suman 6.'),
+    choice(h('6'), [h('A'), h('2'), h('3')], false, '6 recoge A + 2 + 3', 'Da 6, pero usaste tres cartas. Elige solo dos sumandos.'),
+    choice(h('5'), [h('2'), h('3')], false, '5 recoge 2 + 3', 'Esa captura es válida con el 5. En este reto debes usar el 6.'),
+    choice(h('6'), [h('2'), h('3')], false, '6 recoge 2 + 3', 'El 2 y el 3 suman 5. Busca dos cartas que den 6.'),
   ]));
 
   state = scenario(comboPoints, { hand: [h('7'), h('Q')], table: [s('7'), h('J'), s('Q'), h('K'), h('2')] });
@@ -161,8 +162,8 @@ export function createTutorialLessons(comboPoints = 2) {
 
   state = scenario(comboPoints, { hand: [h('Q'), h('7'), h('3')], table: [h('A'), h('2'), h('6')] });
   lessons.push(exercise(state, {
-    id: 'dejar-carta', title: 'Cuando no puedes recoger', prompt: 'Busca una carta sin pareja, suma ni escalera inicial disponible.', goal: 'Deja una carta en la mesa sin capturar.',
-    explanation: 'Si la carta elegida no puede recoger, se queda en la mesa. Si sí puede, debes completar una captura legal.', check: (after, move) => move.kind === 'drop' && after.table.length === 4,
+    id: 'dejar-carta', title: 'Cuando no puedes recoger', prompt: 'Busca una carta que no pueda capturar por igualdad ni por suma.', goal: 'Deja una carta en la mesa sin capturar.',
+    explanation: 'Si no hay igualdad ni suma, la carta jugada se queda en la mesa. La escalera solo continúa una captura que ya empezó.', check: (after, move) => move.kind === 'drop' && after.table.length === 4,
   }, [
     choice(h('Q'), [], true, 'Dejar Q', 'Eso es. La Q queda disponible para futuras jugadas.'),
     choice(h('7'), [], false, 'Dejar 7 sin recoger', 'El 7 puede recoger A + 6; no puedes dejarlo sin capturar.'),
@@ -201,7 +202,7 @@ export function createTutorialLessons(comboPoints = 2) {
   const ronda = dealt(comboPoints, triplePrefix);
   if (ronda.players[0].score !== 2 || !ronda.rondas[0] || publicView(ronda, 1).history.some((item) => item.kind === 'ronda')) throw new Error('La lección de ronda no conserva la puntuación y privacidad.');
   lessons.push(quiz('ronda-privada', 'Tu ronda es privada', 'Acabas de recibir tres cincos. ¿Qué ocurre al repartir?', 'Reconoce los tres iguales y su bonificación.',
-    'La ronda suma 2 automáticamente. Solo tú ves su aviso y sus cartas resaltadas; el marcador sigue siendo público. En este perfil también suma desde 30 o 38.', [
+    'En esta mesa la ronda suma 2 automáticamente. Solo tú ves el aviso con el valor de tu ronda. El marcador sigue siendo público. Aquí también suma desde 30 o 38.', [
       ['Sumo 2 y solo yo veo el aviso de mi ronda', true, 'Correcto. No necesitas anunciarla ni mostrar tus cartas.'],
       ['Sumo 2 y se revelan mis tres cartas al rival', false, 'La bonificación se cuenta, pero la ronda y las cartas permanecen privadas.'],
       ['Sumo 6 porque tengo tres cartas iguales', false, 'La ronda completa vale 2 puntos, no 2 por carta.'],
@@ -210,7 +211,7 @@ export function createTutorialLessons(comboPoints = 2) {
   state = scenario(comboPoints, { hand: [h('7'), h('3')], opponent: [c('7'), d('7'), s('K')], table: [s('7'), h('2'), h('K')], scores: [0, 2], lastCardId: s('7'), rondas: [null, { rank: '7', cardIds: [s('7'), c('7'), d('7')] }] });
   lessons.push(exercise(state, {
     id: 'caida-ronda', title: 'Una caída decisiva', prompt: 'El rival acaba de dejar el 7 de picas. Hazle una caída y observa el resultado.', goal: 'Iguala el último 7 del rival.',
-    explanation: 'Ese 7 pertenecía a la ronda original del rival. Caer sobre cualquiera de esas tres cartas gana inmediatamente; la ronda rival se revela en el resultado.', check: (after, move) => move.rondaFall && after.status === 'finished' && after.winner === 0 && after.players[0].score === 2,
+    explanation: 'Ese 7 era parte de la ronda del rival. En esta mesa, una caída inmediata sobre una carta de esa ronda gana la partida. El resultado explica la jugada.', check: (after, move) => move.rondaFall && after.status === 'finished' && after.winner === 0 && after.players[0].score === 2,
   }, [
     choice(h('7'), [s('7')], true, '7 cae sobre 7', '¡Ganaste! Era una carta de la ronda rival: esta caída termina la partida aunque no llegues a 40.'),
     choice(h('3'), [], false, 'Dejar 3', 'Es legal, pero deja pasar la oportunidad de caerle al último 7.'),
@@ -263,13 +264,13 @@ export function createTutorialLessons(comboPoints = 2) {
       ['No ocurre nada hasta hacer una caída', false, 'La mano de cuatro iguales ya resuelve la victoria al repartir.'],
     ], { hand: four.players[0].hand, after: outcome(four) }));
 
-  state = scenario(comboPoints, { hand: [h('6'), h('7'), h('K')], table: [h('A'), h('2'), h('3'), s('6'), h('J'), h('Q')], scores: [38, 24], lastCardId: s('6') });
+  state = scenario(comboPoints, { hand: [h('6'), h('7'), h('K')], table: [h('A'), h('2'), h('4'), s('6'), h('J'), h('Q')], scores: [38, 24], lastCardId: s('6') });
   lessons.push(exercise(state, {
     id: 'desafio-final', title: 'Gana la última jugada', prompt: 'Tienes 38. El rival acaba de dejar el 6 de picas. Hay varias capturas posibles: encuentra la que te hace ganar.', goal: 'Elige la carta y la captura exactas para llegar a 40.',
-    explanation: 'Tu 6 debe igualar el último 6 rival. Sumar A + 2 + 3 también sería legal, pero no es caída. Recoger el 6 dentro de A + 6 tampoco lo es.', check: (after, move) => move.fall && !move.rondaFall && after.status === 'finished' && after.players[0].score === 40,
+    explanation: 'Tu 6 gana cuando iguala el último 6 rival. Con 2 + 4 haces una captura por suma. Con A + 6 y tu 7 recoges la última carta como sumando. Esas capturas no puntúan como caída.', check: (after, move) => move.fall && !move.rondaFall && after.status === 'finished' && after.players[0].score === 40,
   }, [
     choice(h('6'), [s('6')], true, '6 cae sobre el último 6', '¡Ganaste con 40! Elegiste la igualdad que produce caída.'),
-    choice(h('6'), [h('A'), h('2'), h('3')], false, '6 recoge A + 2 + 3', 'La suma es legal, pero no iguala la última carta y no produce caída.'),
+    choice(h('6'), [h('2'), h('4')], false, '6 recoge 2 + 4', 'La suma es válida. Para hacer una caída debes igualar el último 6 del rival.'),
     choice(h('7'), [h('A'), s('6'), h('J'), h('Q')], false, '7 recoge A + 6 y sigue J → Q', 'Recoges más cartas, pero el último 6 es un sumando. No hay caída ni victoria.'),
     choice(h('K'), [], false, 'Dejar K', 'Es legal, pero la oportunidad de ganar está en igualar el último 6.'),
   ]));

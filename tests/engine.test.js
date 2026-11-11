@@ -68,12 +68,17 @@ test('deck and initial deal have forty unique cards, immutable rank definitions,
   assert.throws(() => createGame({ random: () => 1 }), /azar/);
 });
 
-test('sum, optional equality base, and mandatory ladder match the proposed SRS examples', () => {
+test('a sum uses two table cards, then can extend through a consecutive ladder', () => {
   let state = fixture({ hand0: [h('7')], table: [h('3'), h('4'), h('J'), h('Q')] });
   assert.deepEqual(legalMoves(state, 0)[0].captureIds, [h('3'), h('4'), h('J'), h('Q')]);
   assert.equal(legalMoves(state, 0)[0].kind, 'sum');
   state = fixture({ hand0: [h('6')], table: [h('A'), h('2'), h('3')] });
-  assert.equal(legalMoves(state, 0)[0].captureIds.length, 3);
+  assert.deepEqual(legalMoves(state, 0).map((move) => move.kind), ['drop']);
+  assert.throws(() => play(state, { cardId: h('6'), captureIds: [h('A'), h('2'), h('3')] }), /Captura inválida/);
+  state = fixture({ hand0: [h('6')], table: [h('A'), h('2'), h('3'), s('4'), s('7')] });
+  assert.deepEqual(legalMoves(state, 0).map((move) => move.captureIds), [[h('2'), s('4'), s('7')]]);
+  state = fixture({ hand0: [h('4')], table: [h('2'), s('2')] });
+  assert.deepEqual(legalMoves(state, 0)[0].captureIds, [h('2'), s('2')]);
   state = fixture({ hand0: [h('4')], table: [h('A'), h('3'), s('4')] });
   assert.deepEqual(legalMoves(state, 0).map((move) => move.kind), ['match', 'sum']);
   assert(legalMoves(state, 0).every((move) => move.captureIds.length < 3));

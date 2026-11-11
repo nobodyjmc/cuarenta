@@ -1031,16 +1031,12 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 [data-table-layout] .game-table {
   height: auto;
   max-height: none;
-  border: 1px solid #588473;
-  background: radial-gradient(ellipse at 50% 35%, #285b4c, #163a31 85%);
-  box-shadow: inset 0 0 0 4px #173e35;
-  color: #fff;
 }
 
 [data-table-layout] .table-center {
-  border: 1px solid #bde4cd45;
+  border: 1px solid #ffffff29;
   border-radius: 12px;
-  background: #092c2559;
+  background: #0003;
 }
 
 [data-table-layout] .felt-watermark {
@@ -1555,9 +1551,9 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 /* Card impacts sit above the felt and never receive input. */
 .play-impact {
-  --impact-color: #a4f5c7;
+  --impact-color: #b6ffdc;
   --impact-center: 43%;
-  --impact-travel: clamp(48px, 15vmin, 92px);
+  --impact-travel: clamp(56px, 18vmin, 126px);
   position: absolute;
   inset: 0;
   z-index: 6;
@@ -1567,8 +1563,16 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 .play-impact--ronda,
 .play-impact--win {
-  --impact-color: #ffdb82;
-  --impact-travel: clamp(58px, 20vmin, 116px);
+  --impact-color: #ffe097;
+  --impact-travel: clamp(68px, 24vmin, 155px);
+}
+
+.play-impact::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% var(--impact-center), var(--impact-color), transparent 70%);
+  animation: impact-glow 860ms 130ms ease-out both;
 }
 
 .impact-rays,
@@ -1583,11 +1587,11 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 .impact-rays {
-  width: calc(var(--impact-travel) * 2.5);
+  width: calc(var(--impact-travel) * 2.7);
   aspect-ratio: 1;
   background: repeating-conic-gradient(from 18deg, var(--impact-color) 0deg 3deg, transparent 3deg 36deg);
   mask-image: radial-gradient(transparent 15%, #000 30%, transparent 67%);
-  animation: impact-rays 650ms 155ms ease-out both;
+  animation: impact-rays 740ms 130ms ease-out both;
 }
 
 .impact-ring {
@@ -1596,18 +1600,34 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   border: 2px solid var(--impact-color);
   border-radius: 50%;
   box-shadow: inset 0 0 12px var(--impact-color), 0 0 13px var(--impact-color);
-  animation: impact-ring 590ms 155ms ease-out both;
+  animation: impact-ring 690ms 130ms ease-out both;
+}
+
+.impact-ring::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border: 1px dashed var(--impact-color);
+  border-radius: 50%;
+  opacity: .7;
 }
 
 .impact-particles > i {
   position: absolute;
   inset: -3px auto auto -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
   background: var(--impact-color);
   box-shadow: 0 0 9px var(--impact-color);
-  animation: impact-particle 630ms 155ms cubic-bezier(.16, .68, .33, 1) both;
+  animation: impact-particle 760ms 145ms cubic-bezier(.16, .68, .33, 1) both;
+}
+
+.impact-particles > i:nth-child(even) {
+  --particle-distance: calc(var(--impact-travel) * 1.35);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
 }
 
 .impact-hand {
@@ -1623,7 +1643,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 .impact-card {
-  animation: impact-land 710ms cubic-bezier(.18, .64, .25, 1) both;
+  animation: impact-land 950ms cubic-bezier(.18, .64, .25, 1) both;
 }
 
 .impact-card .playing-card {
@@ -1638,28 +1658,38 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   width: max-content;
   max-width: calc(100% - 24px);
   margin: 0;
-  padding: 5px 14px;
+  padding: 7px 16px;
   transform: translate(-50%, -50%);
   border: 1px solid var(--impact-color);
   border-radius: 999px;
-  background: #102c26;
+  background: #101819;
+  box-shadow: 0 7px 20px #050b0ac7;
   color: var(--impact-color);
-  font-size: clamp(13px, 3vmin, 20px);
+  font-size: clamp(14px, 3.3vmin, 22px);
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
-  animation: impact-caption 680ms 155ms ease-out both;
+  animation: impact-caption 900ms 140ms ease-out both;
 }
 
 .game-table:has(> .play-impact) {
-  animation: impact-table 270ms 155ms ease-out both;
+  animation: impact-table 320ms 125ms ease-out both;
+}
+
+.is-compact-play .play-impact {
+  --impact-center: 41%;
+}
+
+.is-compact-play .impact-caption {
+  top: 72%;
+  padding: 4px 12px;
 }
 
 @keyframes impact-land {
   0% { opacity: 0; transform: translate(-95%, -155%) rotate(-19deg) scale(1.25); }
-  21% { opacity: 1; transform: translate(-50%, -50%) rotate(4deg) scale(.94); }
-  39% { transform: translate(-50%, -56%) rotate(-2deg) scale(1.04); }
-  63%, 83% { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+  15% { opacity: 1; transform: translate(-50%, -50%) rotate(4deg) scale(.94); }
+  29% { transform: translate(-50%, -56%) rotate(-2deg) scale(1.09); }
+  46%, 82% { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) rotate(0) scale(1); }
 }
 
@@ -1671,8 +1701,14 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 @keyframes impact-rays {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
-  20% { opacity: .65; }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18); }
+  19% { opacity: .76; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(14deg) scale(1.18); }
+}
+
+@keyframes impact-glow {
+  0%, 100% { opacity: 0; }
+  16% { opacity: .31; }
+  57% { opacity: .1; }
 }
 
 @keyframes impact-ring {
@@ -1683,7 +1719,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 @keyframes impact-particle {
   0% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateY(-6px); }
   15% { opacity: 1; }
-  100% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateY(calc(-1 * var(--impact-travel))) rotate(45deg) scale(.3); }
+  100% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateY(calc(-1 * var(--particle-distance, var(--impact-travel)))) rotate(90deg) scale(.4); }
 }
 
 @keyframes impact-caption {
@@ -1694,16 +1730,18 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 @keyframes impact-table {
   0%, 100% { transform: translateX(0); }
-  22% { transform: translateX(3px); }
-  44% { transform: translateX(-2px); }
-  69% { transform: translateX(1px); }
+  22% { transform: translateX(4px); }
+  44% { transform: translateX(-3px); }
+  69% { transform: translateX(2px); }
 }
 
+.reduce-motion .play-impact::before,
 .reduce-motion .play-impact > :not(.impact-caption) {
   display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .play-impact::before,
   .play-impact > :not(.impact-caption) {
     display: none;
   }
@@ -1939,7 +1977,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .tutorial-board.is-solved .tutorial-table .playing-card {
+  .tutorial-board.is-solved .tutorial-table .last-card {
     animation: tutorial-capture 450ms ease-out;
   }
 
@@ -1964,7 +2002,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   --felt-borgona: #713c4a;
   --felt-azul: #315773;
   --felt-carbon: #4a4a50;
-  --felt-center: #315b49;
+  --felt-center: var(--felt-quito);
   --felt-edge: #102b23;
   --felt-trim: #dbb776;
   --felt-cream: #f9e5b8;
@@ -1982,31 +2020,31 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 :root[data-felt="borgona"] {
-  --felt-center: #633b46;
+  --felt-center: var(--felt-borgona);
   --felt-edge: #311923;
 }
 
 :root[data-felt="azul"] {
-  --felt-center: #2c4e67;
+  --felt-center: var(--felt-azul);
   --felt-edge: #132839;
 }
 
 :root[data-felt="carbon"] {
-  --felt-center: #444348;
+  --felt-center: var(--felt-carbon);
   --felt-edge: #1f2024;
 }
 
 :root[data-felt="custom"] {
-  --felt-edge: #151d19;
-  /* The dark overlay keeps light text legible even with white selected. */
+  --felt-edge: #171719;
+  /* Neutral shading preserves the chosen hue and keeps cream text legible. */
   --felt-surface:
-    radial-gradient(ellipse at 48% 35%, #050b0abb, #050b0ad9 88%),
+    radial-gradient(ellipse at 48% 35%, rgb(6 7 9 / 65%), rgb(6 7 9 / 83%) 88%),
     var(--felt-custom, var(--felt-quito));
 }
 
 @supports (color: color-mix(in srgb, white, black)) {
   :root[data-felt="custom"] {
-    --felt-edge: color-mix(in srgb, var(--felt-custom, var(--felt-quito)) 15%, #050b0a);
+    --felt-edge: color-mix(in srgb, var(--felt-custom, var(--felt-quito)) 18%, #060709);
     --felt-trim: color-mix(in srgb, var(--felt-custom, var(--felt-quito)) 22%, #f8d38e);
   }
 }
@@ -2019,8 +2057,9 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   color: #fff9ef;
 }
 
+.game-table,
 .tutorial-board {
-  border-color: #b2976866;
+  border: 1px solid #d8b98272;
 }
 
 .hero-table-inner::before,
@@ -2251,7 +2290,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 .capture-receipt {
   position: absolute;
   z-index: 4;
-  top: 39%;
+  top: 44%;
   left: 50%;
   display: flex;
   align-items: center;
@@ -2278,43 +2317,127 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 .is-compact-play .capture-receipt {
-  top: 41%;
+  top: 52%;
   padding: 4px 9px;
   font-size: 11px;
 }
 
+.capture-stack {
+  --capture-travel: clamp(44px, 16vmin, 120px);
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: clamp(36px, 9vmin, 64px);
+  pointer-events: none;
+}
+
+.capture-stack.is-rival {
+  --capture-travel: calc(-1 * clamp(44px, 16vmin, 120px));
+}
+
+.capture-stack::before,
+.capture-stack::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border: 1px solid var(--felt-trim);
+  border-radius: 7px;
+  background: #272326;
+  box-shadow: 0 3px 8px #09090970;
+}
+
+.capture-stack::before {
+  transform: translate(-6px, 3px) rotate(-10deg);
+}
+
+.capture-stack::after {
+  transform: translate(6px, 3px) rotate(9deg);
+}
+
+.capture-stack > .playing-card {
+  width: 100%;
+  box-shadow: 0 3px 12px #09090990;
+}
+
+.is-compact-play .capture-stack {
+  --capture-travel: 45px;
+  width: clamp(28px, 8vmin, 42px);
+}
+
+.is-compact-play .capture-stack.is-rival {
+  --capture-travel: -45px;
+}
+
+.reduce-motion .capture-stack {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capture-stack {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .game-table.is-dealing :is(.own-hand, .opponent-hand) > .playing-card {
-    --deal-offset: -30px;
-    animation: felt-deal 440ms cubic-bezier(.21, .8, .25, 1) var(--deal-delay, 0ms) both;
+    --deal-x: clamp(25px, 11vmin, 80px);
+    --deal-y: clamp(-85px, -17vmin, -36px);
+    --deal-start: 25ms;
+    animation: felt-deal 420ms cubic-bezier(.18, .69, .24, 1) calc(var(--deal-start) + var(--deal-delay, 0ms)) backwards;
   }
 
   .game-table.is-dealing .opponent-hand > .playing-card {
-    --deal-offset: 25px;
+    --deal-start: 0ms;
+    --deal-x: clamp(20px, 8vmin, 57px);
+    --deal-y: clamp(14px, 6vmin, 34px);
   }
 
-  .game-table.is-dealing .playing-card:nth-child(2) { --deal-delay: 55ms; }
-  .game-table.is-dealing .playing-card:nth-child(3) { --deal-delay: 110ms; }
-  .game-table.is-dealing .playing-card:nth-child(4) { --deal-delay: 165ms; }
-  .game-table.is-dealing .playing-card:nth-child(5) { --deal-delay: 220ms; }
+  .game-table.is-dealing .playing-card:nth-child(2) { --deal-delay: 52ms; }
+  .game-table.is-dealing .playing-card:nth-child(3) { --deal-delay: 104ms; }
+  .game-table.is-dealing .playing-card:nth-child(4) { --deal-delay: 156ms; }
+  .game-table.is-dealing .playing-card:nth-child(5) { --deal-delay: 208ms; }
+
+  .game-table.is-dealing .deck-label .icon {
+    animation: felt-deck 580ms ease-out;
+  }
 
   .hero-fan {
     animation: felt-welcome 520ms ease-out both;
   }
 
   .game-table.is-fresh-play .table-cards > .last-card {
-    animation: felt-play 300ms ease-out both;
+    animation: felt-play 460ms cubic-bezier(.16, .72, .22, 1) backwards;
+  }
+
+  .game-table.is-fresh-turn .is-turn .turn-dot {
+    animation: felt-turn 640ms ease-out;
+  }
+
+  .game-table.is-fresh-turn .is-turn .avatar {
+    animation: felt-turn-avatar 440ms ease-out;
   }
 
   .capture-receipt {
-    animation: felt-receipt 610ms ease-out both;
+    animation: felt-receipt 820ms 50ms ease-out both;
+  }
+
+  .capture-stack {
+    animation: felt-capture 760ms cubic-bezier(.25, .65, .35, 1) both;
   }
 }
 
 @keyframes felt-deal {
-  from { opacity: 0; translate: -16px var(--deal-offset); rotate: -10deg; scale: .78; }
-  68% { opacity: 1; translate: 0 2px; rotate: 2deg; scale: 1.025; }
-  to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; }
+  from { opacity: 0; transform: translate(var(--deal-x), var(--deal-y)) rotate(16deg) scale(.68); }
+  22% { opacity: 1; }
+  74% { transform: translate(-3px, 3px) rotate(-4deg) scale(1.04); }
+  to { opacity: 1; }
+}
+
+@keyframes felt-deck {
+  25% { color: var(--felt-cream); transform: rotate(12deg) scale(1.22); }
+  63% { transform: rotate(-6deg) scale(1.04); }
 }
 
 @keyframes felt-welcome {
@@ -2323,13 +2446,33 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 @keyframes felt-play {
-  from { opacity: .3; translate: 0 -11px; rotate: -6deg; scale: .9; }
-  70% { opacity: 1; translate: 0 2px; rotate: 1deg; scale: 1.035; }
-  to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; }
+  from { opacity: .25; transform: translate(34px, -38px) rotate(-16deg) scale(1.12); }
+  34% { opacity: 1; }
+  70% { transform: translate(-2px, 3px) rotate(3deg) scale(.98); }
+  to { opacity: 1; }
+}
+
+@keyframes felt-turn {
+  0% { box-shadow: 0 0 0 1px #f8d38eaa; }
+  52% { box-shadow: 0 0 0 10px #f8d38e00; }
+  54% { box-shadow: 0 0 0 1px #f8d38e75; }
+  100% { box-shadow: 0 0 0 7px #f8d38e00; }
+}
+
+@keyframes felt-turn-avatar {
+  38% { transform: scale(1.12); box-shadow: 0 0 0 3px #f8d38e45; }
 }
 
 @keyframes felt-receipt {
-  from { opacity: 0; translate: 0 6px; }
-  22%, 78% { opacity: 1; translate: 0 0; }
-  to { opacity: 0; translate: 0 -9px; }
+  from { opacity: 0; transform: translate(-50%, -28%) scale(.86); }
+  26% { opacity: 1; transform: translate(-50%, -55%) scale(1.04); }
+  44%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -84%) scale(.98); }
+}
+
+@keyframes felt-capture {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(.78); }
+  22% { opacity: 1; transform: translate(-50%, -50%) rotate(6deg) scale(1.06); }
+  46% { opacity: .88; }
+  100% { opacity: 0; transform: translate(-50%, calc(-50% + var(--capture-travel))) rotate(18deg) scale(.46); }
 }

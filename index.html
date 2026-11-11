@@ -1042,16 +1042,12 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 [data-table-layout] .game-table {
   height: auto;
   max-height: none;
-  border: 1px solid #588473;
-  background: radial-gradient(ellipse at 50% 35%, #285b4c, #163a31 85%);
-  box-shadow: inset 0 0 0 4px #173e35;
-  color: #fff;
 }
 
 [data-table-layout] .table-center {
-  border: 1px solid #bde4cd45;
+  border: 1px solid #ffffff29;
   border-radius: 12px;
-  background: #092c2559;
+  background: #0003;
 }
 
 [data-table-layout] .felt-watermark {
@@ -1566,9 +1562,9 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 /* Card impacts sit above the felt and never receive input. */
 .play-impact {
-  --impact-color: #a4f5c7;
+  --impact-color: #b6ffdc;
   --impact-center: 43%;
-  --impact-travel: clamp(48px, 15vmin, 92px);
+  --impact-travel: clamp(56px, 18vmin, 126px);
   position: absolute;
   inset: 0;
   z-index: 6;
@@ -1578,8 +1574,16 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 .play-impact--ronda,
 .play-impact--win {
-  --impact-color: #ffdb82;
-  --impact-travel: clamp(58px, 20vmin, 116px);
+  --impact-color: #ffe097;
+  --impact-travel: clamp(68px, 24vmin, 155px);
+}
+
+.play-impact::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% var(--impact-center), var(--impact-color), transparent 70%);
+  animation: impact-glow 860ms 130ms ease-out both;
 }
 
 .impact-rays,
@@ -1594,11 +1598,11 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 .impact-rays {
-  width: calc(var(--impact-travel) * 2.5);
+  width: calc(var(--impact-travel) * 2.7);
   aspect-ratio: 1;
   background: repeating-conic-gradient(from 18deg, var(--impact-color) 0deg 3deg, transparent 3deg 36deg);
   mask-image: radial-gradient(transparent 15%, #000 30%, transparent 67%);
-  animation: impact-rays 650ms 155ms ease-out both;
+  animation: impact-rays 740ms 130ms ease-out both;
 }
 
 .impact-ring {
@@ -1607,18 +1611,34 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   border: 2px solid var(--impact-color);
   border-radius: 50%;
   box-shadow: inset 0 0 12px var(--impact-color), 0 0 13px var(--impact-color);
-  animation: impact-ring 590ms 155ms ease-out both;
+  animation: impact-ring 690ms 130ms ease-out both;
+}
+
+.impact-ring::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border: 1px dashed var(--impact-color);
+  border-radius: 50%;
+  opacity: .7;
 }
 
 .impact-particles > i {
   position: absolute;
   inset: -3px auto auto -3px;
-  width: 6px;
-  height: 6px;
-  border-radius: 1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
   background: var(--impact-color);
   box-shadow: 0 0 9px var(--impact-color);
-  animation: impact-particle 630ms 155ms cubic-bezier(.16, .68, .33, 1) both;
+  animation: impact-particle 760ms 145ms cubic-bezier(.16, .68, .33, 1) both;
+}
+
+.impact-particles > i:nth-child(even) {
+  --particle-distance: calc(var(--impact-travel) * 1.35);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
 }
 
 .impact-hand {
@@ -1634,7 +1654,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 .impact-card {
-  animation: impact-land 710ms cubic-bezier(.18, .64, .25, 1) both;
+  animation: impact-land 950ms cubic-bezier(.18, .64, .25, 1) both;
 }
 
 .impact-card .playing-card {
@@ -1649,28 +1669,38 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   width: max-content;
   max-width: calc(100% - 24px);
   margin: 0;
-  padding: 5px 14px;
+  padding: 7px 16px;
   transform: translate(-50%, -50%);
   border: 1px solid var(--impact-color);
   border-radius: 999px;
-  background: #102c26;
+  background: #101819;
+  box-shadow: 0 7px 20px #050b0ac7;
   color: var(--impact-color);
-  font-size: clamp(13px, 3vmin, 20px);
+  font-size: clamp(14px, 3.3vmin, 22px);
   font-weight: 700;
   line-height: 1.2;
   text-align: center;
-  animation: impact-caption 680ms 155ms ease-out both;
+  animation: impact-caption 900ms 140ms ease-out both;
 }
 
 .game-table:has(> .play-impact) {
-  animation: impact-table 270ms 155ms ease-out both;
+  animation: impact-table 320ms 125ms ease-out both;
+}
+
+.is-compact-play .play-impact {
+  --impact-center: 41%;
+}
+
+.is-compact-play .impact-caption {
+  top: 72%;
+  padding: 4px 12px;
 }
 
 @keyframes impact-land {
   0% { opacity: 0; transform: translate(-95%, -155%) rotate(-19deg) scale(1.25); }
-  21% { opacity: 1; transform: translate(-50%, -50%) rotate(4deg) scale(.94); }
-  39% { transform: translate(-50%, -56%) rotate(-2deg) scale(1.04); }
-  63%, 83% { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
+  15% { opacity: 1; transform: translate(-50%, -50%) rotate(4deg) scale(.94); }
+  29% { transform: translate(-50%, -56%) rotate(-2deg) scale(1.09); }
+  46%, 82% { opacity: 1; transform: translate(-50%, -50%) rotate(0) scale(1); }
   100% { opacity: 0; transform: translate(-50%, -50%) rotate(0) scale(1); }
 }
 
@@ -1682,8 +1712,14 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 @keyframes impact-rays {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(.2); }
-  20% { opacity: .65; }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(1.18); }
+  19% { opacity: .76; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(14deg) scale(1.18); }
+}
+
+@keyframes impact-glow {
+  0%, 100% { opacity: 0; }
+  16% { opacity: .31; }
+  57% { opacity: .1; }
 }
 
 @keyframes impact-ring {
@@ -1694,7 +1730,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 @keyframes impact-particle {
   0% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateY(-6px); }
   15% { opacity: 1; }
-  100% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateY(calc(-1 * var(--impact-travel))) rotate(45deg) scale(.3); }
+  100% { opacity: 0; transform: rotate(calc(var(--i) * 36deg)) translateY(calc(-1 * var(--particle-distance, var(--impact-travel)))) rotate(90deg) scale(.4); }
 }
 
 @keyframes impact-caption {
@@ -1705,16 +1741,18 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 
 @keyframes impact-table {
   0%, 100% { transform: translateX(0); }
-  22% { transform: translateX(3px); }
-  44% { transform: translateX(-2px); }
-  69% { transform: translateX(1px); }
+  22% { transform: translateX(4px); }
+  44% { transform: translateX(-3px); }
+  69% { transform: translateX(2px); }
 }
 
+.reduce-motion .play-impact::before,
 .reduce-motion .play-impact > :not(.impact-caption) {
   display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .play-impact::before,
   .play-impact > :not(.impact-caption) {
     display: none;
   }
@@ -1950,7 +1988,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .tutorial-board.is-solved .tutorial-table .playing-card {
+  .tutorial-board.is-solved .tutorial-table .last-card {
     animation: tutorial-capture 450ms ease-out;
   }
 
@@ -1975,7 +2013,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   --felt-borgona: #713c4a;
   --felt-azul: #315773;
   --felt-carbon: #4a4a50;
-  --felt-center: #315b49;
+  --felt-center: var(--felt-quito);
   --felt-edge: #102b23;
   --felt-trim: #dbb776;
   --felt-cream: #f9e5b8;
@@ -1993,31 +2031,31 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 :root[data-felt="borgona"] {
-  --felt-center: #633b46;
+  --felt-center: var(--felt-borgona);
   --felt-edge: #311923;
 }
 
 :root[data-felt="azul"] {
-  --felt-center: #2c4e67;
+  --felt-center: var(--felt-azul);
   --felt-edge: #132839;
 }
 
 :root[data-felt="carbon"] {
-  --felt-center: #444348;
+  --felt-center: var(--felt-carbon);
   --felt-edge: #1f2024;
 }
 
 :root[data-felt="custom"] {
-  --felt-edge: #151d19;
-  /* The dark overlay keeps light text legible even with white selected. */
+  --felt-edge: #171719;
+  /* Neutral shading preserves the chosen hue and keeps cream text legible. */
   --felt-surface:
-    radial-gradient(ellipse at 48% 35%, #050b0abb, #050b0ad9 88%),
+    radial-gradient(ellipse at 48% 35%, rgb(6 7 9 / 65%), rgb(6 7 9 / 83%) 88%),
     var(--felt-custom, var(--felt-quito));
 }
 
 @supports (color: color-mix(in srgb, white, black)) {
   :root[data-felt="custom"] {
-    --felt-edge: color-mix(in srgb, var(--felt-custom, var(--felt-quito)) 15%, #050b0a);
+    --felt-edge: color-mix(in srgb, var(--felt-custom, var(--felt-quito)) 18%, #060709);
     --felt-trim: color-mix(in srgb, var(--felt-custom, var(--felt-quito)) 22%, #f8d38e);
   }
 }
@@ -2030,8 +2068,9 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
   color: #fff9ef;
 }
 
+.game-table,
 .tutorial-board {
-  border-color: #b2976866;
+  border: 1px solid #d8b98272;
 }
 
 .hero-table-inner::before,
@@ -2262,7 +2301,7 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 .capture-receipt {
   position: absolute;
   z-index: 4;
-  top: 39%;
+  top: 44%;
   left: 50%;
   display: flex;
   align-items: center;
@@ -2289,43 +2328,127 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 .is-compact-play .capture-receipt {
-  top: 41%;
+  top: 52%;
   padding: 4px 9px;
   font-size: 11px;
 }
 
+.capture-stack {
+  --capture-travel: clamp(44px, 16vmin, 120px);
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: 50%;
+  width: clamp(36px, 9vmin, 64px);
+  pointer-events: none;
+}
+
+.capture-stack.is-rival {
+  --capture-travel: calc(-1 * clamp(44px, 16vmin, 120px));
+}
+
+.capture-stack::before,
+.capture-stack::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border: 1px solid var(--felt-trim);
+  border-radius: 7px;
+  background: #272326;
+  box-shadow: 0 3px 8px #09090970;
+}
+
+.capture-stack::before {
+  transform: translate(-6px, 3px) rotate(-10deg);
+}
+
+.capture-stack::after {
+  transform: translate(6px, 3px) rotate(9deg);
+}
+
+.capture-stack > .playing-card {
+  width: 100%;
+  box-shadow: 0 3px 12px #09090990;
+}
+
+.is-compact-play .capture-stack {
+  --capture-travel: 45px;
+  width: clamp(28px, 8vmin, 42px);
+}
+
+.is-compact-play .capture-stack.is-rival {
+  --capture-travel: -45px;
+}
+
+.reduce-motion .capture-stack {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .capture-stack {
+    display: none;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .game-table.is-dealing :is(.own-hand, .opponent-hand) > .playing-card {
-    --deal-offset: -30px;
-    animation: felt-deal 440ms cubic-bezier(.21, .8, .25, 1) var(--deal-delay, 0ms) both;
+    --deal-x: clamp(25px, 11vmin, 80px);
+    --deal-y: clamp(-85px, -17vmin, -36px);
+    --deal-start: 25ms;
+    animation: felt-deal 420ms cubic-bezier(.18, .69, .24, 1) calc(var(--deal-start) + var(--deal-delay, 0ms)) backwards;
   }
 
   .game-table.is-dealing .opponent-hand > .playing-card {
-    --deal-offset: 25px;
+    --deal-start: 0ms;
+    --deal-x: clamp(20px, 8vmin, 57px);
+    --deal-y: clamp(14px, 6vmin, 34px);
   }
 
-  .game-table.is-dealing .playing-card:nth-child(2) { --deal-delay: 55ms; }
-  .game-table.is-dealing .playing-card:nth-child(3) { --deal-delay: 110ms; }
-  .game-table.is-dealing .playing-card:nth-child(4) { --deal-delay: 165ms; }
-  .game-table.is-dealing .playing-card:nth-child(5) { --deal-delay: 220ms; }
+  .game-table.is-dealing .playing-card:nth-child(2) { --deal-delay: 52ms; }
+  .game-table.is-dealing .playing-card:nth-child(3) { --deal-delay: 104ms; }
+  .game-table.is-dealing .playing-card:nth-child(4) { --deal-delay: 156ms; }
+  .game-table.is-dealing .playing-card:nth-child(5) { --deal-delay: 208ms; }
+
+  .game-table.is-dealing .deck-label .icon {
+    animation: felt-deck 580ms ease-out;
+  }
 
   .hero-fan {
     animation: felt-welcome 520ms ease-out both;
   }
 
   .game-table.is-fresh-play .table-cards > .last-card {
-    animation: felt-play 300ms ease-out both;
+    animation: felt-play 460ms cubic-bezier(.16, .72, .22, 1) backwards;
+  }
+
+  .game-table.is-fresh-turn .is-turn .turn-dot {
+    animation: felt-turn 640ms ease-out;
+  }
+
+  .game-table.is-fresh-turn .is-turn .avatar {
+    animation: felt-turn-avatar 440ms ease-out;
   }
 
   .capture-receipt {
-    animation: felt-receipt 610ms ease-out both;
+    animation: felt-receipt 820ms 50ms ease-out both;
+  }
+
+  .capture-stack {
+    animation: felt-capture 760ms cubic-bezier(.25, .65, .35, 1) both;
   }
 }
 
 @keyframes felt-deal {
-  from { opacity: 0; translate: -16px var(--deal-offset); rotate: -10deg; scale: .78; }
-  68% { opacity: 1; translate: 0 2px; rotate: 2deg; scale: 1.025; }
-  to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; }
+  from { opacity: 0; transform: translate(var(--deal-x), var(--deal-y)) rotate(16deg) scale(.68); }
+  22% { opacity: 1; }
+  74% { transform: translate(-3px, 3px) rotate(-4deg) scale(1.04); }
+  to { opacity: 1; }
+}
+
+@keyframes felt-deck {
+  25% { color: var(--felt-cream); transform: rotate(12deg) scale(1.22); }
+  63% { transform: rotate(-6deg) scale(1.04); }
 }
 
 @keyframes felt-welcome {
@@ -2334,15 +2457,35 @@ dialog h2{font:600 34px/1.15 var(--sans);letter-spacing:-.4px}
 }
 
 @keyframes felt-play {
-  from { opacity: .3; translate: 0 -11px; rotate: -6deg; scale: .9; }
-  70% { opacity: 1; translate: 0 2px; rotate: 1deg; scale: 1.035; }
-  to { opacity: 1; translate: 0 0; rotate: 0deg; scale: 1; }
+  from { opacity: .25; transform: translate(34px, -38px) rotate(-16deg) scale(1.12); }
+  34% { opacity: 1; }
+  70% { transform: translate(-2px, 3px) rotate(3deg) scale(.98); }
+  to { opacity: 1; }
+}
+
+@keyframes felt-turn {
+  0% { box-shadow: 0 0 0 1px #f8d38eaa; }
+  52% { box-shadow: 0 0 0 10px #f8d38e00; }
+  54% { box-shadow: 0 0 0 1px #f8d38e75; }
+  100% { box-shadow: 0 0 0 7px #f8d38e00; }
+}
+
+@keyframes felt-turn-avatar {
+  38% { transform: scale(1.12); box-shadow: 0 0 0 3px #f8d38e45; }
 }
 
 @keyframes felt-receipt {
-  from { opacity: 0; translate: 0 6px; }
-  22%, 78% { opacity: 1; translate: 0 0; }
-  to { opacity: 0; translate: 0 -9px; }
+  from { opacity: 0; transform: translate(-50%, -28%) scale(.86); }
+  26% { opacity: 1; transform: translate(-50%, -55%) scale(1.04); }
+  44%, 80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -84%) scale(.98); }
+}
+
+@keyframes felt-capture {
+  0% { opacity: 0; transform: translate(-50%, -50%) rotate(-12deg) scale(.78); }
+  22% { opacity: 1; transform: translate(-50%, -50%) rotate(6deg) scale(1.06); }
+  46% { opacity: .88; }
+  100% { opacity: 0; transform: translate(-50%, calc(-50% + var(--capture-travel))) rotate(18deg) scale(.46); }
 }
 
 </style>
@@ -2498,17 +2641,14 @@ function basesFor(card, table) {
   const target = numeric(card);
   if (!target) return result;
   const candidates = table.filter((other) => numeric(other) > 0 && numeric(other) < target);
-  function visit(start, remaining, selected) {
-    if (remaining === 0) {
-      if (selected.length >= 2) result.push({ kind: 'sum', cards: selected.slice() });
-      return;
-    }
-    for (let i = start; i < candidates.length; i += 1) {
-      const value = numeric(candidates[i]);
-      if (value <= remaining) visit(i + 1, remaining - value, [...selected, candidates[i]]);
+  // The sum starts with two table cards. The subsequent ladder can add more.
+  for (let i = 0; i < candidates.length; i += 1) {
+    for (let j = i + 1; j < candidates.length; j += 1) {
+      if (numeric(candidates[i]) + numeric(candidates[j]) === target) {
+        result.push({ kind: 'sum', cards: [candidates[i], candidates[j]] });
+      }
     }
   }
-  visit(0, target, []);
   return result;
 }
 
@@ -3365,14 +3505,15 @@ function createTutorialLessons(comboPoints = 2) {
     choice(h('Q'), [], false, 'Jugar Q', 'Las figuras no representan cantidades para sumar. Busca el 7.'),
   ]));
 
-  state = scenario(comboPoints, { hand: [h('6'), h('5')], table: [h('A'), h('2'), h('3'), h('Q')] });
+  state = scenario(comboPoints, { hand: [h('6'), h('5')], table: [h('A'), h('2'), h('3'), h('4'), h('Q')] });
   lessons.push(exercise(state, {
-    id: 'suma-tres', title: 'Una suma de tres cartas', prompt: 'En esta variante también puedes sumar tres o más cartas numéricas.', goal: 'Recoge A, 2 y 3 con una sola carta.',
-    explanation: 'A + 2 + 3 = 6. Una suma puede usar varias cartas, siempre que el total sea exactamente el valor jugado.', check: (_, move) => move.kind === 'sum' && move.captureIds.length === 3,
+    id: 'suma-dos', title: 'Suma solo dos cartas', prompt: 'Tienes un 6. Busca dos cartas de la mesa que sumen 6.', goal: 'Recoge el 2 y el 4 con tu 6.',
+    explanation: 'El 6 recoge 2 + 4. A + 2 + 3 también da 6, pero son tres sumandos. La suma usa exactamente dos cartas. Después puedes llevarte las que sigan en escalera.', check: (_, move) => move.kind === 'sum' && move.captureIds.length === 2,
   }, [
-    choice(h('6'), [h('A'), h('2'), h('3')], true, '6 recoge A + 2 + 3', 'Exacto: 1 + 2 + 3 = 6.'),
-    choice(h('5'), [h('2'), h('3')], false, '5 recoge 2 + 3', 'Es legal, pero el objetivo incluye también el as.'),
-    choice(h('6'), [h('2'), h('3')], false, '6 recoge 2 + 3', 'Dos más tres da cinco. Falta el as para llegar a seis.'),
+    choice(h('6'), [h('2'), h('4')], true, '6 recoge 2 + 4', 'Exacto. Dos cartas de la mesa suman 6.'),
+    choice(h('6'), [h('A'), h('2'), h('3')], false, '6 recoge A + 2 + 3', 'Da 6, pero usaste tres cartas. Elige solo dos sumandos.'),
+    choice(h('5'), [h('2'), h('3')], false, '5 recoge 2 + 3', 'Esa captura es válida con el 5. En este reto debes usar el 6.'),
+    choice(h('6'), [h('2'), h('3')], false, '6 recoge 2 + 3', 'El 2 y el 3 suman 5. Busca dos cartas que den 6.'),
   ]));
 
   state = scenario(comboPoints, { hand: [h('7'), h('Q')], table: [s('7'), h('J'), s('Q'), h('K'), h('2')] });
@@ -3399,8 +3540,8 @@ function createTutorialLessons(comboPoints = 2) {
 
   state = scenario(comboPoints, { hand: [h('Q'), h('7'), h('3')], table: [h('A'), h('2'), h('6')] });
   lessons.push(exercise(state, {
-    id: 'dejar-carta', title: 'Cuando no puedes recoger', prompt: 'Busca una carta sin pareja, suma ni escalera inicial disponible.', goal: 'Deja una carta en la mesa sin capturar.',
-    explanation: 'Si la carta elegida no puede recoger, se queda en la mesa. Si sí puede, debes completar una captura legal.', check: (after, move) => move.kind === 'drop' && after.table.length === 4,
+    id: 'dejar-carta', title: 'Cuando no puedes recoger', prompt: 'Busca una carta que no pueda capturar por igualdad ni por suma.', goal: 'Deja una carta en la mesa sin capturar.',
+    explanation: 'Si no hay igualdad ni suma, la carta jugada se queda en la mesa. La escalera solo continúa una captura que ya empezó.', check: (after, move) => move.kind === 'drop' && after.table.length === 4,
   }, [
     choice(h('Q'), [], true, 'Dejar Q', 'Eso es. La Q queda disponible para futuras jugadas.'),
     choice(h('7'), [], false, 'Dejar 7 sin recoger', 'El 7 puede recoger A + 6; no puedes dejarlo sin capturar.'),
@@ -3439,7 +3580,7 @@ function createTutorialLessons(comboPoints = 2) {
   const ronda = dealt(comboPoints, triplePrefix);
   if (ronda.players[0].score !== 2 || !ronda.rondas[0] || publicView(ronda, 1).history.some((item) => item.kind === 'ronda')) throw new Error('La lección de ronda no conserva la puntuación y privacidad.');
   lessons.push(quiz('ronda-privada', 'Tu ronda es privada', 'Acabas de recibir tres cincos. ¿Qué ocurre al repartir?', 'Reconoce los tres iguales y su bonificación.',
-    'La ronda suma 2 automáticamente. Solo tú ves su aviso y sus cartas resaltadas; el marcador sigue siendo público. En este perfil también suma desde 30 o 38.', [
+    'En esta mesa la ronda suma 2 automáticamente. Solo tú ves el aviso con el valor de tu ronda. El marcador sigue siendo público. Aquí también suma desde 30 o 38.', [
       ['Sumo 2 y solo yo veo el aviso de mi ronda', true, 'Correcto. No necesitas anunciarla ni mostrar tus cartas.'],
       ['Sumo 2 y se revelan mis tres cartas al rival', false, 'La bonificación se cuenta, pero la ronda y las cartas permanecen privadas.'],
       ['Sumo 6 porque tengo tres cartas iguales', false, 'La ronda completa vale 2 puntos, no 2 por carta.'],
@@ -3448,7 +3589,7 @@ function createTutorialLessons(comboPoints = 2) {
   state = scenario(comboPoints, { hand: [h('7'), h('3')], opponent: [c('7'), d('7'), s('K')], table: [s('7'), h('2'), h('K')], scores: [0, 2], lastCardId: s('7'), rondas: [null, { rank: '7', cardIds: [s('7'), c('7'), d('7')] }] });
   lessons.push(exercise(state, {
     id: 'caida-ronda', title: 'Una caída decisiva', prompt: 'El rival acaba de dejar el 7 de picas. Hazle una caída y observa el resultado.', goal: 'Iguala el último 7 del rival.',
-    explanation: 'Ese 7 pertenecía a la ronda original del rival. Caer sobre cualquiera de esas tres cartas gana inmediatamente; la ronda rival se revela en el resultado.', check: (after, move) => move.rondaFall && after.status === 'finished' && after.winner === 0 && after.players[0].score === 2,
+    explanation: 'Ese 7 era parte de la ronda del rival. En esta mesa, una caída inmediata sobre una carta de esa ronda gana la partida. El resultado explica la jugada.', check: (after, move) => move.rondaFall && after.status === 'finished' && after.winner === 0 && after.players[0].score === 2,
   }, [
     choice(h('7'), [s('7')], true, '7 cae sobre 7', '¡Ganaste! Era una carta de la ronda rival: esta caída termina la partida aunque no llegues a 40.'),
     choice(h('3'), [], false, 'Dejar 3', 'Es legal, pero deja pasar la oportunidad de caerle al último 7.'),
@@ -3501,13 +3642,13 @@ function createTutorialLessons(comboPoints = 2) {
       ['No ocurre nada hasta hacer una caída', false, 'La mano de cuatro iguales ya resuelve la victoria al repartir.'],
     ], { hand: four.players[0].hand, after: outcome(four) }));
 
-  state = scenario(comboPoints, { hand: [h('6'), h('7'), h('K')], table: [h('A'), h('2'), h('3'), s('6'), h('J'), h('Q')], scores: [38, 24], lastCardId: s('6') });
+  state = scenario(comboPoints, { hand: [h('6'), h('7'), h('K')], table: [h('A'), h('2'), h('4'), s('6'), h('J'), h('Q')], scores: [38, 24], lastCardId: s('6') });
   lessons.push(exercise(state, {
     id: 'desafio-final', title: 'Gana la última jugada', prompt: 'Tienes 38. El rival acaba de dejar el 6 de picas. Hay varias capturas posibles: encuentra la que te hace ganar.', goal: 'Elige la carta y la captura exactas para llegar a 40.',
-    explanation: 'Tu 6 debe igualar el último 6 rival. Sumar A + 2 + 3 también sería legal, pero no es caída. Recoger el 6 dentro de A + 6 tampoco lo es.', check: (after, move) => move.fall && !move.rondaFall && after.status === 'finished' && after.players[0].score === 40,
+    explanation: 'Tu 6 gana cuando iguala el último 6 rival. Con 2 + 4 haces una captura por suma. Con A + 6 y tu 7 recoges la última carta como sumando. Esas capturas no puntúan como caída.', check: (after, move) => move.fall && !move.rondaFall && after.status === 'finished' && after.players[0].score === 40,
   }, [
     choice(h('6'), [s('6')], true, '6 cae sobre el último 6', '¡Ganaste con 40! Elegiste la igualdad que produce caída.'),
-    choice(h('6'), [h('A'), h('2'), h('3')], false, '6 recoge A + 2 + 3', 'La suma es legal, pero no iguala la última carta y no produce caída.'),
+    choice(h('6'), [h('2'), h('4')], false, '6 recoge 2 + 4', 'La suma es válida. Para hacer una caída debes igualar el último 6 del rival.'),
     choice(h('7'), [h('A'), s('6'), h('J'), h('Q')], false, '7 recoge A + 6 y sigue J → Q', 'Recoges más cartas, pero el último 6 es un sumando. No hay caída ni victoria.'),
     choice(h('K'), [], false, 'Dejar K', 'Es legal, pero la oportunidad de ganar está en igualar el último 6.'),
   ]));
@@ -3580,7 +3721,9 @@ let selectedMoveIndex = 0;
 let botTimer = null;
 let toastTimer = null;
 let renderedDeal = '';
+let renderedTurn = '';
 let pendingCardArrival = false;
+let pendingPassMove = null;
 let tutorialStep = 0;
 let tutorialLessons = [];
 let tutorialComboPoints = null;
@@ -3759,6 +3902,11 @@ function renderGame() {
     table.classList.add('is-dealing');
   }
   table.classList.toggle('is-own-turn', myTurn);
+  const turnKey = `${v.id}/${v.revision}/${viewer}`;
+  if (myTurn && renderedTurn !== turnKey) {
+    renderedTurn = turnKey;
+    table.classList.add('is-fresh-turn');
+  }
   table.classList.toggle('is-fresh-play', pendingCardArrival);
   pendingCardArrival = false;
   app.querySelector('.table-meta').insertAdjacentHTML('afterend', `<div class="compact-score" aria-label="Puntuación actual">${v.players.map(p => `<span><span>${esc(p.name)}</span><strong>${p.score}<small> / 40</small></strong></span>`).join('')}</div>`);
@@ -3829,7 +3977,7 @@ function scheduleBot(delay = 0) {
         candidate.cardId === command.cardId && candidate.captureIds.length === command.captureIds.length &&
         candidate.captureIds.every(id => command.captureIds.includes(id)));
       if (!move) throw new Error('No se pudo resolver el turno de la máquina.');
-      session.dispatch({ type: 'PLAY', move: command }); afterMove(move);
+      session.dispatch({ type: 'PLAY', move: command }); afterMove(move, 1);
     } catch (error) { toast(error.message); render(); }
   }, Math.max(delay, prefs.quickBot || prefs.reducedMotion ? 280 : 1000));
 }
@@ -3849,8 +3997,10 @@ function showPlayImpact(view, move) {
   return renderImpact(app.querySelector('.game-table'), kind, caption, card);
 }
 
+const animateTable = () => !document.hidden && !prefs.reducedMotion && !systemReducedMotion.matches;
+
 function renderImpact(target, kind, caption, card) {
-  if (!target || document.hidden || prefs.reducedMotion || systemReducedMotion.matches) return 0;
+  if (!target || !animateTable()) return 0;
   const impact = document.createElement('div');
   impact.className = `play-impact play-impact--${kind}`;
   impact.setAttribute('aria-hidden', 'true');
@@ -3865,8 +4015,8 @@ function renderImpact(target, kind, caption, card) {
     <span class="impact-card">${cardMarkup(card, { back: !card })}</span>
     <span class="impact-caption">${caption}</span>`;
   target.append(impact);
-  setTimeout(() => impact.remove(), 870);
-  return 870;
+  setTimeout(() => impact.remove(), 1080);
+  return 1080;
 }
 
 function presentGameStatus(move) {
@@ -3874,7 +4024,7 @@ function presentGameStatus(move) {
   if (!view || modal.open) return;
   const delay = showPlayImpact(view, move);
   if (view.status === 'playing') {
-    const dealing = app.querySelector('.game-table.is-dealing') && !prefs.reducedMotion && !systemReducedMotion.matches;
+    const dealing = app.querySelector('.game-table.is-dealing') && animateTable();
     scheduleBot(Math.max(delay, dealing ? 660 : 0));
     return;
   }
@@ -3888,29 +4038,45 @@ function presentGameStatus(move) {
   else showStatus();
 }
 
-function afterMove(move) {
+function renderCapture(move, actor, center = app.querySelector('.table-center')) {
+  if (!center || !move || move.fall || !move.captureIds.length) return 0;
+  const receipt = document.createElement('span');
+  receipt.className = 'capture-receipt';
+  receipt.setAttribute('aria-hidden', 'true');
+  receipt.innerHTML = `${icon('cards')} ${move.clean ? '¡Limpia! · ' : ''}+${move.captureIds.length + 1} cartas`;
+  center.append(receipt);
+  const animated = animateTable();
+  if (animated) {
+    // Only the card that was publicly played is shown in the moving pile.
+    const stack = document.createElement('div');
+    stack.className = `capture-stack${actor !== viewer ? ' is-rival' : ''}`;
+    stack.setAttribute('aria-hidden', 'true');
+    stack.innerHTML = cardMarkup(impactCards.get(move.cardId));
+    center.append(stack);
+    setTimeout(() => stack.remove(), 900);
+  }
+  setTimeout(() => receipt.remove(), animated ? 900 : 950);
+  return animated ? 900 : 0;
+}
+
+function afterMove(move, actor) {
   selectedId = null; selectedMoveIndex = 0;
   const v = getView();
   if (v.mode === 'pass' && v.status === 'playing') locked = true;
+  pendingPassMove = locked ? { id: v.id, revision: v.revision, move, actor } : null;
   const message = locked && v.lastEvent?.kind === 'ronda' ? 'Nuevo reparto.' : v.lastEvent?.text;
   announce(message || 'Jugada realizada.'); playSound(move.points);
   pendingCardArrival = !locked && move.captureIds.length === 0;
   render();
-  if (!locked && v.status === 'playing' && !move.fall && move.captureIds.length) {
-    const receipt = document.createElement('span');
-    receipt.className = 'capture-receipt';
-    receipt.setAttribute('aria-hidden', 'true');
-    receipt.innerHTML = `${icon('cards')} ${move.clean ? '¡Limpia! · ' : ''}+${move.captureIds.length + 1} cartas`;
-    app.querySelector('.table-center').append(receipt);
-    setTimeout(() => receipt.remove(), prefs.reducedMotion || systemReducedMotion.matches ? 950 : 620);
-  }
-  presentGameStatus(move);
+  if (!locked && v.status === 'playing') renderCapture(move, actor);
+  presentGameStatus(locked ? undefined : move);
 }
 
 function startGame(options) {
   cancelBot(); closeModal(false);
   try {
     session.dispatch({ type: 'NEW_GAME', options });
+    pendingPassMove = null;
     screen = 'game'; mode = options.mode; difficulty = options.difficulty || 'medium'; viewer = 0; locked = mode === 'pass'; selectedId = null;
     render(); focusGame(); announce('Partida iniciada.');
     presentGameStatus();
@@ -3949,7 +4115,7 @@ function showRules() {
   const old = legacyRules(v);
   const points = v?.rules.comboPoints ?? comboPoints;
   const rondaText = old ? 'Tres iguales al repartir dan 2 puntos solo si tienes menos de 30. Esta partida guardada mantiene el perfil anterior, sin victoria por caída a la ronda.' : 'Tres cartas del mismo valor al repartir forman una ronda y suman 2 puntos automáticamente, incluso desde 30 o 38. Si esos puntos llevan a 40, ganas. Cuatro iguales tienen prioridad y ganan directamente. Si ambos alcanzan 40 por ronda en el mismo reparto, gana el asiento que empieza.';
-  showModal('rules', `${modalHeader('Las reglas, sobre la mesa.', old ? 'PERFIL LOCAL V1 · PARTIDA ANTERIOR' : 'PERFIL LOCAL V2 · RONDA GANADORA')}<p class="modal-intro">Una chica a 40 puntos, con 40 cartas y cinco cartas por reparto. Las reglas se fijan al comenzar.</p><div class="rule-scores"><div><strong>2</strong><span>Caída</span></div><div><strong>2</strong><span>Ronda</span></div><div><strong>${points}</strong><span>Caída y limpia</span></div></div>${old ? '' : '<p class="rule-callout">Caída a la ronda = victoria inmediata, sin necesitar 40 puntos.</p>'}<div class="rules-list"><details open><summary>Ronda: tres cartas iguales</summary><p>${rondaText} El valor de tu ronda solo se muestra en tu mano.</p></details>${old ? '' : '<details open><summary>Caída a la ronda: partida ganada</summary><p>Si tu rival juega una de las tres cartas originales de su ronda y tú la capturas por igualdad en el turno inmediato siguiente, ganas. Puede ser la primera, segunda o tercera carta de esa ronda. Debe ser el mismo reparto: recogerla por suma, incluirla en una escalera o capturarla más tarde no da esta victoria.</p></details>'}<details><summary>Capturas, caída y limpia</summary><p>Iguala una carta de la mesa o suma dos o más cartas numéricas para obtener el valor de la tuya. Elige una sola base de captura y completa su escalera: A, 2, 3, 4, 5, 6, 7, J, Q, K. Si falta un valor, termina. Las figuras no se suman. Caer a la carta del turno rival anterior da 2 puntos. La limpia deja la mesa vacía y da 2; juntas valen ${points}.</p></details><details><summary>Cartón y cartas que sobran</summary><p>20 cartas recogidas dan 6 puntos. Cada carta adicional suma uno, redondeando a par. El cartón solo suma hasta 30. En empate, 2 puntos al siguiente repartidor. Si ambos tienen menos de 20 sin empatar, nadie cobra. Las sobrantes se descartan.</p></details><details><summary>El cierre desde 38</summary><p>En las jugadas, desde 38 solo puntúa una caída, no una limpia. ${old ? '' : 'Una nueva ronda también suma sus 2 puntos y cierra la partida. La caída a una ronda gana con cualquier marcador.'} Cuatro iguales al repartir ganan automáticamente; si ambos los reciben, se repite ese reparto.</p></details><details><summary>Cuatro niveles, las mismas reglas</summary><p>Fácil elige jugadas legales al azar. Medio prioriza puntos y capturas. Difícil evalúa respuestas inmediatas y cuida sus cartas de ronda. Experto compara hasta 12 jugadas priorizadas y 8 respuestas probables del rival, y calcula una contra-jugada con las cartas que conserva. La retroalimentación local puede ampliar o reducir esta búsqueda. No recibe la mano rival ni el orden del mazo. Su búsqueda es heurística y no garantiza la victoria.</p></details><details><summary>Esta edición local</summary><p>Sin reloj ni penalizaciones por esperar. Juega contra la máquina o comparte el dispositivo, ocultando las manos entre turnos. El guardado pertenece a este navegador.</p></details></div><button class="button primary full-width" data-action="close-modal">Todo claro ${icon('check')}</button>`);
+  showModal('rules', `${modalHeader('Las reglas, sobre la mesa.', old ? 'PERFIL LOCAL V1 · PARTIDA ANTERIOR' : 'PERFIL LOCAL V2 · RONDA GANADORA')}<p class="modal-intro">Una chica a 40 puntos, con 40 cartas y cinco cartas por reparto. Las reglas se fijan al comenzar.</p><div class="rule-scores"><div><strong>2</strong><span>Caída</span></div><div><strong>2</strong><span>Ronda</span></div><div><strong>${points}</strong><span>Caída y limpia</span></div></div>${old ? '' : '<p class="rule-callout">Caída a la ronda = victoria inmediata, sin necesitar 40 puntos.</p>'}<div class="rules-list"><details open><summary>Ronda: tres cartas iguales</summary><p>${rondaText} El valor de tu ronda solo se muestra en tu mano.</p></details>${old ? '' : '<details open><summary>Caída a la ronda: partida ganada</summary><p>Si tu rival juega una de las tres cartas originales de su ronda y tú la capturas por igualdad en el turno inmediato siguiente, ganas. Puede ser la primera, segunda o tercera carta de esa ronda. Debe ser el mismo reparto: recogerla por suma, incluirla en una escalera o capturarla más tarde no da esta victoria.</p></details>'}<details><summary>Capturas, caída y limpia</summary><p>Iguala una carta de la mesa o suma exactamente dos cartas numéricas para obtener el valor de la tuya. Por ejemplo, con un 6 recoges 2 + 4; A + 2 + 3 no es una suma válida. Elige una sola base de captura y completa su escalera: A, 2, 3, 4, 5, 6, 7, J, Q, K. Si falta un valor, termina. Las figuras no se suman. Caer a la carta del turno rival anterior da 2 puntos. La limpia deja la mesa vacía y da 2; juntas valen ${points}.</p></details><details><summary>Cartón y cartas que sobran</summary><p>20 cartas recogidas dan 6 puntos. Cada carta adicional suma uno, redondeando a par. El cartón solo suma hasta 30. En empate, 2 puntos al siguiente repartidor. Si ambos tienen menos de 20 sin empatar, nadie cobra. Las sobrantes se descartan.</p></details><details><summary>El cierre desde 38</summary><p>En las jugadas, desde 38 solo puntúa una caída, no una limpia. ${old ? '' : 'Una nueva ronda también suma sus 2 puntos y cierra la partida. La caída a una ronda gana con cualquier marcador.'} Cuatro iguales al repartir ganan automáticamente; si ambos los reciben, se repite ese reparto.</p></details><details><summary>Cuatro niveles, las mismas reglas</summary><p>Fácil elige jugadas legales al azar. Medio prioriza puntos y capturas. Difícil evalúa respuestas inmediatas y cuida sus cartas de ronda. Experto compara hasta 12 jugadas priorizadas y 8 respuestas probables del rival, y calcula una contra-jugada con las cartas que conserva. La retroalimentación local puede ampliar o reducir esta búsqueda. No recibe la mano rival ni el orden del mazo. Su búsqueda es heurística y no garantiza la victoria.</p></details><details><summary>Esta edición local</summary><p>Sin reloj ni penalizaciones por esperar. Juega contra la máquina o comparte el dispositivo, ocultando las manos entre turnos. El guardado pertenece a este navegador.</p></details></div><button class="button primary full-width" data-action="close-modal">Todo claro ${icon('check')}</button>`);
 }
 
 function applyFelt() {
@@ -3996,7 +4162,7 @@ function feltSettings() {
 
 function showSettings(focusFelt = false) {
   const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', 'Una experiencia más tranquila.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${feltSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
   if (focusFelt) modal.querySelector('[data-action="felt-theme"][aria-pressed="true"]')?.focus({ preventScroll: true });
 }
 
@@ -4049,17 +4215,18 @@ function showTutorial(focus, keepScroll = false) {
   } else {
     const answer = tutorialSolved.get(tutorialStep);
     const play = lesson.type === 'play';
-    const selected = answer?.cardId ?? tutorialCardId;
-    const taken = new Set(answer?.captureIds ?? tutorialCaptures);
+    const hand = answer?.after?.hand ?? lesson.hand;
+    const table = answer?.after?.table ?? lesson.table;
+    const lastCard = answer ? (answer.after?.move?.kind === 'drop' ? answer.after.move.cardId : null) : lesson.lastCardId;
     const board = lesson.hand.length || lesson.table.length ? `<div class="lesson-board tutorial-board${answer ? ' is-solved' : ''}">
-      <p class="tutorial-zone-label">${lesson.lastCardId ? 'MESA · ÚLTIMA CARTA MARCADA' : 'EN LA MESA'}</p>
-      <div class="tutorial-table">${lesson.table.map(card => cardMarkup(card, {
-        selected: taken.has(card.id), highlight: taken.has(card.id), last: card.id === lesson.lastCardId,
+      <p class="tutorial-zone-label">${answer?.after?.move ? 'MESA DESPUÉS DE JUGAR' : lastCard ? 'MESA · ÚLTIMA CARTA MARCADA' : 'EN LA MESA'}</p>
+      <div class="tutorial-table">${table.map(card => cardMarkup(card, {
+        highlight: !answer && tutorialCaptures.has(card.id), selected: !answer && tutorialCaptures.has(card.id), last: card.id === lastCard,
         interactive: play && !!tutorialCardId && !answer, action: 'tutorial-capture',
       })).join('') || '<span class="tutorial-empty">Mesa vacía</span>'}</div>
       <p class="tutorial-zone-label">TU MANO</p>
-      <div class="tutorial-hand">${lesson.hand.map(card => cardMarkup(card, {
-        selected: card.id === selected, interactive: play && !answer, action: 'tutorial-card',
+      <div class="tutorial-hand">${hand.map(card => cardMarkup(card, {
+        selected: !answer && card.id === tutorialCardId, interactive: play && !answer, action: 'tutorial-card',
       })).join('') || '<span class="tutorial-empty">Sin cartas</span>'}</div>
     </div>` : '';
     const choices = !play && !answer ? `<div class="tutorial-capture-options">${lesson.choices.map(choice =>
@@ -4141,15 +4308,18 @@ function checkTutorialAnswer(answerId) {
     return;
   }
   tutorialSolved.set(tutorialStep, answer);
-  const animated = !prefs.reducedMotion && !systemReducedMotion.matches && (lesson.hand.length || lesson.table.length);
+  const animated = animateTable() && (lesson.hand.length || lesson.table.length);
   showTutorial('#tutorial-feedback', animated);
   const event = answer.after?.event?.kind;
   const special = event === 'ronda-fall' || event === 'ronda-victory';
   const win = answer.after?.status === 'finished';
-  const fall = answer.after?.move?.fall || event === 'fall' || event === 'fall-clean';
-  const label = special ? '¡Ronda ganadora!' : win ? '¡Cierre perfecto!' : fall ? '¡Caída!' : '¡Bien jugado!';
+  const move = answer.after?.move;
+  const fall = move?.fall;
+  const label = special ? '¡Ronda ganadora!' : win ? '¡Cierre perfecto!' : move?.clean ? '¡Caída y limpia!' : '¡Caída!';
   const board = modal.querySelector('.tutorial-board');
-  const duration = renderImpact(board, special ? 'ronda' : win ? 'win' : 'fall', label, impactCards.get(answer.cardId));
+  const duration = win || fall
+    ? renderImpact(board, special ? 'ronda' : win ? 'win' : 'fall', label, impactCards.get(move?.cardId))
+    : renderCapture(move, viewer, board);
   if (duration && (board.offsetTop < modal.scrollTop || board.offsetTop + board.offsetHeight > modal.scrollTop + modal.clientHeight)) {
     modal.scrollTop = Math.max(0, board.offsetTop - 12);
   }
@@ -4179,7 +4349,7 @@ function showResult() {
 
 function handleAction(target) {
   const action = target.dataset.action;
-  if (action === 'home') { cancelBot(); closeModal(false); screen = 'home'; selectedId = null; render(); }
+  if (action === 'home') { cancelBot(); closeModal(false); screen = 'home'; selectedId = null; pendingPassMove = null; render(); }
   else if (action === 'mode') {
     if (mode === target.dataset.mode) return;
     mode = target.dataset.mode;
@@ -4196,13 +4366,26 @@ function handleAction(target) {
   }
   else if (action === 'resume') { screen = 'game'; viewer = 0; locked = session.view(0).mode === 'pass'; render(); focusGame(); presentGameStatus(); }
   else if (action === 'table-layout') changeTableLayout(target.dataset.layout);
-  else if (action === 'reveal') { viewer = getView().turn; locked = false; render(); announce(`Turno de ${getView().players[viewer].name}.`); }
+  else if (action === 'reveal') {
+    const v = getView();
+    viewer = v.turn;
+    const effect = pendingPassMove?.id === v.id && pendingPassMove.revision === v.revision ? pendingPassMove : null;
+    pendingPassMove = null;
+    locked = false;
+    pendingCardArrival = Boolean(effect && !effect.move.captureIds.length);
+    render();
+    if (effect) {
+      renderCapture(effect.move, effect.actor);
+      presentGameStatus(effect.move);
+    }
+    announce(`Turno de ${v.players[viewer].name}.`);
+  }
   else if (action === 'select-card') { selectedId = target.dataset.card; selectedMoveIndex = 0; render(); document.querySelector(`[data-card="${CSS.escape(selectedId)}"]`)?.focus(); }
   else if (action === 'next-capture') { selectedMoveIndex++; const moves = legalMoves(getView(), viewer).filter(m => m.cardId === selectedId); selectedMoveIndex %= moves.length; render(); }
   else if (action === 'play') {
     const v = getView(); const move = legalMoves(v, viewer).filter(m => m.cardId === selectedId)[selectedMoveIndex];
     if (!move || locked) return;
-    try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(move); }
+    try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(move, viewer); }
     catch (error) { toast(error.message); selectedId = null; render(); }
   }
   else if (action === 'next-round') { closeModal(false); try { session.dispatch({ type: 'NEXT_ROUND' }); locked = mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); } }

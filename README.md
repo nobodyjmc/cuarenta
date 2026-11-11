@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.8.0
+# Cuarenta · Versión 0.8.1
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -34,6 +34,8 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo en **Preferencias → Reducir movimiento**. El aviso y las cartas de una ronda solo aparecen en la vista de quien la recibe. Los puntos se suman al marcador.
 
 En **Preferencias → Color de la mesa** puedes elegir Verde Quito, Borgoña, Azul noche o Carbón, o usar el selector para crear tu propio color. La vista previa se actualiza al instante; la elección se guarda en el navegador y se aplica al inicio, a las partidas y al tutorial. Las cartas se animan al repartir y al entrar a la mesa; las capturas muestran cuántas cartas se recogieron. El juego respeta la reducción de movimiento del sistema y la de Preferencias.
+
+Una captura por suma empieza con **exactamente dos cartas numéricas** de la mesa. Por ejemplo, un 6 recoge 2 + 4; A + 2 + 3 no vale aunque dé 6. Después de la suma puedes recoger las cartas consecutivas de la escalera. El motor y el tutorial aplican la misma regla, con las opciones de ronda y caída propias de esta mesa. La mecánica de suma de dos cartas está descrita en el [reglamento del Torneo Internacional de Cuarenta](https://es.scribd.com/document/612816076/REGLAS-DEL-TORNEO-DE-CUARENTA).
 
 En **Aprender a jugar**, resuelve retos con cartas y preguntas de puntuación. Elige tu carta, marca las que recogerías y confirma. Puedes repetir una jugada hasta resolverla y volver a los retos completados. La práctica usa la variante de puntos elegida para caída y limpia y conserva tu partida guardada.
 
