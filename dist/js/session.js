@@ -7,8 +7,8 @@ const DEFAULT_FELT_THEME = 'quito';
 const DEFAULT_TABLE_CITY = 'quito';
 const TABLE_CITY_IDS = new Set(TABLE_CITIES.map(({ id }) => id));
 const DEFAULT_MUSIC_VOLUME = .32;
-const DEFAULT_MUSIC_TRACK = 'juramento';
-const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'reminiscencias'];
+const DEFAULT_MUSIC_TRACK = 'reminiscencias';
+const MUSIC_TRACK_IDS = [DEFAULT_MUSIC_TRACK, 'juramento'];
 
 const FELT_SWATCHES = {
   quito: '#2c6a54',
@@ -117,7 +117,7 @@ export class LocalSession {
 export function loadPreferences(storage) {
   const fallback = {
     sound: false,
-    music: false,
+    music: true,
     musicVolume: DEFAULT_MUSIC_VOLUME,
     musicTrack: DEFAULT_MUSIC_TRACK,
     reducedMotion: false,
@@ -133,7 +133,7 @@ export function loadPreferences(storage) {
     const feedbackChallenge = Number.isInteger(saved.feedbackChallenge) ? Math.max(-3, Math.min(3, saved.feedbackChallenge)) : 0;
     return {
       sound: saved.sound === true,
-      music: saved.music === true,
+      music: saved.music === undefined || saved.music === true,
       musicVolume: Number.isFinite(saved.musicVolume) ? Math.max(0, Math.min(1, saved.musicVolume)) : DEFAULT_MUSIC_VOLUME,
       musicTrack: saved.musicTrack === 'patio' ? 'reminiscencias' :
         MUSIC_TRACK_IDS.includes(saved.musicTrack) ? saved.musicTrack : DEFAULT_MUSIC_TRACK,

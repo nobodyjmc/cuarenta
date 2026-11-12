@@ -111,12 +111,15 @@ function cardMarkup(card, { back = false, selected = false, highlight = false, i
 }
 
 function shell(content) {
-  return `<div class="app-shell app-viewport ${screen === 'game' ? 'is-playing' : 'is-lobby'}">
+  const playing = screen === 'game';
+  const musicActive = musicIsActive();
+  return `<div class="app-shell app-viewport ${playing ? 'is-playing' : 'is-lobby'}">
     <header class="app-bar">
       <button type="button" class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark" aria-hidden="true">40<span>◆</span></span><span class="brand-word">Cuarenta</span></button>
+      ${playing ? tableLayoutPicker() : ''}
       <nav class="app-tools" aria-label="Herramientas">
-        ${screen === 'game' ? `<button type="button" class="app-tool" data-action="tutorial" aria-label="Aprender a jugar" title="Aprender a jugar">${icon('book')}<span>Aprender</span></button>` : ''}
-        <button type="button" class="app-tool music-toggle" data-action="music" aria-label="Música de fondo" aria-pressed="${prefs.music}" title="${prefs.music ? 'Pausar' : 'Activar'} música de fondo">${icon('music')}</button>
+        ${playing ? `<button type="button" class="app-tool" data-action="game-summary" aria-label="Marcador e historial" title="Marcador e historial">${icon('trophy')}</button>`
+          : `<button type="button" class="app-tool music-toggle" data-action="music" aria-label="Música de fondo" aria-pressed="${musicActive}" title="${musicActive ? 'Pausar' : 'Activar'} música de fondo">${icon('music')}</button>`}
         <button type="button" class="app-tool" data-action="settings" aria-label="Preferencias" title="Preferencias">${icon('settings')}</button>
       </nav>
     </header>
@@ -143,10 +146,13 @@ function renderHome() {
       </div>
     </div>
     <section class="setup-panel" aria-labelledby="setup-heading">
-      <header class="setup-header"><h1 id="setup-heading">¿Cómo jugamos?</h1></header>
+      <header class="setup-header">
+        <h1 id="setup-heading">El Cuarenta</h1>
+        <div class="setup-card-art" aria-hidden="true">${cardMarkup(demoCard('A', 'hearts'))}${cardMarkup(demoCard('7', 'clubs'))}</div>
+      </header>
       <button type="button" class="button learn-entry" data-action="tutorial">
         <span class="learn-entry-icon">${icon('book')}</span>
-        <span class="learn-entry-copy"><strong>Aprender a jugar</strong><small>Práctica guiada · Fácil</small></span>
+        <span class="learn-entry-copy"><strong>Aprender a jugar</strong></span>
         ${icon('arrow')}
       </button>
       <form id="new-game-form">
@@ -170,10 +176,6 @@ function renderHome() {
       </form>
     </section>
   </section>`);
-}
-
-function playerBadge(player, mine, active) {
-  return `<div class="player-badge ${active ? 'is-turn' : ''}"><span class="avatar ${mine ? 'avatar-self' : ''}">${icon(!mine && mode === 'solo' ? 'bot' : 'person')}</span><span><strong>${esc(player.name)}</strong><small>${active ? 'Tiene la mano' : `${player.handCount} cartas en mano`}</small></span>${active ? '<span class="turn-dot"></span>' : ''}</div>`;
 }
 
 function scorePanel(v) {
@@ -296,15 +298,18 @@ function renderGame(dealDelay) {
   const captureIds = chosen?.captureIds || [];
 
   const coaching = v.mode === 'solo' && v.difficulty === 'easy';
-  let instruction = coaching ? 'Toca una carta para ver qué puedes recoger.' : 'Tu turno. Elige una carta.';
+  let instruction = coaching ? 'Elige una carta para ver qué puedes recoger.' : 'Tu turno. Elige una carta.';
   if (v.status === 'round-end') instruction = 'Fin del ciclo.';
   else if (v.status === 'finished') instruction = 'Partida terminada.';
   else if (locked) instruction = 'Cambio de turno.';
   else if (!myTurn) instruction = `${other.name} está pensando…`;
   else if (chosen?.rondaFall) instruction = '¡Caída a la ronda! Victoria inmediata.';
-  else if (chosen?.winsGame) instruction = 'Esta jugada completa los 40 puntos.';
-  else if (captureIds.length) instruction = `Recoges ${captureIds.length + 1} cartas${chosen.points ? ` · +${chosen.points} puntos` : ''}`;
-  else if (chosen) instruction = 'La carta quedará en la mesa.';
+  else if (chosen?.winsGame) instruction = 'Con esta jugada llegas a 40.';
+  else if (chosen?.fall && chosen.clean) instruction = `Caída y limpia · +${chosen.points}`;
+  else if (chosen?.fall) instruction = `Caída · +${chosen.points}`;
+  else if (chosen?.clean && chosen.points) instruction = `Limpia · +${chosen.points}`;
+  else if (captureIds.length) instruction = `Recoges ${captureIds.length + 1} cartas.`;
+  else if (chosen) instruction = 'Dejas la carta en la mesa.';
 
   const hiddenCards = count => Array.from({ length: count }, () => cardMarkup(null, { back: true })).join('');
   const tableCount = v.table.length;
@@ -322,29 +327,20 @@ function renderGame(dealDelay) {
   const recipient = locked ? esc(v.players[v.turn].name) : '';
   const compactScore = v.players.map(player => {
     const active = !locked && v.status === 'playing' && player.id === v.turn;
-    return `<span class="${active ? 'is-current' : ''}"><span>${esc(player.name)}</span><strong>${player.score}<small> / 40</small></strong></span>`;
+    return `<span class="${active ? 'is-current' : ''}"><span title="${esc(player.name)}">${esc(player.name)}${active ? '<span class="sr-only">, turno actual</span>' : ''}</span><strong>${player.score}<small> / 40</small></strong></span>`;
   }).join('');
   const playButton = v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>'
     : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>'
       : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`;
 
   app.innerHTML = shell(`
-    <div class="game-toolbar">
-      <div class="game-toolbar-main"><h1>Partida</h1>${mode === 'solo' ? `<span class="difficulty-badge">${difficultyNames[v.difficulty || 'medium']}</span>` : ''}</div>
-      ${tableLayoutPicker()}
-      <div class="game-toolbar-actions">
-        <button type="button" class="icon-button" data-action="game-summary" aria-label="Marcador e historial" title="Marcador e historial">${icon('trophy')}</button>
-        <button type="button" class="icon-button" data-action="new" aria-label="Nueva partida" title="Nueva partida">${icon('cards')}</button>
-      </div>
-    </div>
+    <h1 class="sr-only">Partida de Cuarenta</h1>
     <div class="game-layout">
       <section class="game-column" aria-label="Partida de Cuarenta">
         <div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta">
           ${tableArt(prefs.tableCity)}
-          <div class="table-meta"><span>Ciclo ${v.round} <i>·</i> Reparto ${v.deal}/4</span><span class="deck-label">${icon('cards')} ${v.deckCount} por repartir</span></div>
           <div class="compact-score" aria-label="Puntuación actual">${compactScore}</div>
           <div class="opponent-zone">
-            ${playerBadge(other, false, !locked && v.turn === other.id)}
             <div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${hiddenCards(other.handCount)}</div>
           </div>
           <div class="table-center">
@@ -352,7 +348,6 @@ function renderGame(dealDelay) {
           </div>
           <div class="own-zone">
             ${hasRonda ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(ronda.rank)} · +2 puntos</div>` : ''}
-            <div class="own-label">${playerBadge(me, true, myTurn)}<span class="hand-tip">${myTurn ? 'ELIGE TU CARTA' : 'TU MANO'}</span></div>
             <div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${myHand}</div>
           </div>
           ${locked ? `<div class="privacy-curtain">${tableArt(prefs.tableCity)}
@@ -362,7 +357,7 @@ function renderGame(dealDelay) {
           </div>` : ''}
         </div>
         <div class="action-panel">
-          <div class="action-copy"><span class="action-dot ${myTurn ? 'ready' : ''}"></span><div><strong>${esc(instruction)}</strong>${chosen?.captureIds.length ? `<small>${esc(moveDescription(chosen))}</small>` : ''}</div></div>
+          <div class="action-copy"><strong>${esc(instruction)}</strong></div>
           <div class="move-controls">
             ${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}
             ${playButton}
@@ -393,16 +388,6 @@ function renderGame(dealDelay) {
   }
   table.classList.toggle('is-fresh-play', pendingCardArrival);
   pendingCardArrival = false;
-}
-
-function moveDescription(move) {
-  if (move.rondaFall) return 'Capturas la carta de la ronda del turno anterior: victoria inmediata.';
-  if (move.fall && move.clean) return 'Caída y limpia. ¡Una buena jugada!';
-  if (move.fall) return 'Caída: recoges la carta que acaba de jugar tu rival.';
-  if (move.clean) return 'Limpia: no quedará ninguna carta en la mesa.';
-  if (move.kind === 'sum') return 'Captura por suma; se incluye la escalera disponible.';
-  if (move.kind === 'match') return 'Captura por igualdad; se incluye la escalera disponible.';
-  return 'No hay captura disponible con esta carta.';
 }
 
 function render(dealDelay = 0) {
@@ -465,20 +450,35 @@ function playMoveSound(move, won) {
   playSound(effect);
 }
 
+function musicIsActive() {
+  return prefs.music && (tableMusic.isPlaying || Boolean(musicAttempt));
+}
+
+function updateMusicButton() {
+  const button = app.querySelector('[data-action="music"]');
+  if (!button) return;
+  const active = musicIsActive();
+  button.setAttribute('aria-pressed', String(active));
+  button.title = `${active ? 'Pausar' : 'Activar'} música de fondo`;
+}
+
 function startMusic(reportError = false) {
   const trackId = prefs.musicTrack;
   if (!prefs.music || document.hidden || musicAttempt?.trackId === trackId) return;
+  if (!musicActivated && navigator.userActivation?.hasBeenActive === false) return;
   musicActivated = true;
   const attempt = { trackId };
   musicAttempt = attempt;
+  updateMusicButton();
   const status = modal.querySelector('#music-status');
   if (status) { status.hidden = true; status.textContent = ''; }
   void tableMusic.start({ trackId, volume: prefs.musicVolume }).then(played => {
     if (musicAttempt !== attempt) return;
     musicAttempt = null;
+    updateMusicButton();
     if (played || !reportError) return;
     toggleMusic(false);
-    const message = 'No se pudo iniciar la música. Toca la nota musical para volver a activarla.';
+    const message = 'No se pudo iniciar la música. Puedes volver a activarla en Preferencias.';
     const currentStatus = modal.open && modal.querySelector('#music-status');
     if (currentStatus) { currentStatus.textContent = message; currentStatus.hidden = false; }
     else toast(message);
@@ -488,14 +488,12 @@ function startMusic(reportError = false) {
 function pauseMusic() {
   musicAttempt = null;
   tableMusic.pause();
+  updateMusicButton();
 }
 
 function toggleMusic(enabled) {
   prefs.music = enabled;
   if (!savePreferences(prefs)) toast('No se pudo guardar la preferencia de música.');
-  const button = app.querySelector('[data-action="music"]');
-  button.setAttribute('aria-pressed', String(enabled));
-  button.title = `${enabled ? 'Pausar' : 'Activar'} música de fondo`;
   const checkbox = modal.querySelector('#music-enabled');
   if (checkbox) checkbox.checked = enabled;
   if (enabled) startMusic(true);
@@ -623,6 +621,7 @@ function startGame(options) {
     pendingPassMove = null;
     screen = 'game'; mode = options.mode; difficulty = options.difficulty || 'medium'; viewer = 0; locked = mode === 'pass'; selectedId = null;
     render(); focusGame(); announce('Partida iniciada.');
+    if (!musicIsActive()) startMusic();
     presentGameStatus();
     if (session.warning) toast(session.warning);
   } catch (error) { toast(error.message); }
@@ -690,7 +689,10 @@ function showGameSummary() {
   const v = getView();
   if (!v) return;
   const history = locked ? v.history.filter(event => event.kind !== 'ronda') : v.history;
-  showModal('game-summary', `${modalHeader('Resumen de partida')}${gameSidebar(v, history)}
+  const level = v.mode === 'solo' ? ` · ${difficultyNames[v.difficulty || 'medium']}` : '';
+  showModal('game-summary', `${modalHeader('Resumen de partida')}
+    <p class="modal-intro">Ciclo ${v.round} · Reparto ${v.deal}/4 · ${v.deckCount} por repartir${level}</p>
+    ${gameSidebar(v, history)}
     ${session.warning ? `<p class="modal-intro">${esc(session.warning)}</p>` : ''}`);
 }
 
@@ -771,7 +773,12 @@ function musicSettings() {
 
 function showSettings() {
   const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}<button type="button" class="felt-shortcut settings-table-shortcut" data-action="felt-settings">${icon('palette')} Diseño de mesa ${icon('arrow')}</button>${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Sonidos al repartir, jugar y recoger cartas.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  const links = [['felt-settings', 'palette', 'Diseño de mesa']];
+  if (screen === 'game') links.push(['tutorial', 'book', 'Aprender a jugar'], ['new', 'cards', 'Nueva partida']);
+  const shortcuts = `<nav class="settings-shortcuts" aria-label="Opciones de la mesa">${links.map(([action, symbol, label]) =>
+    `<button type="button" class="felt-shortcut settings-table-shortcut" data-action="${action}">${icon(symbol)} ${label} ${icon('arrow')}</button>`
+  ).join('')}</nav>`;
+  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${shortcuts}${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Sonidos al repartir, jugar y recoger cartas.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
 }
 
 function shouldAskBotFeedback(v) {
@@ -1021,7 +1028,14 @@ function handleAction(target) {
       button.setAttribute('aria-pressed', String(selected));
     }
   }
-  else if (action === 'resume') { screen = 'game'; viewer = 0; locked = session.view(0).mode === 'pass'; render(); focusGame(); presentGameStatus(); }
+  else if (action === 'resume') {
+    screen = 'game';
+    viewer = 0;
+    locked = session.view(0).mode === 'pass';
+    render(); focusGame();
+    if (!musicIsActive()) startMusic();
+    presentGameStatus();
+  }
   else if (action === 'table-layout') changeTableLayout(target.dataset.layout);
   else if (action === 'reveal') {
     const v = getView();
@@ -1072,7 +1086,7 @@ function handleAction(target) {
   else if (action === 'tutorial-capture') selectTutorialCard(target.dataset.card, true);
   else if (action === 'tutorial-play' || action === 'tutorial-answer') checkTutorialAnswer(target.dataset.answer);
   else if (action === 'close-modal') closeModal();
-  else if (action === 'music') toggleMusic(!prefs.music);
+  else if (action === 'music') toggleMusic(!musicIsActive());
   else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound('place'); render(); }
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);
   else if (action === 'round-summary') showRoundSummary();
@@ -1083,8 +1097,8 @@ function handleAction(target) {
 document.addEventListener('click', event => {
   const button = event.target.closest('[data-action]');
   if (button && !button.disabled) handleAction(button);
-  // A remembered setting can resume after the first user gesture on this page.
-  if (event.isTrusted && prefs.music && !tableMusic.isPlaying &&
+  // Another game interaction can recover playback after the browser pauses audio.
+  if (event.isTrusted && screen === 'game' && !musicIsActive() &&
       !event.target.closest('[data-action="music"], .music-toggle-row, #music-track')) startMusic();
 });
 document.addEventListener('input', event => {

@@ -91,24 +91,29 @@ test('preferences accept booleans only, clamp local bot feedback, and tolerate u
   assert.deepEqual(loadPreferences(storage), {
     sound: true, reducedMotion: true, quickBot: false, feedbackMode: false,
     feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', tableCity: 'quito',
-    music: false, musicVolume: .32, musicTrack: 'juramento',
+    music: true, musicVolume: .32, musicTrack: 'reminiscencias',
   });
   assert.equal(savePreferences({ feedbackMode: true, feedbackChallenge: 9, tableLayout: 'vertical' }, storage), true);
   assert.deepEqual(loadPreferences(storage), {
     sound: false, reducedMotion: false, quickBot: false, feedbackMode: true,
     feedbackChallenge: 3, tableLayout: 'vertical', feltTheme: 'quito', tableCity: 'quito',
-    music: false, musicVolume: .32, musicTrack: 'juramento',
+    music: true, musicVolume: .32, musicTrack: 'reminiscencias',
   });
   assert.equal(savePreferences({}, { setItem() { throw Error('blocked'); } }), false);
   assert.deepEqual(loadPreferences({ getItem() { throw Error('blocked'); } }), {
     sound: false, reducedMotion: false, quickBot: false, feedbackMode: true,
     feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', tableCity: 'quito',
-    music: false, musicVolume: .32, musicTrack: 'juramento',
+    music: true, musicVolume: .32, musicTrack: 'reminiscencias',
   });
 });
 
 test('music preferences restore an enabled track independently of sound effects and validate volume', () => {
   const storage = memoryStorage();
+  assert.equal(loadPreferences(storage).music, true);
+  assert.equal(loadPreferences(storage).musicTrack, 'reminiscencias');
+  assert.equal(savePreferences({ music: false, musicTrack: 'juramento' }, storage), true);
+  assert.equal(loadPreferences(storage).music, false);
+  assert.equal(loadPreferences(storage).musicTrack, 'juramento');
   assert.equal(savePreferences({ sound: false, music: true, musicVolume: 0, musicTrack: 'reminiscencias' }, storage), true);
   const quietMusic = loadPreferences(storage);
   assert.equal(quietMusic.sound, false);
@@ -118,7 +123,7 @@ test('music preferences restore an enabled track independently of sound effects 
   assert.equal(savePreferences({ ...quietMusic, musicTrack: 'patio' }, storage), true);
   assert.equal(loadPreferences(storage).musicTrack, 'reminiscencias');
   assert.equal(savePreferences({ ...quietMusic, musicTrack: 'faroles' }, storage), true);
-  assert.equal(loadPreferences(storage).musicTrack, 'juramento');
+  assert.equal(loadPreferences(storage).musicTrack, 'reminiscencias');
 
   assert.equal(savePreferences({ ...quietMusic, musicVolume: 1.5 }, storage), true);
   assert.equal(loadPreferences(storage).musicVolume, 1);
@@ -129,7 +134,7 @@ test('music preferences restore an enabled track independently of sound effects 
   const invalid = loadPreferences(storage);
   assert.equal(invalid.music, false);
   assert.equal(invalid.musicVolume, .32);
-  assert.equal(invalid.musicTrack, 'juramento');
+  assert.equal(invalid.musicTrack, 'reminiscencias');
 });
 
 test('city and palette choices are restored independently, and a legacy custom color becomes a preset', () => {

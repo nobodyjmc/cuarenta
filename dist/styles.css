@@ -2046,9 +2046,11 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
 .settings-table-shortcut {
   width: 100%;
   justify-content: flex-start;
-  margin: 12px 0;
   border-radius: 12px;
 }
+
+.settings-shortcuts { display: grid; gap: 6px; margin-block: 12px; }
+.settings-shortcuts .icon:last-child { margin-inline-start: auto; }
 
 .felt-settings {
   display: grid;
@@ -3281,83 +3283,14 @@ svg.aside-panel-icon {
   min-height: 0;
 }
 
-.app-viewport.is-playing .game-toolbar,
 .app-viewport.is-playing .game-layout {
   width: min(100%, 1120px);
   margin: 0 auto;
 }
 
-.app-viewport.is-playing [data-table-layout="vertical"] :is(.game-toolbar, .game-layout) {
+.app-viewport.is-playing [data-table-layout="vertical"] .game-layout {
   width: min(100%, 720px);
 }
-
-.app-viewport.is-playing .game-toolbar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: clamp(4px, 1.4dvw, 14px);
-}
-
-.app-viewport.is-playing .game-toolbar-main,
-.app-viewport.is-playing .game-toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-}
-
-.app-viewport.is-playing .game-toolbar h1 {
-  margin: 0;
-  color: var(--ink);
-  font: 700 clamp(18px, 2.7dvw, 30px)/1 var(--sans);
-  letter-spacing: -.04em;
-}
-
-.app-viewport.is-playing .game-toolbar .difficulty-badge {
-  padding: 3px 7px;
-  font-size: 11px;
-}
-
-.app-viewport.is-playing .game-toolbar .table-layout-label {
-  position: absolute;
-  clip-path: inset(50%);
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.app-viewport.is-playing .game-toolbar .table-layout-picker {
-  flex-wrap: nowrap;
-  background: #131313;
-}
-
-.app-viewport.is-playing .game-toolbar .table-layout-picker button {
-  min-height: 38px;
-  padding-inline: clamp(7px, 1.4dvw, 14px);
-  font-size: 12px;
-}
-
-.app-viewport.is-playing .game-toolbar-actions button {
-  display: grid;
-  width: 44px;
-  min-width: 0;
-  height: 44px;
-  min-height: 0;
-  padding: 0;
-  place-items: center;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: #131313;
-  color: var(--ink);
-}
-
-.app-viewport.is-playing .game-toolbar-actions button:hover {
-  border-color: var(--accent-dark);
-  background: #222;
-}
-
-.app-viewport.is-playing .game-toolbar-actions .icon { width: 18px; height: 18px; }
 
 .app-viewport.is-playing .game-layout {
   display: grid;
@@ -3616,10 +3549,7 @@ svg.aside-panel-icon {
 .app-viewport.is-playing .move-controls .icon { flex: 0 0 15px; height: 15px; }
 
 @media (max-width: 560px) {
-  .app-viewport.is-playing .game-toolbar .difficulty-badge { display: none; }
-  .app-viewport.is-playing .game-toolbar-actions { gap: 4px; }
 
-  .app-viewport.is-playing .game-toolbar-actions button { width: 38px; height: 40px; }
 
   .app-viewport.is-playing .action-panel:has(.option-button) { flex-wrap: wrap; }
 
@@ -3634,12 +3564,7 @@ svg.aside-panel-icon {
 
 .app-viewport.is-playing.is-compact-play .workspace[data-table-layout] { --play-gap: 4px; }
 
-.app-viewport.is-playing.is-compact-play .game-toolbar :is(.table-layout-picker button, .game-toolbar-actions button) {
-  min-height: 34px;
-  height: 34px;
-}
 
-.app-viewport.is-playing.is-compact-play .game-toolbar-actions button { width: 38px; }
 
 .app-viewport.is-playing.is-compact-play [data-table-layout] .game-table {
   grid-template-columns: minmax(0, 1fr) auto auto;
@@ -4006,3 +3931,333 @@ svg.aside-panel-icon {
 .is-rotated-view #modal[data-kind="tutorial"] .modal-top .icon-button { width: 32px; height: 32px; flex-basis: 32px; }
 .is-rotated-view #modal[data-kind="tutorial"] #modal-title { margin-bottom: 6px; }
 .is-rotated-view #modal[data-kind="tutorial"] .tutorial-links button { min-height: 30px; }
+
+/* A quiet frame lets the selected felt and playing cards carry the color. */
+.app-viewport,
+#modal {
+  --card-ivory: #f4e4bf;
+  --card-gold: #e4bb72;
+  --card-ink: #241c10;
+  --card-edge: #292725;
+}
+
+.app-viewport .app-bar {
+  gap: 8px;
+  border-bottom-color: transparent;
+}
+
+.app-viewport .brand-mark {
+  position: relative;
+  width: 32px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #5c4b31;
+  border-radius: 7px;
+  color: var(--card-ivory);
+  background: #1d1810;
+  font-weight: 760;
+}
+
+.app-viewport .brand-mark > span {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  margin: 0;
+  color: var(--card-gold);
+  font-size: 6px;
+}
+
+.app-viewport .brand-word { color: var(--card-ivory); }
+.app-viewport .app-tool { color: #dbd4c8; }
+.app-viewport .app-tool[aria-pressed="true"] { color: var(--card-gold); }
+
+.app-viewport :is(.app-tool, .brand, .table-layout-picker button, .button, .mode-option):focus-visible {
+  outline: 2px solid var(--card-gold);
+  outline-offset: 3px;
+}
+
+.app-viewport.is-playing .app-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.app-viewport.is-playing .app-bar .brand { justify-self: start; }
+.app-viewport.is-playing .app-bar .app-tools { justify-self: end; }
+
+.app-viewport.is-playing .app-bar .table-layout-choice { margin: 0; }
+
+.app-viewport.is-playing .app-bar .table-layout-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+  clip-path: inset(50%);
+}
+
+.app-viewport.is-playing .app-bar .table-layout-picker {
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--card-edge);
+  border-radius: 12px;
+  background: #141311;
+}
+
+.app-viewport.is-playing .app-bar .table-layout-picker button {
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.app-viewport.is-playing .app-bar .table-layout-picker button[aria-pressed="true"] {
+  color: var(--card-ivory);
+  background: #342817;
+  box-shadow: inset 0 0 0 1px #765a34;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.app-viewport.is-playing [data-table-layout] .game-table,
+.app-viewport.is-playing.is-compact-play [data-table-layout] .game-table {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "score opponent"
+    "cards cards"
+    "hand hand";
+  border: 0;
+  box-shadow: inset 0 0 20px #0003;
+}
+
+.app-viewport.is-playing .game-table::after,
+.app-viewport.is-lobby .hero-table-inner::after { display: none; }
+
+.app-viewport.is-lobby .hero-table-inner { box-shadow: inset 0 0 22px #0003; }
+.app-viewport.is-playing [data-table-layout] .table-center { border-color: #0002; background: #0002; }
+
+.app-viewport.is-playing [data-table-layout] .compact-score {
+  justify-content: flex-start;
+  gap: 5px;
+  min-width: 0;
+  text-shadow: none;
+}
+
+.app-viewport.is-playing [data-table-layout] .compact-score > span {
+  gap: 4px;
+  padding: 5px 6px;
+  border-color: transparent;
+  background: #0005;
+  line-height: 1;
+}
+
+.app-viewport.is-playing [data-table-layout] .compact-score > span.is-current {
+  border-color: #f1d39980;
+  background: #0008;
+}
+
+.app-viewport.is-playing [data-table-layout] .compact-score > span.is-current strong { color: var(--card-ivory); }
+.app-viewport.is-playing [data-table-layout] .compact-score > span > span { min-width: 0; }
+.app-viewport.is-playing [data-table-layout] .compact-score strong { font-size: clamp(15px, 2.7dvw, 19px); }
+
+.app-viewport.is-playing [data-table-layout] .opponent-zone {
+  justify-content: flex-end;
+}
+
+.app-viewport.is-playing [data-table-layout] .opponent-hand .playing-card {
+  width: clamp(16px, 4.2cqw, 28px);
+}
+
+.app-viewport.is-playing [data-table-layout] :is(.own-hand .playing-card.selected, .table-cards .playing-card.highlight) {
+  outline-color: var(--card-gold);
+}
+
+.app-viewport.is-playing [data-table-layout] .action-panel {
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.app-viewport.is-playing .action-dot.ready { background: var(--card-gold); }
+
+.app-viewport.is-playing .move-controls .button { border-radius: 10px; }
+
+.app-viewport .button:is(.primary, .gold),
+#modal .button.primary {
+  background: var(--card-ivory);
+  border-color: var(--card-ivory);
+  color: var(--card-ink);
+}
+
+.app-viewport .button:is(.primary, .gold):hover:not(:disabled),
+#modal .button.primary:hover:not(:disabled) {
+  background: #fff0d2;
+  border-color: #fff0d2;
+}
+
+.app-viewport.is-playing .move-controls .button.primary:disabled {
+  background: #25221d;
+  border-color: #25221d;
+  color: #c4bba8;
+  opacity: 1;
+}
+
+.app-viewport.is-lobby .setup-panel {
+  --setup-surface: transparent;
+  --setup-control: #171613;
+  --setup-field: #151412;
+  --setup-line: #38332b;
+  --setup-selected: #272017;
+  --setup-signal: var(--card-gold);
+  gap: 12px;
+  padding: clamp(8px, 2vw, 22px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.app-viewport.is-lobby .setup-header {
+  min-height: 64px;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.app-viewport.is-lobby .setup-header h1 {
+  color: var(--card-ivory);
+  font: 700 clamp(34px, 7.5vw, 54px)/.98 Georgia, "Times New Roman", serif;
+  letter-spacing: -.065em;
+}
+
+.app-viewport.is-lobby .setup-card-art {
+  position: relative;
+  width: clamp(62px, 18vw, 104px);
+  height: 63px;
+  flex: none;
+  pointer-events: none;
+}
+
+.app-viewport.is-lobby .setup-card-art .playing-card {
+  position: absolute;
+  right: 13px;
+  bottom: 5px;
+  width: 36px;
+  border-radius: 4px;
+  transform: rotate(12deg);
+}
+
+.app-viewport.is-lobby .setup-card-art .playing-card:first-child {
+  right: 30px;
+  bottom: 8px;
+  transform: rotate(-13deg);
+}
+
+.app-viewport.is-lobby .setup-panel > .learn-entry {
+  min-height: 44px;
+  padding: 5px 8px;
+  border-color: #423522;
+  border-radius: 10px;
+  background: #1c170f;
+  color: var(--card-ivory);
+}
+
+.app-viewport.is-lobby .learn-entry-icon {
+  width: 29px;
+  height: 29px;
+  border: 0;
+  background: #352719;
+  color: var(--card-gold);
+}
+
+.app-viewport.is-lobby .setup-shortcuts button {
+  min-height: 40px;
+  border-color: transparent;
+  background: transparent;
+  color: #d0c6b4;
+}
+
+.app-viewport.is-lobby .setup-shortcuts button:hover:not(:disabled) {
+  background: #1b1813;
+  color: var(--card-ivory);
+}
+
+.app-viewport.is-lobby .resume-button {
+  border-color: #504027;
+  background: #201a12;
+  color: var(--card-ivory);
+}
+
+.app-viewport.is-lobby .start-button {
+  background: var(--card-ivory);
+  border-color: var(--card-ivory);
+  color: var(--card-ink);
+}
+
+@media (min-width: 851px) and (min-height: 521px) {
+  .app-viewport.is-lobby .setup-card-art { display: none; }
+}
+
+@media (max-width: 440px) {
+  .app-viewport.is-playing .app-bar {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding-inline: max(8px, env(safe-area-inset-left, 0px)) max(8px, env(safe-area-inset-right, 0px));
+    gap: 6px;
+  }
+
+  .app-viewport.is-playing .app-bar .brand-word { display: none; }
+  .app-viewport.is-playing .app-bar .table-layout-choice { justify-self: center; }
+
+  .app-viewport.is-playing .app-bar .app-tool {
+    min-width: 40px;
+    padding-inline: 7px;
+  }
+
+  .app-viewport.is-playing [data-table-layout] .compact-score > span {
+    gap: 3px;
+    padding-inline: 5px;
+  }
+}
+
+@container lobby-viewport (max-height: 380px) and (min-width: 470px) {
+  .app-viewport.is-lobby .setup-panel { gap: 6px 12px; padding: 8px; }
+  .app-viewport.is-lobby .setup-header { min-height: 48px; }
+  .app-viewport.is-lobby .setup-header h1 { font-size: 34px; }
+  .app-viewport.is-lobby .setup-card-art { display: none; }
+  .app-viewport.is-lobby .setup-shortcuts button { min-height: 36px; }
+}
+
+.app-viewport.is-playing.is-compact-play .app-bar .table-layout-picker button { min-height: 33px; }
+
+@media (max-width: 850px) {
+  .app-viewport.is-lobby .brand-word { display: none; }
+}
+
+@media (orientation: portrait) and (max-width: 850px) and (min-height: 680px) {
+  :root:not(.is-rotated-view) .app-viewport.is-lobby .lobby-layout {
+    margin-block: clamp(20px, 6dvh, 64px) auto;
+  }
+
+  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-header { min-height: 106px; }
+
+  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-header h1 {
+    font-size: clamp(38px, 11vw, 56px);
+  }
+
+  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-card-art {
+    width: clamp(80px, 24vw, 122px);
+    height: 96px;
+  }
+
+  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-card-art .playing-card {
+    right: 9px;
+    width: 49px;
+  }
+
+  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-card-art .playing-card:first-child {
+    right: 32px;
+    bottom: 12px;
+  }
+}
