@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.10.2
+# Cuarenta · Versión 0.11.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -10,7 +10,7 @@ Esta versión está preparada para GitHub Pages. En cada cambio de `main`, GitHu
 
 1. Abre el enlace en Chrome, Edge o Safari desde PC o celular.
 2. Prueba **Contra la máquina** en Fácil, Medio, Difícil y Experto. En Experto, valora las jugadas para ajustar el reto.
-3. Prueba **Pasar el dispositivo** en una sola pantalla.
+3. Prueba **Dos jugadores** para pasar el dispositivo entre turnos.
 4. Revisa las reglas de ronda: tres iguales al repartir suman 2 puntos; una caída inmediata a una carta de la ronda rival gana la partida.
 5. Recarga la página para comprobar que la partida puede continuar en el mismo navegador.
 
@@ -25,11 +25,11 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 ## Jugar ahora
 
 1. Abre **Jugar_Cuarenta.html** con doble clic en un navegador moderno de escritorio.
-2. Elige **Contra la máquina** o **Pasar el dispositivo**.
-3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. Puedes cambiar el nombre de **Don Julio** en **Nombre del bot (opcional)**. Escoge **2** o **4 puntos** por caída y limpia juntas y pulsa **Repartir cartas**.
+2. Elige **Contra la máquina** o **Dos jugadores**.
+3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. En **Ajustes de partida** puedes cambiar los nombres y elegir **2** o **4 puntos** por caída y limpia juntas. Pulsa **Repartir cartas** para empezar.
 4. Selecciona una carta y confirma la jugada. Si admite varias capturas, cambia entre las opciones antes de confirmar.
 5. En **Vista de la mesa**, elige **Horizontal** o **Vertical** antes de repartir o durante la partida. En el celular, tocar **Horizontal** gira la vista completa del juego y **Vertical** la devuelve a la vista normal. El navegador recuerda tu elección.
-6. En el celular puedes jugar de pie o de lado. Desliza hacia abajo para ver el marcador detallado, el historial y las reglas.
+6. La mano, las cartas de la mesa, el marcador y el botón de jugar comparten pantalla. Pulsa el trofeo para abrir el historial, el marcador detallado y las reglas.
 
 Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo en **Preferencias → Reducir movimiento**. El aviso y las cartas de una ronda solo aparecen en la vista de quien la recibe. Los puntos se suman al marcador.
 

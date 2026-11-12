@@ -99,69 +99,60 @@ function cardMarkup(card, { back = false, selected = false, highlight = false, i
 }
 
 function shell(content) {
-  return `<div class="app-shell${screen === 'game' ? ' is-playing' : ''}">
-    <aside class="sidebar" aria-label="Menú principal">
-      <button class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark">40<span>◆</span></span><span class="brand-word">cuarenta<span>DE AQUÍ, DE SIEMPRE</span></span></button>
-      <nav><button class="nav-item active" data-action="home">${icon('cards')}<span>La mesa</span></button><button class="nav-item" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button><button class="nav-item" data-action="settings">${icon('settings')}<span>Preferencias</span></button></nav>
-      <div class="sidebar-bottom"><span class="ecuador-stripes" aria-hidden="true"><i></i><i></i><i></i></span><span>Una tradición ecuatoriana.<br>Una mesa para todos.</span></div>
-    </aside>
-    <div class="main-shell"><header class="topbar"><div class="breadcrumb">${screen === 'home' ? 'Bienvenido a tu mesa' : `<button data-action="home">La mesa</button><span>/</span><strong>Partida local</strong>`}</div><div class="topbar-actions"><span class="local-badge"><i></i> En este dispositivo</span><button type="button" class="icon-button music-toggle" data-action="music" aria-label="Música de fondo" aria-pressed="${prefs.music}" title="${prefs.music ? 'Pausar' : 'Activar'} música de fondo">${icon('music')}</button><button class="icon-button sound-toggle" data-action="sound" aria-label="${prefs.sound ? 'Desactivar' : 'Activar'} sonido" title="${prefs.sound ? 'Desactivar' : 'Activar'} sonido">${icon(prefs.sound ? 'sound' : 'mute')}</button><button class="icon-button mobile-settings" data-action="settings" aria-label="Preferencias">${icon('settings')}</button></div></header><main id="main" tabindex="-1">${content}</main><footer class="footer"><span>Hecho para disfrutar, carta a carta.</span><button data-action="rules">Reglas de esta mesa ${icon('arrow')}</button></footer></div>
+  return `<div class="app-shell app-viewport ${screen === 'game' ? 'is-playing' : 'is-lobby'}">
+    <header class="app-bar">
+      <button type="button" class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark" aria-hidden="true">40<span>◆</span></span><span class="brand-word">Cuarenta</span></button>
+      <nav class="app-tools" aria-label="Herramientas">
+        <button type="button" class="app-tool" data-action="tutorial" aria-label="Aprender a jugar" title="Aprender a jugar">${icon('book')}<span>Aprender</span></button>
+        <button type="button" class="app-tool music-toggle" data-action="music" aria-label="Música de fondo" aria-pressed="${prefs.music}" title="${prefs.music ? 'Pausar' : 'Activar'} música de fondo">${icon('music')}</button>
+        <button type="button" class="app-tool" data-action="settings" aria-label="Preferencias" title="Preferencias">${icon('settings')}</button>
+      </nav>
+    </header>
+    <main id="main" class="workspace" tabindex="-1">${content}</main>
   </div>`;
 }
 
 function renderHome() {
   const saved = session.view(0);
   const canResume = saved && saved.status !== 'finished';
-  const namesOpen = app.querySelector('#setup-names')?.open || false;
-  const opponentLabel = mode === 'solo' ? 'Nombre del bot (opcional)' : 'Nombre del otro jugador';
-  const opponentDefault = mode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2';
   const modeButtons = [
-    ['solo', 'bot', 'Contra la máquina', `Juega contra ${DEFAULT_BOT_NAME}.`],
-    ['pass', 'people', 'Pasar el dispositivo', 'Dos personas en la misma mesa.'],
-  ].map(([id, symbol, label, description]) => `
+    ['solo', 'bot', 'Contra la máquina'],
+    ['pass', 'people', 'Dos jugadores'],
+  ].map(([id, symbol, label]) => `
     <button type="button" class="mode-option${mode === id ? ' chosen' : ''}" data-action="mode" data-mode="${id}" aria-pressed="${mode === id}">
       <span class="mode-icon">${icon(symbol)}</span>
-      <span class="mode-copy"><strong>${label}</strong><small>${description}</small></span>
+      <span class="mode-copy"><strong>${label}</strong></span>
       <span class="radio-dot" aria-hidden="true"></span>
     </button>`).join('');
-  app.innerHTML = shell(`<section class="welcome-heading"><div><p class="eyebrow">EL JUEGO QUE NOS REÚNE</p><h1>El Cuarenta de siempre.</h1><p class="intro">Baraja, reparte y disfruta. La próxima buena mano empieza aquí.</p></div></section>
-    <section class="lobby-layout" aria-label="Preparar una partida">
-      <div class="hero-table"><div class="hero-table-inner">${tableArt(prefs.tableCity)}<div class="hero-fan" aria-hidden="true">${cardMarkup(demoCard('A', 'hearts'))}${cardMarkup(demoCard('7', 'clubs'))}${cardMarkup(demoCard('K', 'diamonds'))}</div></div><div class="hero-bottom"><span data-table-city-name>${cityNames[prefs.tableCity]}</span><button type="button" class="felt-shortcut" data-action="felt-settings">${icon('palette')} Diseño de mesa</button></div></div>
-      <section class="setup-panel" aria-labelledby="setup-heading">
-        <header class="setup-header"><span class="setup-heading-icon">${icon('cards')}</span><h2 id="setup-heading">¿Cómo jugamos?</h2></header>
+  app.innerHTML = shell(`<section class="lobby-layout" aria-label="Preparar una partida">
+    <div class="hero-table" aria-hidden="true">
+      <div class="hero-table-inner">${tableArt(prefs.tableCity)}
+        <div class="hero-fan">${cardMarkup(demoCard('A', 'hearts'))}${cardMarkup(demoCard('7', 'clubs'))}${cardMarkup(demoCard('K', 'diamonds'))}</div>
+      </div>
+    </div>
+    <section class="setup-panel" aria-labelledby="setup-heading">
+      <header class="setup-header"><h1 id="setup-heading">¿Cómo jugamos?</h1></header>
+      <form id="new-game-form">
         <div class="mode-options setup-modes" role="group" aria-label="Modo de juego">${modeButtons}</div>
-        <form id="new-game-form">
-          <div class="setup-controls">
-            ${mode === 'solo' ? `<div class="difficulty-picker">
-              <label for="bot-difficulty">Nivel de la máquina</label>
-              <select id="bot-difficulty" name="difficulty" aria-describedby="difficulty-note">${Object.entries(difficultyNames).map(([key, label]) => `<option value="${key}" ${difficulty === key ? 'selected' : ''}>${label}</option>`).join('')}</select>
-              <p class="difficulty-note" id="difficulty-note">${difficultyNotes[difficulty]}</p>
-            </div>` : ''}
-            <details class="setup-names" id="setup-names"${namesOpen ? ' open' : ''}>
-              <summary class="setup-names-summary">${icon('person')} <span>Nombres de jugadores</span></summary>
-              <div class="name-fields">
-                <label>Tu nombre<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="Tú" value="${esc(draftNames.player)}"></label>
-                <label>${opponentLabel}<input id="opponent-name" name="opponent" autocomplete="off" maxlength="20" placeholder="${opponentDefault}" value="${esc(draftNames[mode])}"></label>
-              </div>
-            </details>
-            <div class="setup-settings">
-              <div class="combo-choice"><span>Caída y limpia ${icon('spark')}</span>
-                <div role="group" aria-label="Puntos de caída y limpia">
-                  ${[2, 4].map(points => `<button type="button" class="${comboPoints === points ? 'chosen' : ''}" data-action="combo" data-points="${points}" aria-pressed="${comboPoints === points}">${points} puntos</button>`).join('')}
-                </div>
-              </div>
-              ${tableLayoutPicker()}
-            </div>
-          </div>
-          <div class="setup-actions">
-            <button class="button primary start-button" type="submit">Repartir cartas ${icon('arrow')}</button>
-            ${canResume ? `<button class="button resume-button" type="button" data-action="resume">${icon('play')} <span>Continuar partida</span> <span class="resume-score">${saved.players[0].score} a ${saved.players[1].score}</span></button>` : ''}
-          </div>
-        </form>
-        ${canResume && legacyRules(saved) ? '<p class="legacy-note">Tu partida guardada conserva las reglas anteriores. Reparte una nueva para activar la caída a la ronda.</p>' : ''}
-        <p class="setup-footnote"><button type="button" data-action="rules">Ver reglas</button></p>
-      </section>
-    </section>`);
+        <div class="setup-controls">
+          ${mode === 'solo' ? `<div class="difficulty-picker">
+            <label for="bot-difficulty">Nivel de la máquina</label>
+            <select id="bot-difficulty" name="difficulty" aria-describedby="difficulty-note">${Object.entries(difficultyNames).map(([key, label]) => `<option value="${key}" ${difficulty === key ? 'selected' : ''}>${label}</option>`).join('')}</select>
+            <p class="sr-only" id="difficulty-note">${difficultyNotes[difficulty]}</p>
+          </div>` : ''}
+          ${tableLayoutPicker()}
+        </div>
+        <div class="setup-shortcuts">
+          <button type="button" class="button outline" data-action="setup-options">${icon('settings')} Ajustes de partida</button>
+          <button type="button" class="button outline" data-action="felt-settings">${icon('palette')} Diseño de mesa</button>
+        </div>
+        <div class="setup-actions">
+          <button class="button primary start-button" type="submit">Repartir cartas ${icon('arrow')}</button>
+          ${canResume ? `<button class="button resume-button" type="button" data-action="resume">${icon('play')} <span>Continuar partida</span> <span class="resume-score">${saved.players[0].score} a ${saved.players[1].score}</span></button>` : ''}
+        </div>
+      </form>
+    </section>
+  </section>`);
 }
 
 function playerBadge(player, mine, active) {
@@ -282,19 +273,89 @@ function renderGame() {
   const me = v.players[viewer];
   const other = v.players[1 - viewer];
   const myTurn = v.turn === viewer && v.status === 'playing' && !locked;
-  const moves = myTurn ? legalMoves(v, viewer).filter(m => m.cardId === selectedId) : [];
+  const moves = myTurn ? legalMoves(v, viewer).filter(move => move.cardId === selectedId) : [];
   selectedMoveIndex = Math.min(selectedMoveIndex, Math.max(0, moves.length - 1));
   const chosen = moves[selectedMoveIndex];
   const captureIds = chosen?.captureIds || [];
-  const visibleHistory = locked ? v.history.filter(event => event.kind !== 'ronda') : v.history;
-  let instruction = v.status === 'round-end' ? 'Terminó el ciclo. Vamos a contar el cartón.' : v.status === 'finished' ? 'La chica ya tiene ganador.' : locked ? 'Las cartas están ocultas. Pasa el dispositivo.' : !myTurn ? `${other.name} está pensando…` : selectedId ? (captureIds.length ? `Recoges ${captureIds.length + 1} cartas${chosen.points ? ` · +${chosen.points} puntos` : ''}` : 'Esta carta se quedará en la mesa.') : 'Tu turno. Elige una carta de tu mano.';
-  if (chosen?.rondaFall) instruction = '¡Caída a la ronda! Esta jugada gana la partida.';
+
+  let instruction = 'Tu turno. Elige una carta.';
+  if (v.status === 'round-end') instruction = 'Fin del ciclo.';
+  else if (v.status === 'finished') instruction = 'Partida terminada.';
+  else if (locked) instruction = 'Cambio de turno.';
+  else if (!myTurn) instruction = `${other.name} está pensando…`;
+  else if (chosen?.rondaFall) instruction = '¡Caída a la ronda! Victoria inmediata.';
   else if (chosen?.winsGame) instruction = 'Esta jugada completa los 40 puntos.';
-  app.innerHTML = shell(`<div class="game-heading"><div><p class="eyebrow">${mode === 'solo' ? `TÚ CONTRA ${esc(other.name)}` : 'UNA MESA PARA DOS'}</p><h1>Que hablen las cartas.</h1>${mode === 'solo' ? `<span class="difficulty-badge">Mesa ${difficultyNames[v.difficulty || 'medium'].toLowerCase()}</span>` : ''}</div><div class="game-heading-actions">${tableLayoutPicker()}<button class="button outline small-button" data-action="new">${icon('cards')} Nueva partida</button></div></div><div class="game-layout"><section class="game-column"><div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta">${tableArt(prefs.tableCity)}<div class="table-meta"><span>CICLO ${v.round} <i>·</i> REPARTO ${v.deal}/4</span><span class="deck-label">${icon('cards')} ${v.deckCount} por repartir</span></div><div class="opponent-zone">${playerBadge(other, false, v.turn === other.id)}<div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${Array.from({ length: other.handCount }, () => cardMarkup(null, { back: true })).join('')}</div></div><div class="table-center"><span class="felt-watermark" aria-hidden="true">40</span><div class="table-cards" aria-label="Cartas sobre la mesa">${v.table.length ? v.table.map(c => cardMarkup(c, { highlight: captureIds.includes(c.id), last: v.lastPlay?.cardId === c.id })).join('') : '<div class="empty-table"><span>La mesa está limpia.</span><small>Una carta puede cambiarlo todo.</small></div>'}</div></div><div class="own-zone">${!locked && v.rondas?.[viewer] && me.hand?.some(c => v.rondas[viewer].cardIds.includes(c.id)) ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(v.rondas[viewer].rank)} · +2 al repartir</div>` : ''}<div class="own-label">${playerBadge(me, true, v.turn === me.id)}<span class="hand-tip">${myTurn ? 'ELIGE TU CARTA' : 'TU MANO'}</span></div><div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${locked ? Array.from({ length: me.handCount }, () => cardMarkup(null, { back: true })).join('') : (me.hand || []).map(c => cardMarkup(c, { interactive: myTurn, selected: c.id === selectedId })).join('')}</div></div>${locked ? `<div class="privacy-curtain">${tableArt(prefs.tableCity)}<div class="privacy-icon">${icon('eye')}</div><p class="eyebrow">CAMBIO DE TURNO</p><h2>Pasa el dispositivo a<br>${esc(v.players[v.turn].name)}.</h2><p>Tu mano solo aparece cuando estés listo.</p><button class="button gold" data-action="reveal">Soy ${esc(v.players[v.turn].name)} · Ver mi mano ${icon('arrow')}</button></div>` : ''}</div><div class="action-panel"><div class="action-copy"><span class="action-dot ${myTurn ? 'ready' : ''}"></span><div><strong>${esc(instruction)}</strong><small>${chosen ? moveDescription(chosen) : myTurn ? 'Haz clic o toca una carta. Después confirma la jugada.' : 'Sin prisa. Aquí se juega a gusto.'}</small></div></div><div class="move-controls">${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}${v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>' : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>' : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${chosen?.captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`}</div></div><div class="save-status">${icon(session.warning ? 'shield' : 'check')} ${esc(session.warning || 'Partida guardada en este navegador')}${mode === 'pass' ? '<span>Las manos se ocultan entre turnos.</span>' : ''}</div></section>${gameSidebar(v, visibleHistory)}</div>`);
+  else if (captureIds.length) instruction = `Recoges ${captureIds.length + 1} cartas${chosen.points ? ` · +${chosen.points} puntos` : ''}`;
+  else if (chosen) instruction = 'La carta quedará en la mesa.';
+
+  const hiddenCards = count => Array.from({ length: count }, () => cardMarkup(null, { back: true })).join('');
+  const tableCount = v.table.length;
+  const density = tableCount > 22 ? 4 : tableCount > 14 ? 3 : tableCount > 8 ? 2 : 1;
+  const tableCards = tableCount ? v.table.map(card => cardMarkup(card, {
+    highlight: captureIds.includes(card.id),
+    last: v.lastPlay?.cardId === card.id,
+  })).join('') : '<div class="empty-table">Mesa limpia</div>';
+  const myHand = locked ? hiddenCards(me.handCount) : (me.hand || []).map(card => cardMarkup(card, {
+    interactive: myTurn,
+    selected: card.id === selectedId,
+  })).join('');
+  const ronda = locked ? null : v.rondas?.[viewer];
+  const hasRonda = ronda && me.hand?.some(card => ronda.cardIds.includes(card.id));
+  const recipient = locked ? esc(v.players[v.turn].name) : '';
+  const compactScore = v.players.map(player => {
+    const active = !locked && v.status === 'playing' && player.id === v.turn;
+    return `<span class="${active ? 'is-current' : ''}"><span>${esc(player.name)}</span><strong>${player.score}<small> / 40</small></strong></span>`;
+  }).join('');
+  const playButton = v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>'
+    : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>'
+      : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`;
+
+  app.innerHTML = shell(`
+    <div class="game-toolbar">
+      <div class="game-toolbar-main"><h1>Partida</h1>${mode === 'solo' ? `<span class="difficulty-badge">${difficultyNames[v.difficulty || 'medium']}</span>` : ''}</div>
+      ${tableLayoutPicker()}
+      <div class="game-toolbar-actions">
+        <button type="button" class="icon-button" data-action="game-summary" aria-label="Marcador e historial" title="Marcador e historial">${icon('trophy')}</button>
+        <button type="button" class="icon-button" data-action="new" aria-label="Nueva partida" title="Nueva partida">${icon('cards')}</button>
+      </div>
+    </div>
+    <div class="game-layout">
+      <section class="game-column" aria-label="Partida de Cuarenta">
+        <div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta">
+          ${tableArt(prefs.tableCity)}
+          <div class="table-meta"><span>Ciclo ${v.round} <i>·</i> Reparto ${v.deal}/4</span><span class="deck-label">${icon('cards')} ${v.deckCount} por repartir</span></div>
+          <div class="compact-score" aria-label="Puntuación actual">${compactScore}</div>
+          <div class="opponent-zone">
+            ${playerBadge(other, false, !locked && v.turn === other.id)}
+            <div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${hiddenCards(other.handCount)}</div>
+          </div>
+          <div class="table-center">
+            <div class="table-cards" data-table-density="${density}" style="--table-card-count:${tableCount}" aria-label="Cartas sobre la mesa">${tableCards}</div>
+          </div>
+          <div class="own-zone">
+            ${hasRonda ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(ronda.rank)} · +2 puntos</div>` : ''}
+            <div class="own-label">${playerBadge(me, true, myTurn)}<span class="hand-tip">${myTurn ? 'ELIGE TU CARTA' : 'TU MANO'}</span></div>
+            <div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${myHand}</div>
+          </div>
+          ${locked ? `<div class="privacy-curtain">${tableArt(prefs.tableCity)}
+            <div class="privacy-icon">${icon('eye')}</div>
+            <h2>Pasa el dispositivo a ${recipient}</h2>
+            <button class="button gold" data-action="reveal">Ver mi mano ${icon('arrow')}</button>
+          </div>` : ''}
+        </div>
+        <div class="action-panel">
+          <div class="action-copy"><span class="action-dot ${myTurn ? 'ready' : ''}"></span><div><strong>${esc(instruction)}</strong>${chosen?.captureIds.length ? `<small>${esc(moveDescription(chosen))}</small>` : ''}</div></div>
+          <div class="move-controls">
+            ${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}
+            ${playButton}
+          </div>
+        </div>
+      </section>
+    </div>`);
   updateGameOrientation();
   const table = app.querySelector('.game-table');
   const dealKey = `${v.id}/${v.round}/${v.deal}`;
-  // In pass-and-play, deal the visible hand only after the player unlocks it.
+  // Deal the visible hand after the player unlocks it in pass-and-play.
   if (!locked && v.status === 'playing' && renderedDeal !== dealKey) {
     renderedDeal = dealKey;
     table.classList.add('is-dealing');
@@ -307,7 +368,6 @@ function renderGame() {
   }
   table.classList.toggle('is-fresh-play', pendingCardArrival);
   pendingCardArrival = false;
-  app.querySelector('.table-meta').insertAdjacentHTML('afterend', `<div class="compact-score" aria-label="Puntuación actual">${v.players.map(p => `<span><span>${esc(p.name)}</span><strong>${p.score}<small> / 40</small></strong></span>`).join('')}</div>`);
 }
 
 function moveDescription(move) {
@@ -531,8 +591,8 @@ function startGame(options) {
 }
 
 function readForm() {
-  const clean = (id, fallback) => (document.getElementById(id)?.value || '').replace(/[\u0000-\u001f]/g, '').trim().slice(0, 20) || fallback;
-  const names = [clean('player-name', 'Tú'), clean('opponent-name', mode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2')];
+  const clean = (value, fallback) => value.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 20) || fallback;
+  const names = [clean(draftNames.player, 'Tú'), clean(draftNames[mode], mode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2')];
   if (names[0] === names[1]) names[1] = names[1].slice(0, 17) + ' 2';
   return { mode, names, comboPoints, difficulty };
 }
@@ -554,6 +614,33 @@ function closeModal(resume = true) {
 
 function modalHeader(title, eyebrow = 'EN TU MESA') {
   return `<div class="modal-top"><p class="eyebrow">${eyebrow}</p><button class="icon-button" data-action="close-modal" aria-label="Cerrar">${icon('close')}</button></div><h2 id="modal-title">${title}</h2>`;
+}
+
+function showSetupOptions() {
+  const opponentLabel = mode === 'solo' ? 'Nombre del bot (opcional)' : 'Nombre del otro jugador';
+  const opponentDefault = mode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2';
+  showModal('setup-options', `${modalHeader('Ajustes de partida')}
+    <div class="match-options">
+      <div class="name-fields">
+        <label>Tu nombre<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="Tú" value="${esc(draftNames.player)}"></label>
+        <label>${opponentLabel}<input id="opponent-name" name="opponent" autocomplete="off" maxlength="20" placeholder="${opponentDefault}" value="${esc(draftNames[mode])}"></label>
+      </div>
+      <div class="combo-choice"><span>Caída y limpia</span>
+        <div role="group" aria-label="Puntos de caída y limpia">
+          ${[2, 4].map(points => `<button type="button" class="${comboPoints === points ? 'chosen' : ''}" data-action="combo" data-points="${points}" aria-pressed="${comboPoints === points}">${points} puntos</button>`).join('')}
+        </div>
+      </div>
+      <button class="button primary full-width" data-action="close-modal">Listo ${icon('check')}</button>
+      <button class="button text-button full-width" data-action="rules">Ver reglas</button>
+    </div>`);
+}
+
+function showGameSummary() {
+  const v = getView();
+  if (!v) return;
+  const history = locked ? v.history.filter(event => event.kind !== 'ronda') : v.history;
+  showModal('game-summary', `${modalHeader('Resumen de partida')}${gameSidebar(v, history)}
+    ${session.warning ? `<p class="modal-intro">${esc(session.warning)}</p>` : ''}`);
 }
 
 function showRules() {
@@ -829,7 +916,7 @@ function handleAction(target) {
   }
   else if (action === 'combo') {
     comboPoints = Number(target.dataset.points);
-    for (const button of app.querySelectorAll('[data-action="combo"]')) {
+    for (const button of modal.querySelectorAll('[data-action="combo"]')) {
       const selected = Number(button.dataset.points) === comboPoints;
       button.classList.toggle('chosen', selected);
       button.setAttribute('aria-pressed', String(selected));
@@ -861,6 +948,8 @@ function handleAction(target) {
   }
   else if (action === 'next-round') { closeModal(false); try { session.dispatch({ type: 'NEXT_ROUND' }); locked = mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); } }
   else if (action === 'rules') showRules();
+  else if (action === 'setup-options') showSetupOptions();
+  else if (action === 'game-summary') showGameSummary();
   else if (action === 'settings') showSettings();
   else if (action === 'felt-settings') showTableAppearance();
   else if (action === 'felt-theme') setTableAppearance({ theme: target.dataset.felt });

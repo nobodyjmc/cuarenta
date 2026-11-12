@@ -3064,3 +3064,748 @@ svg.aside-panel-icon {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* One workspace below the shared app bar. */
+.app-shell.app-viewport {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: var(--app-viewport-height, 100dvh);
+  min-height: 0;
+}
+
+.is-rotated-view .app-shell.app-viewport {
+  --app-viewport-height: var(--rotated-height);
+  min-height: 0;
+}
+
+.app-viewport .app-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+  padding: max(5px, env(safe-area-inset-top, 0px)) max(12px, calc((100% - 1120px) / 2), env(safe-area-inset-right, 0px)) 5px max(12px, calc((100% - 1120px) / 2), env(safe-area-inset-left, 0px));
+  border-bottom: 1px solid var(--line);
+  background: #080808;
+}
+
+.app-viewport .brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto;
+  min-height: 42px;
+  gap: 8px;
+  padding: 0;
+}
+
+.app-viewport .brand-mark { width: 30px; height: 36px; }
+.app-viewport .brand-word { display: block; font: 680 17px/1 var(--sans); color: var(--ink); }
+.app-viewport .app-tools { display: flex; align-items: center; gap: 4px; }
+
+.app-viewport .app-tool {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--ink);
+  font: 600 13px/1 var(--sans);
+}
+
+.app-viewport .app-tool:hover,
+.app-viewport .app-tool[aria-pressed="true"] { background: #222; border-color: var(--line); }
+.app-viewport .app-tool .icon { width: 18px; height: 18px; }
+
+.app-viewport .workspace {
+  display: grid;
+  width: min(100%, 1200px);
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(6px, 1.6dvh, 16px) max(8px, 2.4dvw, env(safe-area-inset-right, 0px)) max(6px, 1.6dvh, env(safe-area-inset-bottom, 0px)) max(8px, 2.4dvw, env(safe-area-inset-left, 0px));
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.is-rotated-view .app-viewport .app-bar {
+  padding: 3px max(10px, env(safe-area-inset-bottom, 0px)) 3px max(10px, env(safe-area-inset-top, 0px));
+}
+
+.is-rotated-view .app-viewport .workspace {
+  padding: 5px max(8px, env(safe-area-inset-bottom, 0px)) max(5px, env(safe-area-inset-left, 0px)) max(8px, env(safe-area-inset-top, 0px));
+}
+
+#modal .match-options { display: grid; gap: 14px; margin-top: 18px; }
+#modal .game-aside { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: 18px; }
+
+@media (max-width: 359px) {
+  .app-viewport .app-tool span { display: none; }
+}
+
+@media (max-height: 420px) {
+  .app-viewport .app-bar { padding-block: 2px; }
+  .app-viewport :is(.app-tool, .brand) { min-height: 36px; }
+  .app-viewport .brand-mark { width: 26px; height: 30px; }
+}
+
+.is-rotated-view .app-viewport :is(.app-tool, .brand) { min-height: 36px; }
+.is-rotated-view .app-viewport .brand-mark { width: 26px; height: 30px; }
+
+/* Match setup in the app viewport */
+.app-viewport.is-lobby .workspace { container: lobby-viewport / size; }
+.app-viewport.is-lobby .lobby-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
+  grid-template-areas: "visual setup";
+  align-items: stretch;
+  gap: clamp(12px, 2vw, 24px);
+  width: min(100%, 1050px);
+  min-height: 0;
+  margin: auto;
+}
+
+.app-viewport.is-lobby .hero-table { min-height: 0; gap: 0; }
+.app-viewport.is-lobby .hero-table-inner { min-height: 0; }
+
+.app-viewport.is-lobby .setup-panel {
+  --setup-surface: #111;
+  --setup-control: #1a1a1a;
+  --setup-field: #141414;
+  --setup-line: #454545;
+  --setup-selected: #282828;
+  --setup-signal: #f5f5f5;
+  justify-content: center;
+  gap: 16px;
+  padding: clamp(14px, 2vw, 24px);
+  border-radius: 16px;
+}
+
+.app-viewport.is-lobby .setup-header {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.app-viewport.is-lobby .setup-header::after,
+.app-viewport.is-lobby .setup-heading-icon { display: none; }
+
+.app-viewport.is-lobby .setup-header :is(h1, h2) {
+  margin: 0;
+  color: var(--ink);
+  font: 660 clamp(24px, 3vw, 34px)/1.1 var(--sans);
+  letter-spacing: -.035em;
+}
+
+.app-viewport.is-lobby #new-game-form { display: grid; gap: 12px; min-width: 0; }
+
+.app-viewport.is-lobby .setup-modes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.app-viewport.is-lobby .mode-option {
+  grid-template: "symbol copy selected" 1fr / auto minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 54px;
+  gap: 7px;
+  padding: 7px 9px;
+  border-radius: 10px;
+}
+
+.app-viewport.is-lobby .mode-option strong { font-size: 13px; line-height: 1.17; }
+.app-viewport.is-lobby .mode-option .mode-icon { width: 24px; height: 24px; border-radius: 6px; }
+.app-viewport.is-lobby .mode-option .mode-icon .icon { width: 16px; height: 16px; }
+.app-viewport.is-lobby .mode-option small { display: none; }
+.app-viewport.is-lobby .radio-dot { width: 11px; height: 11px; }
+
+.app-viewport.is-lobby .setup-controls {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 12px;
+}
+
+.app-viewport.is-lobby .setup-controls .table-layout-choice {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+}
+
+.app-viewport.is-lobby .setup-controls :is(.difficulty-picker label, .table-layout-label) {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.app-viewport.is-lobby .setup-controls .difficulty-picker select {
+  height: 44px;
+  min-height: 44px;
+  padding: 4px 9px;
+  border-radius: 9px;
+}
+
+.app-viewport.is-lobby .table-layout-picker {
+  width: 100%;
+  padding: 2px;
+  background: var(--setup-field);
+  border-color: var(--setup-line);
+  border-radius: 9px;
+}
+
+.app-viewport.is-lobby .table-layout-picker button {
+  flex: 1;
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.app-viewport.is-lobby .table-layout-picker button[aria-pressed="true"] {
+  background: var(--setup-selected);
+  box-shadow: inset 0 0 0 1px var(--setup-signal);
+  color: var(--setup-signal);
+}
+
+.app-viewport.is-lobby .setup-shortcuts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.app-viewport.is-lobby .setup-shortcuts button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 5px 8px;
+  border: 1px solid var(--setup-line);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ink);
+  font: 600 12px/1.15 var(--sans);
+  white-space: normal;
+}
+
+.app-viewport.is-lobby .setup-shortcuts .icon { width: 15px; height: 15px; flex: none; }
+.app-viewport.is-lobby .setup-shortcuts button:hover { background: var(--setup-control); }
+.app-viewport.is-lobby .setup-actions { gap: 8px; margin: 0; }
+
+.app-viewport.is-lobby .start-button {
+  min-height: 46px;
+  padding: 7px 12px;
+  border-color: #f1eee6;
+  border-radius: 9px;
+  background: #f1eee6;
+  color: #141414;
+}
+
+.app-viewport.is-lobby .start-button:hover:not(:disabled) { background: #fff; }
+
+.app-viewport.is-lobby .resume-button {
+  min-height: 44px;
+  padding: 6px 9px;
+  border-radius: 9px;
+  white-space: normal;
+}
+
+@media (max-width: 850px), (max-height: 520px) {
+  .app-viewport.is-lobby .lobby-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "setup";
+    width: min(100%, 540px);
+  }
+
+  .app-viewport.is-lobby .hero-table { display: none; }
+}
+
+@media (max-width: 380px) {
+  .app-viewport.is-lobby .setup-panel { gap: 12px; padding: 12px; }
+  .app-viewport.is-lobby #new-game-form { gap: 9px; }
+  .app-viewport.is-lobby .setup-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 7px; }
+  .app-viewport.is-lobby .mode-option { min-height: 48px; gap: 5px; padding: 6px; }
+  .app-viewport.is-lobby .mode-option strong { font-size: 12px; }
+  .app-viewport.is-lobby .mode-option .mode-icon { width: 18px; height: 18px; }
+  .app-viewport.is-lobby .mode-option .mode-icon .icon { width: 13px; height: 13px; }
+  .app-viewport.is-lobby .table-layout-picker button { padding-inline: 6px; font-size: 12px; }
+  .app-viewport.is-lobby .setup-shortcuts button { padding-inline: 5px; }
+  .app-viewport.is-lobby .setup-shortcuts .icon { width: 13px; height: 13px; }
+}
+
+@container lobby-viewport (max-height: 380px) and (min-width: 470px) {
+  .app-viewport.is-lobby .lobby-layout { width: min(100%, 670px); }
+  .app-viewport.is-lobby .setup-panel { gap: 8px; padding: 10px; }
+  .app-viewport.is-lobby .setup-header :is(h1, h2) { font-size: 24px; }
+
+  .app-viewport.is-lobby #new-game-form {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    grid-template-areas:
+      "modes modes"
+      "controls actions"
+      "shortcuts actions";
+    align-items: start;
+    gap: 6px 10px;
+  }
+
+  .app-viewport.is-lobby .setup-modes { grid-area: modes; }
+  .app-viewport.is-lobby .mode-option { min-height: 38px; padding-block: 4px; }
+  .app-viewport.is-lobby .setup-controls { grid-area: controls; grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .app-viewport.is-lobby .setup-controls :is(.difficulty-picker, .table-layout-choice) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(136px, 1.3fr);
+    align-items: center;
+    gap: 6px;
+  }
+
+  .app-viewport.is-lobby .setup-controls .difficulty-picker select { height: 38px; min-height: 38px; }
+  .app-viewport.is-lobby .table-layout-picker button { min-height: 32px; padding-inline: 6px; font-size: 12px; }
+  .app-viewport.is-lobby .setup-shortcuts { grid-area: shortcuts; gap: 5px; }
+  .app-viewport.is-lobby .setup-shortcuts button { min-height: 36px; }
+  .app-viewport.is-lobby .setup-actions { grid-area: actions; align-self: center; gap: 6px; }
+  .app-viewport.is-lobby .setup-actions button { min-height: 40px; }
+}
+
+/* Play fits the available viewport, including the rotated mobile stage. */
+.app-viewport.is-playing .workspace[data-table-layout] {
+  --play-height: var(--rotated-height, 100dvh);
+  --play-gap: clamp(5px, 1.35dvh, 12px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--play-gap);
+  min-width: 0;
+  min-height: 0;
+}
+
+.app-viewport.is-playing .game-toolbar,
+.app-viewport.is-playing .game-layout {
+  width: min(100%, 1120px);
+  margin: 0 auto;
+}
+
+.app-viewport.is-playing [data-table-layout="vertical"] :is(.game-toolbar, .game-layout) {
+  width: min(100%, 720px);
+}
+
+.app-viewport.is-playing .game-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: clamp(4px, 1.4dvw, 14px);
+}
+
+.app-viewport.is-playing .game-toolbar-main,
+.app-viewport.is-playing .game-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.app-viewport.is-playing .game-toolbar h1 {
+  margin: 0;
+  color: var(--ink);
+  font: 700 clamp(18px, 2.7dvw, 30px)/1 var(--sans);
+  letter-spacing: -.04em;
+}
+
+.app-viewport.is-playing .game-toolbar .difficulty-badge {
+  padding: 3px 7px;
+  font-size: 11px;
+}
+
+.app-viewport.is-playing .game-toolbar .table-layout-label {
+  position: absolute;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.app-viewport.is-playing .game-toolbar .table-layout-picker {
+  flex-wrap: nowrap;
+  background: #131313;
+}
+
+.app-viewport.is-playing .game-toolbar .table-layout-picker button {
+  min-height: 38px;
+  padding-inline: clamp(7px, 1.4dvw, 14px);
+  font-size: 12px;
+}
+
+.app-viewport.is-playing .game-toolbar-actions button {
+  display: grid;
+  width: 44px;
+  min-width: 0;
+  height: 44px;
+  min-height: 0;
+  padding: 0;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #131313;
+  color: var(--ink);
+}
+
+.app-viewport.is-playing .game-toolbar-actions button:hover {
+  border-color: var(--accent-dark);
+  background: #222;
+}
+
+.app-viewport.is-playing .game-toolbar-actions .icon { width: 18px; height: 18px; }
+
+.app-viewport.is-playing .game-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+}
+
+.app-viewport.is-playing .game-column {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--play-gap);
+  min-height: 0;
+}
+
+.app-viewport.is-playing [data-table-layout] .game-table {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "meta score"
+    "opponent opponent"
+    "cards cards"
+    "hand hand";
+  align-items: center;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  column-gap: 8px;
+  row-gap: var(--play-gap);
+  padding: clamp(8px, 2dvh, 18px);
+  container-type: inline-size;
+}
+
+.app-viewport.is-playing [data-table-layout] .table-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 2px 12px;
+  font-size: 10px;
+  line-height: 1.15;
+  letter-spacing: .025em;
+}
+
+.app-viewport.is-playing .table-meta > span { white-space: nowrap; }
+
+.app-viewport.is-playing .deck-label {
+  gap: 4px;
+  font-size: inherit;
+  letter-spacing: 0;
+}
+
+.app-viewport.is-playing [data-table-layout] .compact-score {
+  grid-area: score;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.app-viewport.is-playing [data-table-layout] .compact-score > span {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 5px 7px;
+  border: 1px solid #fff2;
+  border-radius: 8px;
+  background: #0005;
+}
+
+.app-viewport.is-playing [data-table-layout] .compact-score > span > span {
+  max-width: clamp(27px, 14cqw, 116px);
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-viewport.is-playing [data-table-layout] .compact-score strong {
+  color: var(--ink);
+  font: 700 14px/1 var(--sans);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.app-viewport.is-playing [data-table-layout] .compact-score small {
+  font: 500 9px/1 var(--sans);
+}
+
+.app-viewport.is-playing [data-table-layout] .opponent-zone {
+  grid-area: opponent;
+  min-width: 0;
+  margin: 0;
+}
+
+.app-viewport.is-playing .player-badge small { display: none; }
+
+.app-viewport.is-playing .game-table .playing-card > svg {
+  position: absolute;
+  inset: 0;
+}
+
+.app-viewport.is-playing [data-table-layout] .opponent-hand .playing-card {
+  width: clamp(19px, calc(var(--play-height) * .045), 36px);
+}
+
+.app-viewport.is-playing [data-table-layout] .table-center {
+  grid-area: cards;
+  align-self: stretch;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  border-radius: clamp(8px, 1.8dvh, 14px);
+  container-type: size;
+}
+
+.app-viewport.is-playing [data-table-layout] .table-cards {
+  --table-columns: clamp(1, var(--table-card-count, 1), 8);
+  --table-rows: 1;
+  --card-gap: clamp(3px, .8cqw, 10px);
+  --card-block-padding: 14px;
+  --card-width: calc((100cqw - 13px - (var(--table-columns) - 1) * var(--card-gap)) / var(--table-columns));
+  --card-height: calc((100cqh - var(--card-block-padding) - (var(--table-rows) - 1) * var(--card-gap)) / var(--table-rows) / 1.44);
+  display: flex;
+  align-content: center;
+  gap: var(--card-gap);
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  padding: 5px 6px 9px;
+  overflow: visible;
+}
+
+.app-viewport.is-playing .table-cards[data-table-density="2"] {
+  --table-columns: 7;
+  --table-rows: 2;
+}
+
+.app-viewport.is-playing .table-cards[data-table-density="3"] {
+  --table-columns: 8;
+  --table-rows: 3;
+}
+
+.app-viewport.is-playing .table-cards[data-table-density="4"] {
+  --table-columns: 10;
+  --table-rows: 4;
+}
+
+.app-viewport.is-playing [data-table-layout] .table-cards > .playing-card {
+  width: max(1px, min(74px, var(--card-width), var(--card-height)));
+}
+
+.app-viewport.is-playing .table-cards > .last-card::after {
+  content: '';
+  bottom: -5px;
+  width: 13px;
+  height: 3px;
+  padding: 0;
+  background: #fff;
+  box-shadow: 0 0 0 1px #0008;
+}
+
+.app-viewport.is-playing [data-table-layout] .empty-table span { font-size: clamp(13px, 2.4dvw, 18px); }
+.app-viewport.is-playing [data-table-layout] .empty-table small { display: none; }
+
+.app-viewport.is-playing [data-table-layout] .own-zone {
+  grid-area: hand;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  min-width: 0;
+}
+
+.app-viewport.is-playing .own-label { display: none; }
+
+.app-viewport.is-playing [data-table-layout] .own-hand {
+  --hand-gap: clamp(4px, 1.7cqw, 12px);
+  display: flex;
+  gap: var(--hand-gap);
+  min-height: 0;
+  padding-top: 8px;
+}
+
+.app-viewport.is-playing [data-table-layout] .own-hand .playing-card {
+  width: min(84px, calc((100cqw - 4 * var(--hand-gap) - 8px) / 5), calc(var(--play-height) * .145));
+}
+
+.app-viewport.is-playing [data-table-layout] .own-hand button.selected { transform: translateY(-5px); }
+
+.app-viewport.is-playing [data-table-layout] .ronda-notice {
+  justify-self: center;
+  min-width: 0;
+  gap: 5px;
+  margin: 0;
+  padding: 3px 8px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.app-viewport.is-playing .ronda-notice .icon { flex: 0 0 13px; height: 13px; }
+
+.app-viewport.is-playing [data-table-layout] .action-panel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 5px 4px 10px;
+  border-radius: 14px;
+  background: #131313;
+}
+
+.app-viewport.is-playing [data-table-layout] .action-copy {
+  flex: 0 1 auto;
+  gap: 7px;
+  min-width: 0;
+}
+
+.app-viewport.is-playing .action-copy strong {
+  font-size: 13px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.app-viewport.is-playing [data-table-layout] .action-copy small {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.app-viewport.is-playing [data-table-layout] .move-controls {
+  width: auto;
+  flex-wrap: nowrap;
+  gap: 4px;
+  margin: 0;
+}
+
+.app-viewport.is-playing .move-controls .button {
+  min-width: 0;
+  min-height: 44px;
+  padding: 5px 12px;
+  font-size: 13px;
+  line-height: 1.12;
+}
+
+.app-viewport.is-playing .move-controls .icon { flex: 0 0 15px; height: 15px; }
+
+@media (max-width: 560px) {
+  .app-viewport.is-playing .game-toolbar .difficulty-badge { display: none; }
+  .app-viewport.is-playing .game-toolbar-actions { gap: 4px; }
+
+  .app-viewport.is-playing .game-toolbar-actions button { width: 38px; height: 40px; }
+
+  .app-viewport.is-playing .action-panel:has(.option-button) { flex-wrap: wrap; }
+
+  .app-viewport.is-playing .action-panel:has(.option-button) .action-copy,
+  .app-viewport.is-playing .action-panel:has(.option-button) .move-controls { width: 100%; }
+
+  .app-viewport.is-playing .action-panel:has(.option-button) .move-controls .primary { flex: 1; }
+
+  .app-viewport.is-playing .move-controls .button { padding-inline: 10px; font-size: 12px; }
+  .app-viewport.is-playing .move-controls .icon { display: none; }
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] { --play-gap: 4px; }
+
+.app-viewport.is-playing.is-compact-play .game-toolbar :is(.table-layout-picker button, .game-toolbar-actions button) {
+  min-height: 34px;
+  height: 34px;
+}
+
+.app-viewport.is-playing.is-compact-play .game-toolbar-actions button { width: 38px; }
+
+.app-viewport.is-playing.is-compact-play [data-table-layout] .game-table {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "meta score opponent"
+    "cards cards cards"
+    "hand hand hand";
+  padding: 7px 9px;
+}
+
+.app-viewport.is-playing.is-compact-play .opponent-zone .player-badge { display: none; }
+.app-viewport.is-playing.is-compact-play .opponent-hand .playing-card:nth-child(odd) { transform: none; }
+
+.app-viewport.is-playing.is-compact-play .table-cards[data-table-density="2"] {
+  --table-columns: 14;
+  --table-rows: 1;
+}
+
+.app-viewport.is-playing.is-compact-play .table-cards[data-table-density="3"] {
+  --table-columns: 11;
+  --table-rows: 2;
+}
+
+.app-viewport.is-playing.is-compact-play .table-cards[data-table-density="4"] {
+  --table-columns: 20;
+  --table-rows: 2;
+  --card-gap: 3px;
+  --card-block-padding: 8px;
+  padding-block: 3px 5px;
+}
+
+.app-viewport.is-playing.is-compact-play [data-table-layout] .own-zone:has(.ronda-notice) {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+}
+
+.app-viewport.is-playing.is-compact-play [data-table-layout] .own-hand { padding-top: 5px; }
+
+.app-viewport.is-playing.is-compact-play [data-table-layout] .own-hand .playing-card {
+  width: min(60px, calc(var(--play-height) * .12));
+}
+
+.app-viewport.is-playing.is-compact-play [data-table-layout] .game-table:has(.table-cards:is([data-table-density="3"], [data-table-density="4"])) {
+  padding-block: 4px;
+}
+
+.app-viewport.is-playing.is-compact-play [data-table-layout] .game-table:has(.table-cards:is([data-table-density="3"], [data-table-density="4"])) .own-hand .playing-card {
+  width: min(56px, calc(var(--play-height) * .105));
+}
+
+.app-viewport.is-playing.is-compact-play [data-table-layout] .action-panel { flex-wrap: nowrap; }
+.app-viewport.is-playing.is-compact-play [data-table-layout] :is(.action-copy, .move-controls) { width: auto; }
+.app-viewport.is-playing.is-compact-play .move-controls .button { min-height: 36px; }
+
+.app-viewport.is-playing.is-compact-play .privacy-curtain .privacy-icon { display: none; }
+
+.app-viewport.is-playing.is-compact-play .privacy-curtain h2 {
+  margin-top: 5px;
+  font-size: 21px;
+  line-height: 1.08;
+}
+
+.app-viewport.is-playing.is-compact-play .privacy-curtain p:not(.eyebrow) { margin: 5px 0 8px; }
