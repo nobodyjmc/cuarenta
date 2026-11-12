@@ -526,7 +526,7 @@ main{padding-top:22px}
 /* Apple-inspired web language. Local CSS only, with the game content preserved. */
 :root{
   color-scheme:dark;
-  --paper:#080808;
+  --paper:#000;
   --panel:#1c1c1e;
   --pearl:#1d1d1f;
   --ink:#f5f5f7;
@@ -1879,11 +1879,8 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   to { box-shadow: 0 0 0 0 #63ad8a00; }
 }
 
-/* Metro-inspired contours and table colors are shared by the lobby, match and lessons. */
+/* Table colors are shared by the lobby, match and lessons. */
 :root {
-  --metro-contours: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20720%20480%22%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%221.25%22%20stroke-opacity%3D%22.63%22%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(0%200)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-4%2010)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-8%2020)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-12%2030)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-16%2040)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-20%2050)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-24%2060)%22%2F%3E%3Cpath%20d%3D%22M-80%20155C7%20187%2039%20176%2078%20148S159%2075%20211%2093s84%2032%20143%205S437%2017%20499%2018s133%2049%20252%2017%22%20transform%3D%22translate(-28%2070)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(0%200)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(3%209)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(6%2018)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(9%2027)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(12%2036)%22%2F%3E%3Cpath%20d%3D%22M-48%20497C64%20462%2093%20440%20107%20399c20-57%2069-81%20132-73%2058%207%2087%2042%20146%2036%2060-6%2098-75%20171-76%2062-1%20110%2051%20196%2017%22%20transform%3D%22translate(15%2045)%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(1.000)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.895)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.790)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.685)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.580)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.475)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3Cpath%20transform%3D%22translate(585%20411)%20scale(0.370)%20translate(-585%20-411)%22%20d%3D%22M705%20406c-14%2038-68%2071-124%2070-55-1-103-19-115-48-11-27%2014-57%2045-67%2022-7%2037%205%2059%200%2040-9%2053-25%2091-19%2041%206%2058%2026%2044%2064Z%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222%22%20stroke-opacity%3D%22.48%22%3E%3Cpath%20d%3D%22M-28%20252c75%2027%20107%2024%20173-13%2056-32%2098-44%20157-18%2085%2037%20107%2010%20166-18%2053-26%2095-39%20146-20%2030%2011%2067%2040%20129%2027%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-  --metro-geometry: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20720%20480%22%3E%3Cg%20stroke%3D%22%23031a37%22%20stroke-opacity%3D%22.38%22%20stroke-width%3D%226%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20fill%3D%22%2349cfff%22%20fill-opacity%3D%22.12%22%20d%3D%22M-12%207h179l76%2091-68%2075H70l-82-70Z%22%2F%3E%3Cpath%20fill%3D%22%2364d4ff%22%20fill-opacity%3D%22.08%22%20d%3D%22m391-14%2099%2026%2055%2076-38%2053-108-21-68-76Z%22%2F%3E%3Cpath%20fill%3D%22%2352ceff%22%20fill-opacity%3D%22.13%22%20d%3D%22m722%20149-81%2010-65%2068%2037%2079%20113%2034Z%22%2F%3E%3Cpath%20fill%3D%22%23052749%22%20fill-opacity%3D%22.12%22%20d%3D%22m-14%20304%2098-50%2085%2062-30%2084-70%2088H-14Z%22%2F%3E%3Cpath%20fill%3D%22%234ccaff%22%20fill-opacity%3D%22.13%22%20d%3D%22m341%20444%20102-83%2077%2020%2064%20108H317Z%22%2F%3E%3Cpath%20fill%3D%22none%22%20d%3D%22m-10%20201%2088-30%2091%2040%2047-17%2065-65%2079%2011%2067%2062%2086-27%2042-88%20171-9M18%20487l85-90%2095%206%2059-63%205-58%2066-29%2071%2025%2042%2083m-21-161%2060%2055%2098-15m-51%20246%2047-102%20156%2012%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23052c56%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%22.62%22%20stroke-width%3D%222%22%3E%3Ccircle%20cx%3D%22169%22%20cy%3D%22211%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22281%22%20cy%3D%22129%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22427%22%20cy%3D%22202%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22480%22%20cy%3D%22255%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22198%22%20cy%3D%22403%22%20r%3D%225%22%2F%3E%3Ccircle%20cx%3D%22615%22%20cy%3D%22306%22%20r%3D%225%22%2F%3E%3C%2Fg%3E%3Cg%20fill%3D%22%23ff684f%22%20fill-opacity%3D%22.77%22%20stroke%3D%22%23082548%22%20stroke-width%3D%223%22%20stroke-opacity%3D%22.35%22%3E%3Cpath%20d%3D%22m31%2087%2015-14%2010%2016Z%22%2F%3E%3Cpath%20d%3D%22m651%2099%2022%201-9%2014Z%22%2F%3E%3Cpath%20d%3D%22m129%20361%2012-11%208%2014Z%22%2F%3E%3Cpath%20d%3D%22m557%20438%2015-15%209%2018Z%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
-  --metro-page-veil: linear-gradient(120deg, #080808a6, #080808cb);
   --metro-bar: #101012;
   --metro-panel-shadow: 0 16px 36px -24px #0009;
   --felt-quito: #2c6a54;
@@ -1908,20 +1905,10 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   --city-art-accent: #ff8b6a;
 }
 
-.app-shell {
-  background:
-    var(--metro-page-veil),
-    var(--metro-contours) center top / 820px 547px repeat,
-    var(--paper);
-}
-
 .app-shell > .main-shell { background: transparent; }
 
 .sidebar {
-  background:
-    linear-gradient(#101012e6, #101012e6),
-    var(--metro-contours) left center / 440px auto,
-    #101012;
+  background: #101012;
   box-shadow: 0 1px 0 #ffffff26, 0 4px 20px #0005;
 }
 
@@ -1966,31 +1953,6 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   border: 1px solid #d9eaff60;
 }
 
-.hero-table-inner::before,
-.game-table::before,
-.tutorial-board::before,
-.felt-preview::before,
-.game-table .privacy-curtain::before {
-  content: '';
-  display: block;
-  position: absolute;
-  inset: 0;
-  z-index: -2;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse at 50% 45%, #071c3a28 2%, transparent 70%),
-    var(--metro-contours) center / max(100%, 460px) auto repeat,
-    var(--metro-geometry) center / cover no-repeat;
-  opacity: .49;
-}
-
-.hero-table-inner::before { opacity: .77; }
-.felt-preview::before { opacity: .69; }
-.tutorial-board::before { opacity: .36; }
-.game-table::before {
-  mask-image: linear-gradient(to bottom, #0004, #0007 21%, #000 40% 63%, #0006 83%, #0003);
-}
-
 .table-city-art {
   position: absolute;
   inset: auto 0 12%;
@@ -2000,7 +1962,7 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   height: auto;
   max-height: 76%;
   pointer-events: none;
-  color: #fff;
+  color: var(--city-art-accent);
   opacity: .60;
 }
 
@@ -2057,8 +2019,6 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   overflow: hidden;
   background: var(--felt-surface);
 }
-
-.game-table .privacy-curtain::before { opacity: .34; }
 
 .hero-bottom { align-items: center; }
 
@@ -2198,7 +2158,6 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   height: 19px;
   border-radius: 6px;
   background:
-    var(--metro-contours) center / 95px auto,
     linear-gradient(145deg, #ffffff12, #0002),
     var(--swatch-color, var(--felt-quito));
   box-shadow: inset 0 0 0 1px #ffffff65;
@@ -2487,7 +2446,7 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   font-size: 13px;
 }
 
-/* Lobby controls share the palette and contours of the table. */
+/* Lobby controls share the table palette. */
 .setup-panel {
   --setup-surface: #141416;
   --setup-control: #202023;
@@ -2519,7 +2478,6 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   border-radius: 14px;
   background:
     linear-gradient(110deg, #171719ef 8%, #222225cb 55%, #22222585),
-    var(--metro-contours) right 45% / 420px auto,
     #29292c;
 }
 
@@ -2758,7 +2716,6 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
 .game-aside {
   --aside-surface: #141416;
   --aside-header: #242427;
-  --aside-header-veil: #242427b8;
   --aside-border: #3b3b40;
   --aside-row: #1e1e21;
   --aside-current: #25272a;
@@ -2795,10 +2752,7 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   padding: 12px 14px;
   border-radius: calc(var(--radius-surface) - 1px) calc(var(--radius-surface) - 1px) 0 0;
   border-bottom: 1px solid var(--aside-border);
-  background:
-    linear-gradient(var(--aside-header-veil), var(--aside-header-veil)),
-    var(--metro-contours) right 44% / 340px auto no-repeat,
-    var(--aside-header);
+  background: var(--aside-header);
 }
 
 .aside-panel-title {
@@ -3027,7 +2981,7 @@ svg.aside-panel-icon {
   min-width: 0;
   padding: max(5px, env(safe-area-inset-top, 0px)) max(12px, calc((100% - 1120px) / 2), env(safe-area-inset-right, 0px)) 5px max(12px, calc((100% - 1120px) / 2), env(safe-area-inset-left, 0px));
   border-bottom: 1px solid var(--line);
-  background: #080808;
+  background: var(--paper);
 }
 
 .app-viewport .brand {
@@ -3752,7 +3706,7 @@ svg.aside-panel-icon {
 
 .app-viewport.is-playing.is-compact-play .privacy-curtain p:not(.eyebrow) { margin: 5px 0 8px; }
 
-/* Guided practice shares the lobby's black shell and the match's felt. */
+/* Guided practice shares the lobby's black background and the match's felt. */
 .app-viewport.is-lobby .setup-panel > .learn-entry {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -3763,7 +3717,7 @@ svg.aside-panel-icon {
   padding: 7px 11px;
   border: 1px solid #6d5936;
   border-radius: 10px;
-  background: linear-gradient(100deg, #2d271c, #211e19e8), var(--metro-contours) right 40% / 350px auto;
+  background: linear-gradient(100deg, #2d271c, #211e19e8);
   color: #ffedc4;
   text-align: left;
 }
