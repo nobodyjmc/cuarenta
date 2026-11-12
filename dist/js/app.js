@@ -6,15 +6,15 @@ import { LocalSession, FELT_THEMES, loadPreferences, savePreferences } from './s
 import { createTutorialLessons } from './tutorial.js';
 import { MUSIC_TRACKS, TableMusic } from './music.js';
 import { TABLE_CITIES, tableArt } from './table-art.js';
+import { HOME_ART, HOME_ART_WIDTH, HOME_ART_HEIGHT } from './home-art.js';
 
 const app = document.querySelector('#app');
 const modal = document.querySelector('#modal');
 const session = new LocalSession();
 const prefs = loadPreferences();
 let screen = 'home';
-let mode = 'solo';
 let comboPoints = 2;
-let difficulty = 'medium';
+let difficulty = 'easy';
 const draftNames = { player: '', solo: '', pass: '' };
 const difficultyNames = { easy: 'Fácil', medium: 'Medio', hard: 'Difícil', expert: 'Experto' };
 const tableLayouts = { horizontal: 'Horizontal', vertical: 'Vertical' };
@@ -102,7 +102,6 @@ const iconPaths = {
 };
 const icon = (name, className = '') => `<svg class="icon ${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name] || iconPaths.cards}</svg>`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-const demoCard = (rank, suit) => ({ id: `${rank}-${suit}`, rank, suit });
 const getView = () => session.view(viewer);
 
 function cardMarkup(card, { back = false, selected = false, highlight = false, interactive = false, last = false, coach = false, action = 'select-card' } = {}) {
@@ -112,14 +111,12 @@ function cardMarkup(card, { back = false, selected = false, highlight = false, i
 
 function shell(content) {
   const playing = screen === 'game';
-  const musicActive = musicIsActive();
   return `<div class="app-shell app-viewport ${playing ? 'is-playing' : 'is-lobby'}">
     <header class="app-bar">
       <button type="button" class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark" aria-hidden="true">40<span>◆</span></span><span class="brand-word">Cuarenta</span></button>
       ${playing ? tableLayoutPicker() : ''}
       <nav class="app-tools" aria-label="Herramientas">
-        ${playing ? `<button type="button" class="app-tool" data-action="game-summary" aria-label="Marcador e historial" title="Marcador e historial">${icon('trophy')}</button>`
-          : `<button type="button" class="app-tool music-toggle" data-action="music" aria-label="Música de fondo" aria-pressed="${musicActive}" title="${musicActive ? 'Pausar' : 'Activar'} música de fondo">${icon('music')}</button>`}
+        ${playing ? `<button type="button" class="app-tool" data-action="game-summary" aria-label="Marcador e historial" title="Marcador e historial">${icon('trophy')}</button>` : ''}
         <button type="button" class="app-tool" data-action="settings" aria-label="Preferencias" title="Preferencias">${icon('settings')}</button>
       </nav>
     </header>
@@ -130,52 +127,27 @@ function shell(content) {
 function renderHome() {
   const saved = session.view(0);
   const canResume = saved && saved.status !== 'finished';
-  const modeButtons = [
-    ['solo', 'bot', 'Contra la máquina'],
-    ['pass', 'people', 'Dos jugadores'],
-  ].map(([id, symbol, label]) => `
-    <button type="button" class="mode-option${mode === id ? ' chosen' : ''}" data-action="mode" data-mode="${id}" aria-pressed="${mode === id}">
-      <span class="mode-icon">${icon(symbol)}</span>
-      <span class="mode-copy"><strong>${label}</strong></span>
-      <span class="radio-dot" aria-hidden="true"></span>
-    </button>`).join('');
-  app.innerHTML = shell(`<section class="lobby-layout" aria-label="Preparar una partida">
-    <div class="hero-table" aria-hidden="true">
-      <div class="hero-table-inner">${tableArt(prefs.tableCity)}
-        <div class="hero-fan">${cardMarkup(demoCard('A', 'hearts'))}${cardMarkup(demoCard('7', 'clubs'))}${cardMarkup(demoCard('K', 'diamonds'))}</div>
-      </div>
+  app.innerHTML = shell(`<section class="quick-home" aria-labelledby="setup-heading">
+    <div class="home-cover">
+      <h1 id="setup-heading">El Cuarenta</h1>
+      <img class="home-cover-art" alt="" width="${HOME_ART_WIDTH}" height="${HOME_ART_HEIGHT}" decoding="async">
     </div>
-    <section class="setup-panel" aria-labelledby="setup-heading">
-      <header class="setup-header">
-        <h1 id="setup-heading">El Cuarenta</h1>
-        <div class="setup-card-art" aria-hidden="true">${cardMarkup(demoCard('A', 'hearts'))}${cardMarkup(demoCard('7', 'clubs'))}</div>
-      </header>
-      <button type="button" class="button learn-entry" data-action="tutorial">
-        <span class="learn-entry-icon">${icon('book')}</span>
-        <span class="learn-entry-copy"><strong>Aprender a jugar</strong></span>
-        ${icon('arrow')}
-      </button>
-      <form id="new-game-form">
-        <div class="mode-options setup-modes" role="group" aria-label="Modo de juego">${modeButtons}</div>
-        <div class="setup-controls">
-          ${mode === 'solo' ? `<div class="difficulty-picker">
-            <label for="bot-difficulty">Nivel de la máquina</label>
-            <select id="bot-difficulty" name="difficulty" aria-describedby="difficulty-note">${Object.entries(difficultyNames).map(([key, label]) => `<option value="${key}" ${difficulty === key ? 'selected' : ''}>${label}</option>`).join('')}</select>
-            <p class="sr-only" id="difficulty-note">${difficultyNotes[difficulty]}</p>
-          </div>` : ''}
-          ${tableLayoutPicker()}
-        </div>
-        <div class="setup-shortcuts">
-          <button type="button" class="button outline" data-action="setup-options">${icon('settings')} Ajustes de partida</button>
-          <button type="button" class="button outline" data-action="felt-settings">${icon('palette')} Diseño de mesa</button>
-        </div>
-        <div class="setup-actions">
-          <button class="button primary start-button" type="submit">Repartir cartas ${icon('arrow')}</button>
-          ${canResume ? `<button class="button resume-button" type="button" data-action="resume">${icon('play')} <span>Continuar partida</span> <span class="resume-score">${saved.players[0].score} a ${saved.players[1].score}</span></button>` : ''}
-        </div>
-      </form>
-    </section>
+    <div class="home-actions${canResume ? ' has-saved' : ''}">
+      ${canResume ? `<button class="button resume-button" type="button" data-action="resume">${icon('play')} <span>Continuar partida</span><span class="resume-score">${saved.players[0].score} a ${saved.players[1].score}</span></button>` : ''}
+      <p class="home-level">Nivel ${difficultyNames[difficulty]}</p>
+      <button class="button primary start-button" type="button" data-action="quick-play"><span>Jugar contra ${esc(newGameOptions().names[1])}</span>${icon('arrow')}</button>
+      <button class="button learn-entry" type="button" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button>
+      <button class="button local-entry" type="button" data-action="local-game">${icon('people')}<span>Dos jugadores</span>${icon('arrow')}</button>
+    </div>
   </section>`);
+  app.querySelector('.home-cover-art').src = HOME_ART;
+}
+
+function updateHomeMatchLabels() {
+  const level = app.querySelector('.home-level');
+  if (!level) return;
+  level.textContent = `Nivel ${difficultyNames[difficulty]}`;
+  app.querySelector('.start-button span').textContent = `Jugar contra ${newGameOptions().names[1]}`;
 }
 
 function scorePanel(v) {
@@ -218,8 +190,8 @@ function tableLayoutPicker() {
     `<button type="button" data-action="table-layout" data-layout="${value}" aria-pressed="${prefs.tableLayout === value}">${label}</button>`
   );
   return `<div class="table-layout-choice">
-    <span class="table-layout-label" id="table-layout-label">Vista de la mesa</span>
-    <div class="table-layout-picker" role="group" aria-labelledby="table-layout-label">${buttons.join('')}</div>
+    <span class="table-layout-label" aria-hidden="true">Vista de la mesa</span>
+    <div class="table-layout-picker" role="group" aria-label="Vista de la mesa">${buttons.join('')}</div>
   </div>`;
 }
 
@@ -230,7 +202,7 @@ function changeTableLayout(layout) {
   const changed = prefs.tableLayout !== layout;
   prefs.tableLayout = layout;
   updateGameOrientation();
-  for (const button of app.querySelectorAll('.table-layout-picker button')) {
+  for (const button of document.querySelectorAll('.table-layout-picker button')) {
     button.setAttribute('aria-pressed', String(button.dataset.layout === layout));
   }
   if (changed && !savePreferences(prefs)) toast('No se pudo guardar la orientación en este navegador.');
@@ -288,7 +260,6 @@ function releaseNativeRotation() {
 function renderGame(dealDelay) {
   const v = getView();
   if (!v) { screen = 'home'; renderHome(); return; }
-  mode = v.mode;
   const me = v.players[viewer];
   const other = v.players[1 - viewer];
   const myTurn = v.turn === viewer && v.status === 'playing' && !locked;
@@ -454,14 +425,6 @@ function musicIsActive() {
   return prefs.music && (tableMusic.isPlaying || Boolean(musicAttempt));
 }
 
-function updateMusicButton() {
-  const button = app.querySelector('[data-action="music"]');
-  if (!button) return;
-  const active = musicIsActive();
-  button.setAttribute('aria-pressed', String(active));
-  button.title = `${active ? 'Pausar' : 'Activar'} música de fondo`;
-}
-
 function startMusic(reportError = false) {
   const trackId = prefs.musicTrack;
   if (!prefs.music || document.hidden || musicAttempt?.trackId === trackId) return;
@@ -469,13 +432,11 @@ function startMusic(reportError = false) {
   musicActivated = true;
   const attempt = { trackId };
   musicAttempt = attempt;
-  updateMusicButton();
   const status = modal.querySelector('#music-status');
   if (status) { status.hidden = true; status.textContent = ''; }
   void tableMusic.start({ trackId, volume: prefs.musicVolume }).then(played => {
     if (musicAttempt !== attempt) return;
     musicAttempt = null;
-    updateMusicButton();
     if (played || !reportError) return;
     toggleMusic(false);
     const message = 'No se pudo iniciar la música. Puedes volver a activarla en Preferencias.';
@@ -488,7 +449,6 @@ function startMusic(reportError = false) {
 function pauseMusic() {
   musicAttempt = null;
   tableMusic.pause();
-  updateMusicButton();
 }
 
 function toggleMusic(enabled) {
@@ -619,7 +579,7 @@ function startGame(options) {
   try {
     session.dispatch({ type: 'NEW_GAME', options });
     pendingPassMove = null;
-    screen = 'game'; mode = options.mode; difficulty = options.difficulty || 'medium'; viewer = 0; locked = mode === 'pass'; selectedId = null;
+    screen = 'game'; viewer = 0; locked = options.mode === 'pass'; selectedId = null;
     render(); focusGame(); announce('Partida iniciada.');
     if (!musicIsActive()) startMusic();
     presentGameStatus();
@@ -627,7 +587,7 @@ function startGame(options) {
   } catch (error) { toast(error.message); }
 }
 
-function newGameOptions(gameMode = mode, gameDifficulty = difficulty, points = comboPoints) {
+function newGameOptions(gameMode = 'solo', gameDifficulty = difficulty, points = comboPoints) {
   const clean = (value, fallback) => value.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 20) || fallback;
   const names = [clean(draftNames.player, 'Tú'), clean(draftNames[gameMode], gameMode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2')];
   if (names[0] === names[1]) names[1] = names[1].slice(0, 17) + ' 2';
@@ -666,23 +626,38 @@ function modalHeader(title, eyebrow = 'EN TU MESA') {
   return `<div class="modal-top"><p class="eyebrow">${eyebrow}</p><button class="icon-button" data-action="close-modal" aria-label="Cerrar">${icon('close')}</button></div><h2 id="modal-title">${title}</h2>`;
 }
 
-function showSetupOptions() {
-  const opponentLabel = mode === 'solo' ? 'Nombre del bot (opcional)' : 'Nombre del otro jugador';
-  const opponentDefault = mode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2';
-  showModal('setup-options', `${modalHeader('Ajustes de partida')}
+function showSetupOptions(gameMode = 'solo') {
+  const local = gameMode === 'pass';
+  const opponentLabel = local ? 'Nombre del segundo jugador' : 'Nombre del bot (opcional)';
+  const opponentDefault = local ? 'Jugador 2' : DEFAULT_BOT_NAME;
+  showModal('setup-options', `${modalHeader(local ? 'Dos jugadores' : 'Ajustes de partida')}
+    ${local ? '<p class="modal-intro">Jueguen en el mismo dispositivo y pásenlo al cambiar de turno.</p>' : ''}
     <div class="match-options">
       <div class="name-fields">
-        <label>Tu nombre<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="Tú" value="${esc(draftNames.player)}"></label>
-        <label>${opponentLabel}<input id="opponent-name" name="opponent" autocomplete="off" maxlength="20" placeholder="${opponentDefault}" value="${esc(draftNames[mode])}"></label>
+        <label>${local ? 'Nombre del primer jugador' : 'Tu nombre'}<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="Tú" value="${esc(draftNames.player)}"></label>
+        <label>${opponentLabel}<input id="opponent-name" name="opponent" data-opponent-mode="${gameMode}" autocomplete="off" maxlength="20" placeholder="${opponentDefault}" value="${esc(draftNames[gameMode])}"></label>
       </div>
+      ${local ? '' : `<div class="difficulty-picker">
+        <label for="bot-difficulty">Nivel de la máquina</label>
+        <select id="bot-difficulty" name="difficulty" aria-describedby="difficulty-note">${Object.entries(difficultyNames).map(([key, label]) =>
+          `<option value="${key}" ${difficulty === key ? 'selected' : ''}>${label}</option>`
+        ).join('')}</select>
+        <p class="difficulty-note" id="difficulty-note">${difficultyNotes[difficulty]}</p>
+      </div>`}
       <div class="combo-choice"><span>Caída y limpia</span>
         <div role="group" aria-label="Puntos de caída y limpia">
           ${[2, 4].map(points => `<button type="button" class="${comboPoints === points ? 'chosen' : ''}" data-action="combo" data-points="${points}" aria-pressed="${comboPoints === points}">${points} puntos</button>`).join('')}
         </div>
       </div>
-      <button class="button primary full-width" data-action="close-modal">Listo ${icon('check')}</button>
+      ${tableLayoutPicker()}
+      ${local
+        ? `<button class="button primary full-width" data-action="start-local">Repartir cartas ${icon('arrow')}</button>`
+        : `<button class="button primary full-width" data-action="close-modal">Listo ${icon('check')}</button>`}
       <button class="button text-button full-width" data-action="rules">Ver reglas</button>
     </div>`);
+  const title = modal.querySelector('#modal-title');
+  title.tabIndex = -1;
+  title.focus({ preventScroll: true });
 }
 
 function showGameSummary() {
@@ -775,6 +750,7 @@ function showSettings() {
   const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
   const links = [['felt-settings', 'palette', 'Diseño de mesa']];
   if (screen === 'game') links.push(['tutorial', 'book', 'Aprender a jugar'], ['new', 'cards', 'Nueva partida']);
+  else links.unshift(['setup-options', 'cards', 'Ajustes de partida']);
   const shortcuts = `<nav class="settings-shortcuts" aria-label="Opciones de la mesa">${links.map(([action, symbol, label]) =>
     `<button type="button" class="felt-shortcut settings-table-shortcut" data-action="${action}">${icon(symbol)} ${label} ${icon('arrow')}</button>`
   ).join('')}</nav>`;
@@ -1014,12 +990,9 @@ function showResult() {
 function handleAction(target) {
   const action = target.dataset.action;
   if (action === 'home') { cancelBot(); closeModal(false); screen = 'home'; selectedId = null; pendingPassMove = null; render(); }
-  else if (action === 'mode') {
-    if (mode === target.dataset.mode) return;
-    mode = target.dataset.mode;
-    render();
-    app.querySelector(`[data-mode="${mode}"]`)?.focus({ preventScroll: true });
-  }
+  else if (action === 'quick-play') requestNewGame(newGameOptions());
+  else if (action === 'local-game') showSetupOptions('pass');
+  else if (action === 'start-local') requestNewGame(newGameOptions('pass'));
   else if (action === 'combo') {
     comboPoints = Number(target.dataset.points);
     for (const button of modal.querySelectorAll('[data-action="combo"]')) {
@@ -1059,7 +1032,7 @@ function handleAction(target) {
     try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(move, viewer); }
     catch (error) { toast(error.message); selectedId = null; render(); }
   }
-  else if (action === 'next-round') { closeModal(false); try { session.dispatch({ type: 'NEXT_ROUND' }); locked = mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); } }
+  else if (action === 'next-round') { closeModal(false); try { const next = session.dispatch({ type: 'NEXT_ROUND' }); locked = next.mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); } }
   else if (action === 'rules') showRules();
   else if (action === 'setup-options') showSetupOptions();
   else if (action === 'game-summary') showGameSummary();
@@ -1086,7 +1059,6 @@ function handleAction(target) {
   else if (action === 'tutorial-capture') selectTutorialCard(target.dataset.card, true);
   else if (action === 'tutorial-play' || action === 'tutorial-answer') checkTutorialAnswer(target.dataset.answer);
   else if (action === 'close-modal') closeModal();
-  else if (action === 'music') toggleMusic(!musicIsActive());
   else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound('place'); render(); }
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);
   else if (action === 'round-summary') showRoundSummary();
@@ -1099,22 +1071,19 @@ document.addEventListener('click', event => {
   if (button && !button.disabled) handleAction(button);
   // Another game interaction can recover playback after the browser pauses audio.
   if (event.isTrusted && screen === 'game' && !musicIsActive() &&
-      !event.target.closest('[data-action="music"], .music-toggle-row, #music-track')) startMusic();
+      !event.target.closest('.music-toggle-row, #music-track')) startMusic();
 });
 document.addEventListener('input', event => {
-  if (event.target.id === 'player-name') draftNames.player = event.target.value;
-  else if (event.target.id === 'opponent-name') draftNames[mode] = event.target.value;
-  else if (event.target.id === 'music-volume') {
+  if (event.target.id === 'player-name' || event.target.id === 'opponent-name') {
+    const key = event.target.id === 'player-name' ? 'player' : event.target.dataset.opponentMode;
+    draftNames[key] = event.target.value;
+    updateHomeMatchLabels();
+  } else if (event.target.id === 'music-volume') {
     const volume = event.target.valueAsNumber;
     prefs.musicVolume = volume / 100;
     tableMusic.setVolume(prefs.musicVolume);
     modal.querySelector('#music-level').value = `${volume}%`;
   }
-});
-document.addEventListener('submit', event => {
-  if (event.target.id !== 'new-game-form') return;
-  event.preventDefault();
-  requestNewGame(newGameOptions());
 });
 document.addEventListener('change', event => {
   if (event.target.id === 'music-enabled') {
@@ -1133,6 +1102,7 @@ document.addEventListener('change', event => {
   if (event.target.id === 'bot-difficulty') {
     if (Object.hasOwn(difficultyNames, event.target.value)) difficulty = event.target.value;
     document.querySelector('#difficulty-note').textContent = difficultyNotes[difficulty];
+    updateHomeMatchLabels();
     return;
   }
   const key = event.target.dataset.preference;

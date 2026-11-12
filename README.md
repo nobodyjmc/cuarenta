@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.13.0
+# Cuarenta · Versión 0.14.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -9,7 +9,7 @@ Esta versión está preparada para GitHub Pages. En cada cambio de `main`, GitHu
 ### Guía rápida para el grupo
 
 1. Abre el enlace en Chrome, Edge o Safari desde PC o celular.
-2. Prueba **Contra la máquina** en Fácil, Medio, Difícil y Experto. En Experto, valora las jugadas para ajustar el reto.
+2. Prueba **Jugar contra Don Julio** y cambia entre Fácil, Medio, Difícil y Experto en **Ajustes de partida**. En Experto, valora las jugadas para ajustar el reto.
 3. Prueba **Dos jugadores** para pasar el dispositivo entre turnos.
 4. Revisa las reglas de ronda: tres iguales al repartir suman 2 puntos; una caída inmediata a una carta de la ronda rival gana la partida.
 5. Recarga la página para comprobar que la partida puede continuar en el mismo navegador.
@@ -25,17 +25,17 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 ## Jugar ahora
 
 1. Abre **Jugar_Cuarenta.html** con doble clic en un navegador moderno de escritorio.
-2. Elige **Contra la máquina** o **Dos jugadores**.
-3. Elige **Fácil, Medio, Difícil o Experto** cuando juegues contra la máquina. En **Ajustes de partida** puedes cambiar los nombres y elegir **2** o **4 puntos** por caída y limpia juntas. Pulsa **Repartir cartas** para empezar.
+2. Pulsa **Jugar contra Don Julio** para empezar en Fácil, **Aprender a jugar** para practicar o **Dos jugadores** para compartir el dispositivo.
+3. En **Preferencias → Ajustes de partida** puedes elegir el nivel, cambiar los nombres y configurar **2** o **4 puntos** por caída y limpia juntas. Si hay una partida guardada, **Continuar partida** aparece primero.
 4. Selecciona una carta y confirma la jugada. Si admite varias capturas, cambia entre las opciones antes de confirmar.
-5. En **Vista de la mesa**, elige **Horizontal** o **Vertical** antes de repartir o durante la partida. En el celular, tocar **Horizontal** gira la vista completa del juego y **Vertical** la devuelve a la vista normal. El navegador recuerda tu elección.
+5. Elige **Horizontal** o **Vertical** desde **Ajustes de partida** o desde la barra superior durante el juego. En el celular, tocar **Horizontal** gira la vista completa y **Vertical** la devuelve a la vista normal. El navegador recuerda tu elección.
 6. La mano, las cartas de la mesa, el marcador y el botón de jugar comparten pantalla. Usa el trofeo de la barra superior para abrir el historial, ver los datos del reparto y consultar las reglas. Desde Preferencias puedes abrir la práctica o preparar otra partida.
 
 Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo en **Preferencias → Reducir movimiento**. El aviso y las cartas de una ronda solo aparecen en la vista de quien la recibe. Los puntos se suman al marcador.
 
-En **Diseño de mesa** puedes combinar ocho colores con ilustraciones de Quito, Guayaquil, Cuenca, Loja, Manta y Ambato. La vista previa se actualiza al instante. El diseño se guarda en el navegador y aparece en el inicio, en las partidas y en el tutorial. Las cartas se animan al repartir y al entrar a la mesa. Las capturas muestran cuántas cartas se recogieron. El juego respeta la reducción de movimiento del sistema y la de Preferencias.
+En **Preferencias → Diseño de mesa** puedes combinar ocho colores con ilustraciones de Quito, Guayaquil, Cuenca, Loja, Manta y Ambato. La vista previa se actualiza al instante. El diseño se guarda en el navegador y aparece en las partidas y en el tutorial. Las cartas se animan al repartir y al entrar a la mesa. Las capturas muestran cuántas cartas se recogieron. El juego respeta la reducción de movimiento del sistema y la de Preferencias.
 
-**Reminiscencias** suena al repartir o continuar una partida por primera vez. En **Preferencias → Música de fondo** puedes elegir *Nuestro Juramento*, ajustar el volumen o apagar la música. El navegador recuerda esos ajustes. La música se pausa al salir de la pestaña.
+**Reminiscencias** suena al empezar o continuar una partida por primera vez. En **Preferencias → Música de fondo** puedes elegir *Nuestro Juramento*, ajustar el volumen o apagar la música. El navegador recuerda esos ajustes. La música se pausa al salir de la pestaña.
 
 Activa **Preferencias → Sonidos de la mesa** para escuchar las cartas deslizarse al repartir, jugar y recoger. La caída y la victoria usan variaciones suaves de la misma baraja. Los efectos de la partida y la práctica provienen de [Casino Audio de Kenney (CC0)](https://kenney.nl/assets/casino-audio).
 

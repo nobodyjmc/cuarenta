@@ -3037,6 +3037,12 @@ svg.aside-panel-icon {
 }
 
 #modal .match-options { display: grid; gap: 14px; margin-top: 18px; }
+#modal .match-options :is(.name-fields, .difficulty-picker, .combo-choice, .table-layout-choice) { margin: 0; }
+#modal .match-options .table-layout-choice { justify-content: space-between; }
+#modal .match-options :is(.combo-choice, .table-layout-picker) button[aria-pressed="true"] {
+  background: #392d1c;
+  color: var(--card-ivory);
+}
 #modal .game-aside { display: grid; grid-template-columns: minmax(0, 1fr); margin-top: 18px; }
 
 @media (max-width: 359px) {
@@ -3052,225 +3058,7 @@ svg.aside-panel-icon {
 .is-rotated-view .app-viewport :is(.app-tool, .brand) { min-height: 36px; }
 .is-rotated-view .app-viewport .brand-mark { width: 26px; height: 30px; }
 
-/* Match setup in the app viewport */
 .app-viewport.is-lobby .workspace { container: lobby-viewport / size; }
-.app-viewport.is-lobby .lobby-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(360px, .9fr);
-  grid-template-areas: "visual setup";
-  align-items: stretch;
-  gap: clamp(12px, 2vw, 24px);
-  width: min(100%, 1050px);
-  min-height: 0;
-  margin: auto;
-}
-
-.app-viewport.is-lobby .hero-table { min-height: 0; gap: 0; }
-.app-viewport.is-lobby .hero-table-inner { min-height: 0; }
-
-.app-viewport.is-lobby .setup-panel {
-  --setup-surface: #111;
-  --setup-control: #1a1a1a;
-  --setup-field: #141414;
-  --setup-line: #454545;
-  --setup-selected: #282828;
-  --setup-signal: #f5f5f5;
-  justify-content: center;
-  gap: 16px;
-  padding: clamp(14px, 2vw, 24px);
-  border-radius: 16px;
-}
-
-.app-viewport.is-lobby .setup-header {
-  min-height: 0;
-  margin: 0;
-  padding: 0;
-  overflow: visible;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-
-.app-viewport.is-lobby .setup-header::after,
-.app-viewport.is-lobby .setup-heading-icon { display: none; }
-
-.app-viewport.is-lobby .setup-header :is(h1, h2) {
-  margin: 0;
-  color: var(--ink);
-  font: 660 clamp(24px, 3vw, 34px)/1.1 var(--sans);
-  letter-spacing: -.035em;
-}
-
-.app-viewport.is-lobby #new-game-form { display: grid; gap: 12px; min-width: 0; }
-
-.app-viewport.is-lobby .setup-modes {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0;
-}
-
-.app-viewport.is-lobby .mode-option {
-  grid-template: "symbol copy selected" 1fr / auto minmax(0, 1fr) auto;
-  align-items: center;
-  min-height: 54px;
-  gap: 7px;
-  padding: 7px 9px;
-  border-radius: 10px;
-}
-
-.app-viewport.is-lobby .mode-option strong { font-size: 13px; line-height: 1.17; }
-.app-viewport.is-lobby .mode-option .mode-icon { width: 24px; height: 24px; border-radius: 6px; }
-.app-viewport.is-lobby .mode-option .mode-icon .icon { width: 16px; height: 16px; }
-.app-viewport.is-lobby .mode-option small { display: none; }
-.app-viewport.is-lobby .radio-dot { width: 11px; height: 11px; }
-
-.app-viewport.is-lobby .setup-controls {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 8px 12px;
-}
-
-.app-viewport.is-lobby .setup-controls .table-layout-choice {
-  display: grid;
-  gap: 5px;
-  margin: 0;
-}
-
-.app-viewport.is-lobby .setup-controls :is(.difficulty-picker label, .table-layout-label) {
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.2;
-  font-weight: 600;
-}
-
-.app-viewport.is-lobby .setup-controls .difficulty-picker select {
-  height: 44px;
-  min-height: 44px;
-  padding: 4px 9px;
-  border-radius: 9px;
-}
-
-.app-viewport.is-lobby .table-layout-picker {
-  width: 100%;
-  padding: 2px;
-  background: var(--setup-field);
-  border-color: var(--setup-line);
-  border-radius: 9px;
-}
-
-.app-viewport.is-lobby .table-layout-picker button {
-  flex: 1;
-  min-height: 38px;
-  padding: 0 10px;
-  border-radius: 6px;
-  white-space: nowrap;
-}
-
-.app-viewport.is-lobby .table-layout-picker button[aria-pressed="true"] {
-  background: var(--setup-selected);
-  box-shadow: inset 0 0 0 1px var(--setup-signal);
-  color: var(--setup-signal);
-}
-
-.app-viewport.is-lobby .setup-shortcuts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.app-viewport.is-lobby .setup-shortcuts button {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  min-height: 42px;
-  padding: 5px 8px;
-  border: 1px solid var(--setup-line);
-  border-radius: 9px;
-  background: transparent;
-  color: var(--ink);
-  font: 600 12px/1.15 var(--sans);
-  white-space: normal;
-}
-
-.app-viewport.is-lobby .setup-shortcuts .icon { width: 15px; height: 15px; flex: none; }
-.app-viewport.is-lobby .setup-shortcuts button:hover { background: var(--setup-control); }
-.app-viewport.is-lobby .setup-actions { gap: 8px; margin: 0; }
-
-.app-viewport.is-lobby .start-button {
-  min-height: 46px;
-  padding: 7px 12px;
-  border-color: #f1eee6;
-  border-radius: 9px;
-  background: #f1eee6;
-  color: #141414;
-}
-
-.app-viewport.is-lobby .start-button:hover:not(:disabled) { background: #fff; }
-
-.app-viewport.is-lobby .resume-button {
-  min-height: 44px;
-  padding: 6px 9px;
-  border-radius: 9px;
-  white-space: normal;
-}
-
-@media (max-width: 850px), (max-height: 520px) {
-  .app-viewport.is-lobby .lobby-layout {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "setup";
-    width: min(100%, 540px);
-  }
-
-  .app-viewport.is-lobby .hero-table { display: none; }
-}
-
-@media (max-width: 380px) {
-  .app-viewport.is-lobby .setup-panel { gap: 12px; padding: 12px; }
-  .app-viewport.is-lobby #new-game-form { gap: 9px; }
-  .app-viewport.is-lobby .setup-controls { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); gap: 7px; }
-  .app-viewport.is-lobby .mode-option { min-height: 48px; gap: 5px; padding: 6px; }
-  .app-viewport.is-lobby .mode-option strong { font-size: 12px; }
-  .app-viewport.is-lobby .mode-option .mode-icon { width: 18px; height: 18px; }
-  .app-viewport.is-lobby .mode-option .mode-icon .icon { width: 13px; height: 13px; }
-  .app-viewport.is-lobby .table-layout-picker button { padding-inline: 6px; font-size: 12px; }
-  .app-viewport.is-lobby .setup-shortcuts button { padding-inline: 5px; }
-  .app-viewport.is-lobby .setup-shortcuts .icon { width: 13px; height: 13px; }
-}
-
-@container lobby-viewport (max-height: 380px) and (min-width: 470px) {
-  .app-viewport.is-lobby .lobby-layout { width: min(100%, 670px); }
-  .app-viewport.is-lobby .setup-panel { gap: 8px; padding: 10px; }
-  .app-viewport.is-lobby .setup-header :is(h1, h2) { font-size: 24px; }
-
-  .app-viewport.is-lobby #new-game-form {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    grid-template-areas:
-      "modes modes"
-      "controls actions"
-      "shortcuts actions";
-    align-items: start;
-    gap: 6px 10px;
-  }
-
-  .app-viewport.is-lobby .setup-modes { grid-area: modes; }
-  .app-viewport.is-lobby .mode-option { min-height: 38px; padding-block: 4px; }
-  .app-viewport.is-lobby .setup-controls { grid-area: controls; grid-template-columns: minmax(0, 1fr); gap: 5px; }
-  .app-viewport.is-lobby .setup-controls :is(.difficulty-picker, .table-layout-choice) {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(136px, 1.3fr);
-    align-items: center;
-    gap: 6px;
-  }
-
-  .app-viewport.is-lobby .setup-controls .difficulty-picker select { height: 38px; min-height: 38px; }
-  .app-viewport.is-lobby .table-layout-picker button { min-height: 32px; padding-inline: 6px; font-size: 12px; }
-  .app-viewport.is-lobby .setup-shortcuts { grid-area: shortcuts; gap: 5px; }
-  .app-viewport.is-lobby .setup-shortcuts button { min-height: 36px; }
-  .app-viewport.is-lobby .setup-actions { grid-area: actions; align-self: center; gap: 6px; }
-  .app-viewport.is-lobby .setup-actions button { min-height: 40px; }
-}
 
 /* Play fits the available viewport, including the rotated mobile stage. */
 .app-viewport.is-playing .workspace[data-table-layout] {
@@ -3630,62 +3418,6 @@ svg.aside-panel-icon {
 }
 
 .app-viewport.is-playing.is-compact-play .privacy-curtain p:not(.eyebrow) { margin: 5px 0 8px; }
-
-/* Guided practice shares the lobby's black background and the match's felt. */
-.app-viewport.is-lobby .setup-panel > .learn-entry {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  min-height: 56px;
-  padding: 7px 11px;
-  border: 1px solid #6d5936;
-  border-radius: 10px;
-  background: linear-gradient(100deg, #2d271c, #211e19e8);
-  color: #ffedc4;
-  text-align: left;
-}
-
-.app-viewport.is-lobby .setup-panel > .learn-entry:hover {
-  border-color: #f1cd83;
-  background-color: #3c3220;
-}
-
-.learn-entry-icon {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  place-items: center;
-  border: 1px solid #836a3f;
-  border-radius: 8px;
-  background: #3e331e;
-}
-
-.learn-entry .icon { width: 17px; height: 17px; }
-.learn-entry-copy { display: grid; gap: 2px; min-width: 0; }
-.learn-entry-copy strong { font: 700 14px/1.14 var(--sans); }
-.learn-entry-copy small { color: #dac8a3; font: 500 11px/1.15 var(--sans); }
-
-@container lobby-viewport (max-height: 380px) and (min-width: 470px) {
-  .app-viewport.is-lobby .setup-panel {
-    display: grid;
-    grid-template-areas: "heading practice" "form form";
-    grid-template-columns: minmax(0, 1fr) minmax(170px, 1fr);
-    align-items: center;
-    gap: 8px 12px;
-  }
-
-  .app-viewport.is-lobby .setup-header { grid-area: heading; }
-  .app-viewport.is-lobby .setup-panel > .learn-entry {
-    grid-area: practice;
-    gap: 7px;
-    min-height: 42px;
-    padding: 4px 8px;
-  }
-  .app-viewport.is-lobby .learn-entry-icon { width: 27px; height: 27px; }
-  .app-viewport.is-lobby #new-game-form { grid-area: form; }
-}
 
 #modal[data-kind="tutorial"] {
   container: practice-dialog / inline-size;
@@ -4106,100 +3838,6 @@ svg.aside-panel-icon {
   opacity: 1;
 }
 
-.app-viewport.is-lobby .setup-panel {
-  --setup-surface: transparent;
-  --setup-control: #171613;
-  --setup-field: #151412;
-  --setup-line: #38332b;
-  --setup-selected: #272017;
-  --setup-signal: var(--card-gold);
-  gap: 12px;
-  padding: clamp(8px, 2vw, 22px);
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.app-viewport.is-lobby .setup-header {
-  min-height: 64px;
-  gap: 8px;
-  justify-content: space-between;
-}
-
-.app-viewport.is-lobby .setup-header h1 {
-  color: var(--card-ivory);
-  font: 700 clamp(34px, 7.5vw, 54px)/.98 Georgia, "Times New Roman", serif;
-  letter-spacing: -.065em;
-}
-
-.app-viewport.is-lobby .setup-card-art {
-  position: relative;
-  width: clamp(62px, 18vw, 104px);
-  height: 63px;
-  flex: none;
-  pointer-events: none;
-}
-
-.app-viewport.is-lobby .setup-card-art .playing-card {
-  position: absolute;
-  right: 13px;
-  bottom: 5px;
-  width: 36px;
-  border-radius: 4px;
-  transform: rotate(12deg);
-}
-
-.app-viewport.is-lobby .setup-card-art .playing-card:first-child {
-  right: 30px;
-  bottom: 8px;
-  transform: rotate(-13deg);
-}
-
-.app-viewport.is-lobby .setup-panel > .learn-entry {
-  min-height: 44px;
-  padding: 5px 8px;
-  border-color: #423522;
-  border-radius: 10px;
-  background: #1c170f;
-  color: var(--card-ivory);
-}
-
-.app-viewport.is-lobby .learn-entry-icon {
-  width: 29px;
-  height: 29px;
-  border: 0;
-  background: #352719;
-  color: var(--card-gold);
-}
-
-.app-viewport.is-lobby .setup-shortcuts button {
-  min-height: 40px;
-  border-color: transparent;
-  background: transparent;
-  color: #d0c6b4;
-}
-
-.app-viewport.is-lobby .setup-shortcuts button:hover:not(:disabled) {
-  background: #1b1813;
-  color: var(--card-ivory);
-}
-
-.app-viewport.is-lobby .resume-button {
-  border-color: #504027;
-  background: #201a12;
-  color: var(--card-ivory);
-}
-
-.app-viewport.is-lobby .start-button {
-  background: var(--card-ivory);
-  border-color: var(--card-ivory);
-  color: var(--card-ink);
-}
-
-@media (min-width: 851px) and (min-height: 521px) {
-  .app-viewport.is-lobby .setup-card-art { display: none; }
-}
-
 @media (max-width: 440px) {
   .app-viewport.is-playing .app-bar {
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -4221,43 +3859,181 @@ svg.aside-panel-icon {
   }
 }
 
-@container lobby-viewport (max-height: 380px) and (min-width: 470px) {
-  .app-viewport.is-lobby .setup-panel { gap: 6px 12px; padding: 8px; }
-  .app-viewport.is-lobby .setup-header { min-height: 48px; }
-  .app-viewport.is-lobby .setup-header h1 { font-size: 34px; }
-  .app-viewport.is-lobby .setup-card-art { display: none; }
-  .app-viewport.is-lobby .setup-shortcuts button { min-height: 36px; }
-}
-
 .app-viewport.is-playing.is-compact-play .app-bar .table-layout-picker button { min-height: 33px; }
 
-@media (max-width: 850px) {
-  .app-viewport.is-lobby .brand-word { display: none; }
+/* The home screen presents one route to play, learn, or share a device. */
+.app-viewport.is-lobby .app-bar {
+  background: #000;
+  padding-inline: max(14px, calc((100% - 1032px) / 2), env(safe-area-inset-left, 0px)) max(14px, calc((100% - 1032px) / 2), env(safe-area-inset-right, 0px));
 }
 
-@media (orientation: portrait) and (max-width: 850px) and (min-height: 680px) {
-  :root:not(.is-rotated-view) .app-viewport.is-lobby .lobby-layout {
-    margin-block: clamp(20px, 6dvh, 64px) auto;
+.is-rotated-view .app-viewport.is-lobby .app-bar {
+  padding-inline: max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-top, 0px));
+}
+
+.app-viewport.is-lobby .brand-word { display: none; }
+
+.app-viewport.is-lobby .brand-mark {
+  width: 34px;
+  height: 43px;
+  border: 1px solid #e1ca97;
+  border-radius: 5px;
+  outline: 1px solid #2f5b43;
+  outline-offset: -4px;
+  background: var(--card-ivory);
+  color: #234b36;
+  font: italic 700 23px/1 Georgia, "Times New Roman", serif;
+}
+
+.app-viewport.is-lobby .brand-mark > span { display: none; }
+.app-viewport.is-lobby .app-tool { color: var(--card-ivory); }
+.app-viewport.is-lobby .app-tool .icon { width: 24px; height: 24px; }
+
+.app-viewport.is-lobby .quick-home {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: clamp(8px, 1.8cqh, 20px);
+  width: min(100%, 444px);
+  height: min(100%, 790px);
+  min-height: 0;
+  margin: auto;
+  padding-inline: 3px;
+  color: var(--card-ivory);
+}
+
+.quick-home .home-cover {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: clamp(3px, 1.4cqh, 14px);
+  min-width: 0;
+  min-height: 0;
+  padding-block-start: clamp(6px, 4cqh, 36px);
+  text-align: center;
+}
+
+.quick-home #setup-heading {
+  margin: 0;
+  color: #f5e7c3;
+  font: italic 700 clamp(38px, 17.7cqw, 78px)/1.03 Georgia, "Times New Roman", serif;
+  letter-spacing: -.065em;
+  text-wrap: balance;
+}
+
+.quick-home .home-cover-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+.quick-home .home-actions {
+  display: grid;
+  gap: clamp(7px, 1.7cqh, 17px);
+  min-width: 0;
+  padding-block-end: 2px;
+}
+
+.quick-home .home-level {
+  margin: 0 2px -3px;
+  color: #f5e7c3;
+  font: 600 clamp(14px, 4.8cqw, 20px)/1.15 var(--sans);
+}
+
+.quick-home .home-actions .button {
+  display: flex;
+  width: 100%;
+  min-height: clamp(44px, 8.7cqh, 66px);
+  padding: 7px 12px;
+  border-radius: 10px;
+  font: 650 clamp(15px, 5cqw, 22px)/1.15 var(--sans);
+  white-space: normal;
+}
+
+.quick-home .home-actions .button .icon { flex: none; width: 20px; height: 20px; }
+
+.quick-home .home-actions .start-button {
+  justify-content: space-between;
+  background: #f8e7be;
+  border-color: #f8e7be;
+  color: #21190d;
+  font-weight: 760;
+  text-align: start;
+}
+
+.quick-home .home-actions .start-button:hover:not(:disabled) { background: #fff0cf; }
+
+.quick-home .home-actions .learn-entry {
+  justify-content: center;
+  border: 1px solid #eddbb2;
+  background: #000;
+  color: #f4e4bf;
+}
+
+.quick-home .home-actions .local-entry {
+  justify-content: flex-start;
+  background: #000;
+  color: #f4e4bf;
+  text-align: start;
+}
+
+.quick-home .home-actions .local-entry .icon:last-child { margin-inline-start: auto; }
+
+.quick-home .home-actions :is(.learn-entry, .local-entry):hover:not(:disabled) { background: #18140e; }
+
+.quick-home .home-actions .resume-button {
+  justify-content: flex-start;
+  gap: 8px;
+  margin: 0;
+  border: 1px solid #e9cf97;
+  background: #f8e7be;
+  color: #21190d;
+  text-align: start;
+}
+
+.quick-home .home-actions .resume-score {
+  margin-inline-start: auto;
+  background: #dfca9b;
+  color: #302518;
+}
+
+.quick-home .home-actions.has-saved .start-button {
+  border-color: #705a3b;
+  background: #20190f;
+  color: #f4e4bf;
+}
+
+.quick-home .home-actions.has-saved .start-button:hover:not(:disabled) { background: #322519; }
+
+@container lobby-viewport (min-width: 708px) {
+  .app-viewport.is-lobby .quick-home {
+    grid-template-columns: minmax(0, 1.15fr) minmax(250px, .85fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(32px, 6cqw, 92px);
+    width: min(100%, 1024px);
+    height: min(100%, 620px);
   }
 
-  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-header { min-height: 106px; }
+  .quick-home .home-cover { height: min(100%, 560px); padding-block-start: 0; }
+  .quick-home #setup-heading { font-size: clamp(46px, 8cqw, 88px); }
+  .quick-home .home-actions .button { min-height: 58px; }
+}
 
-  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-header h1 {
-    font-size: clamp(38px, 11vw, 56px);
+@container lobby-viewport (min-width: 400px) and (max-height: 405px) {
+  .app-viewport.is-lobby .quick-home {
+    grid-template-columns: minmax(0, 1fr) minmax(210px, .94fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(8px, 3cqw, 24px);
+    width: min(100%, 800px);
+    height: 100%;
   }
 
-  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-card-art {
-    width: clamp(80px, 24vw, 122px);
-    height: 96px;
-  }
-
-  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-card-art .playing-card {
-    right: 9px;
-    width: 49px;
-  }
-
-  :root:not(.is-rotated-view) .app-viewport.is-lobby .setup-card-art .playing-card:first-child {
-    right: 32px;
-    bottom: 12px;
-  }
+  .quick-home .home-cover { height: 100%; gap: 0; padding-block-start: 2px; }
+  .quick-home #setup-heading { font-size: clamp(27px, 7.7cqw, 56px); }
+  .quick-home .home-actions { gap: 5px; padding-block-end: 0; }
+  .quick-home .home-level { font-size: 14px; }
+  .quick-home .home-actions .button { min-height: 44px; font-size: 15px; }
 }
