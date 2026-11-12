@@ -1,6 +1,7 @@
 import { createDeck, DEFAULT_BOT_NAME, legalMoves } from './engine.js';
 import { chooseBotMove } from './bot.js';
 import { cardSvg, cardBackSvg, cardLabel } from './cards.js';
+import { playCardSound } from './card-sounds.js';
 import { LocalSession, FELT_THEMES, loadPreferences, savePreferences } from './session.js';
 import { createTutorialLessons } from './tutorial.js';
 import { MUSIC_TRACKS, TableMusic } from './music.js';
@@ -282,7 +283,7 @@ function releaseNativeRotation() {
   rotationOwnsFullscreen = false;
 }
 
-function renderGame() {
+function renderGame(dealDelay) {
   const v = getView();
   if (!v) { screen = 'home'; renderHome(); return; }
   mode = v.mode;
@@ -376,6 +377,13 @@ function renderGame() {
   if (!locked && v.status === 'playing' && renderedDeal !== dealKey) {
     renderedDeal = dealKey;
     table.classList.add('is-dealing');
+    if (dealDelay && prefs.sound) {
+      setTimeout(() => {
+        if (screen === 'game' && renderedDeal === dealKey && !modal.open) playSound('deal');
+      }, dealDelay);
+    } else if (!dealDelay) {
+      playSound('deal');
+    }
   }
   table.classList.toggle('is-own-turn', myTurn);
   const turnKey = `${v.id}/${v.revision}/${viewer}`;
@@ -397,14 +405,14 @@ function moveDescription(move) {
   return 'No hay captura disponible con esta carta.';
 }
 
-function render() {
+function render(dealDelay = 0) {
   document.documentElement.classList.toggle('reduce-motion', prefs.reducedMotion);
   applyFelt();
   if (screen === 'home') {
     renderHome();
     updateGameOrientation();
   } else {
-    renderGame();
+    renderGame(dealDelay);
   }
 }
 
@@ -430,20 +438,31 @@ function getAudioContext() {
   return audioContext;
 }
 
-function playSound(points = 0) {
-  if (!prefs.sound) return;
+function playSound(effect) {
+  if (!prefs.sound || document.hidden) return;
   try {
     const context = getAudioContext();
     if (!context) return;
-    if (context.state !== 'running') void context.resume().catch(() => {});
-    const osc = context.createOscillator();
-    const gain = context.createGain();
-    osc.type = 'sine'; osc.frequency.value = points ? 660 : 350;
-    gain.gain.setValueAtTime(.035, context.currentTime);
-    gain.gain.exponentialRampToValueAtTime(.001, context.currentTime + .13);
-    osc.connect(gain); gain.connect(context.destination); osc.start(); osc.stop(context.currentTime + .14);
-    osc.onended = () => { osc.disconnect(); gain.disconnect(); };
+    if (context.state === 'running') {
+      playCardSound(context, effect);
+      return;
+    }
+    const requestedAt = performance.now();
+    void context.resume().then(() => {
+      // An interrupted browser may resume after the relevant play is over.
+      if (prefs.sound && !document.hidden && context.state === 'running' && performance.now() - requestedAt < 350) {
+        playCardSound(context, effect);
+      }
+    }).catch(() => {});
   } catch { /* Sound never interrupts the game. */ }
+}
+
+function playMoveSound(move, won) {
+  let effect = 'place';
+  if (won) effect = 'win';
+  else if (move.fall) effect = 'fall';
+  else if (move.captureIds.length) effect = 'capture';
+  playSound(effect);
 }
 
 function startMusic(reportError = false) {
@@ -545,6 +564,7 @@ function renderImpact(target, kind, caption, card) {
 function presentGameStatus(move) {
   const view = getView();
   if (!view || modal.open) return;
+  if (!move && view.status === 'finished') playSound('win');
   const delay = showPlayImpact(view, move);
   if (view.status === 'playing') {
     const dealing = app.querySelector('.game-table.is-dealing') && animateTable();
@@ -588,9 +608,10 @@ function afterMove(move, actor) {
   if (v.mode === 'pass' && v.status === 'playing') locked = true;
   pendingPassMove = locked ? { id: v.id, revision: v.revision, move, actor } : null;
   const message = locked && v.lastEvent?.kind === 'ronda' ? 'Nuevo reparto.' : v.lastEvent?.text;
-  announce(message || 'Jugada realizada.'); playSound(move.points);
+  announce(message || 'Jugada realizada.');
+  playMoveSound(move, v.status === 'finished');
   pendingCardArrival = !locked && move.captureIds.length === 0;
-  render();
+  render(260);
   if (!locked && v.status === 'playing') renderCapture(move, actor);
   presentGameStatus(locked ? undefined : move);
 }
@@ -750,7 +771,7 @@ function musicSettings() {
 
 function showSettings() {
   const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}<button type="button" class="felt-shortcut settings-table-shortcut" data-action="felt-settings">${icon('palette')} Diseño de mesa ${icon('arrow')}</button>${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Un toque suave al jugar y puntuar.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}<button type="button" class="felt-shortcut settings-table-shortcut" data-action="felt-settings">${icon('palette')} Diseño de mesa ${icon('arrow')}</button>${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Sonidos al repartir, jugar y recoger cartas.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
 }
 
 function shouldAskBotFeedback(v) {
@@ -953,6 +974,8 @@ function checkTutorialAnswer(answerId) {
   const special = event === 'ronda-fall' || event === 'ronda-victory';
   const win = answer.after?.status === 'finished';
   const move = answer.after?.move;
+  if (move) playMoveSound(move, win);
+  else if (win) playSound('win');
   const fall = move?.fall;
   const label = special ? '¡Ronda ganadora!' : win ? '¡Cierre perfecto!' : move?.clean ? '¡Caída y limpia!' : '¡Caída!';
   const board = modal.querySelector('.tutorial-board');
@@ -1050,7 +1073,7 @@ function handleAction(target) {
   else if (action === 'tutorial-play' || action === 'tutorial-answer') checkTutorialAnswer(target.dataset.answer);
   else if (action === 'close-modal') closeModal();
   else if (action === 'music') toggleMusic(!prefs.music);
-  else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound(2); render(); }
+  else if (action === 'sound') { prefs.sound = !prefs.sound; savePreferences(prefs); playSound('place'); render(); }
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);
   else if (action === 'round-summary') showRoundSummary();
   else if (action === 'result') showResult();
@@ -1103,7 +1126,7 @@ document.addEventListener('change', event => {
   prefs[key] = event.target.checked;
   if (!savePreferences(prefs)) toast('No se pudieron guardar las preferencias.');
   document.documentElement.classList.toggle('reduce-motion', prefs.reducedMotion);
-  if (key === 'sound') playSound(2);
+  if (key === 'sound') playSound('place');
   render();
 });
 modal.addEventListener('cancel', event => { event.preventDefault(); closeModal(); });
