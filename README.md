@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.12.2
+# Cuarenta · Versión 0.12.3
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -37,7 +37,7 @@ En **Diseño de mesa** puedes combinar ocho colores con ilustraciones de Quito, 
 
 Pulsa la nota musical o activa **Preferencias → Música de fondo** para escuchar las versiones instrumentales de *Nuestro Juramento* y *Reminiscencias*. La pista elegida se repite durante la partida y su volumen se ajusta por separado de los efectos de las cartas. La música se pausa al salir de la pestaña. La pista, el volumen y la activación se guardan en el navegador.
 
-Activa **Preferencias → Sonidos de la mesa** para escuchar el roce de la baraja al repartir, el golpe de una carta sobre el tapete y los efectos de captura, caída y victoria. También se oyen en las jugadas de la práctica guiada.
+Activa **Preferencias → Sonidos de la mesa** para escuchar las cartas deslizarse al repartir, jugar y recoger. La caída y la victoria usan variaciones suaves de la misma baraja. Los efectos de la partida y la práctica provienen de [Casino Audio de Kenney (CC0)](https://kenney.nl/assets/casino-audio).
 
 Una captura por suma empieza con **exactamente dos cartas numéricas** de la mesa. Por ejemplo, un 6 recoge 2 + 4; A + 2 + 3 no vale aunque dé 6. Después de la suma puedes recoger las cartas consecutivas de la escalera. El motor y el tutorial aplican la misma regla, con las opciones de ronda y caída propias de esta mesa. La mecánica de suma de dos cartas está descrita en el [reglamento del Torneo Internacional de Cuarenta](https://es.scribd.com/document/612816076/REGLAS-DEL-TORNEO-DE-CUARENTA).
 
