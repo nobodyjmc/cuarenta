@@ -1699,50 +1699,14 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   gap: 12px;
 }
 
-.tutorial-progress,
 .tutorial-capture-options {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
-.tutorial-progress {
-  position: relative;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding: 4px;
-  scrollbar-width: thin;
-}
-
-.tutorial-progress button {
-  flex: 0 0 auto;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 6px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  background: var(--panel);
-  color: var(--ink);
-  font-size: 13px;
-  font-variant-numeric: tabular-nums;
-}
-
-.tutorial-progress button:hover:not(:disabled),
 .tutorial-capture-options .button:hover:not(:disabled) {
   border-color: var(--accent);
-}
-
-.tutorial-progress button[data-solved="true"] {
-  border-color: #4e9475;
-  box-shadow: inset 0 -3px #4e9475;
-}
-
-.tutorial-progress button:is([aria-current="step"], [aria-pressed="true"]),
-.tutorial-capture-options .button[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: #fff;
-  font-weight: 600;
 }
 
 .tutorial-board {
@@ -1813,28 +1777,6 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
   font-weight: 700;
   line-height: 1.5;
   text-align: center;
-}
-
-.tutorial-scoreline,
-.tutorial-goal {
-  font-size: 14px;
-}
-
-.tutorial-setup {
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-control);
-  font-size: 14px;
-}
-
-.tutorial-setup summary {
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.tutorial-setup p {
-  margin-top: 8px;
-  color: var(--muted);
 }
 
 .tutorial-score-gain {
@@ -3809,3 +3751,304 @@ svg.aside-panel-icon {
 }
 
 .app-viewport.is-playing.is-compact-play .privacy-curtain p:not(.eyebrow) { margin: 5px 0 8px; }
+
+/* Guided practice shares the lobby's black shell and the match's felt. */
+.app-viewport.is-lobby .setup-panel > .learn-entry {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 7px 11px;
+  border: 1px solid #6d5936;
+  border-radius: 10px;
+  background: linear-gradient(100deg, #2d271c, #211e19e8), var(--metro-contours) right 40% / 350px auto;
+  color: #ffedc4;
+  text-align: left;
+}
+
+.app-viewport.is-lobby .setup-panel > .learn-entry:hover {
+  border-color: #f1cd83;
+  background-color: #3c3220;
+}
+
+.learn-entry-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #836a3f;
+  border-radius: 8px;
+  background: #3e331e;
+}
+
+.learn-entry .icon { width: 17px; height: 17px; }
+.learn-entry-copy { display: grid; gap: 2px; min-width: 0; }
+.learn-entry-copy strong { font: 700 14px/1.14 var(--sans); }
+.learn-entry-copy small { color: #dac8a3; font: 500 11px/1.15 var(--sans); }
+
+@container lobby-viewport (max-height: 380px) and (min-width: 470px) {
+  .app-viewport.is-lobby .setup-panel {
+    display: grid;
+    grid-template-areas: "heading practice" "form form";
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 1fr);
+    align-items: center;
+    gap: 8px 12px;
+  }
+
+  .app-viewport.is-lobby .setup-header { grid-area: heading; }
+  .app-viewport.is-lobby .setup-panel > .learn-entry {
+    grid-area: practice;
+    gap: 7px;
+    min-height: 42px;
+    padding: 4px 8px;
+  }
+  .app-viewport.is-lobby .learn-entry-icon { width: 27px; height: 27px; }
+  .app-viewport.is-lobby #new-game-form { grid-area: form; }
+}
+
+#modal[data-kind="tutorial"] {
+  container: practice-dialog / inline-size;
+  width: min(720px, calc(100% - 20px));
+  max-height: calc(100dvh - 22px);
+  padding: clamp(11px, 2.2vw, 22px);
+  border-radius: clamp(12px, 2.5vw, 20px);
+  background: #131313;
+}
+
+.is-rotated-view #modal[open][data-kind="tutorial"] {
+  width: min(720px, calc(var(--rotated-width) - 20px));
+  max-width: none;
+  max-height: calc(var(--rotated-height) - 20px);
+  padding: 10px 12px;
+}
+
+#modal[data-kind="tutorial"] .modal-top {
+  gap: 10px;
+  margin-bottom: 3px;
+}
+
+#modal[data-kind="tutorial"] .modal-top .eyebrow {
+  color: #ebd4a5;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+#modal[data-kind="tutorial"] .modal-top .icon-button { flex: 0 0 40px; }
+
+#modal[data-kind="tutorial"] #modal-title {
+  margin: 0 0 9px;
+  font-size: clamp(21px, 4.5vw, 29px);
+  line-height: 1.12;
+}
+
+#modal[data-kind="tutorial"] .tutorial-game { gap: 7px; }
+
+.tutorial-meter {
+  display: block;
+  width: 100%;
+  height: 5px;
+  appearance: none;
+  border: 0;
+  border-radius: 10px;
+  background: #3a352b;
+  color: #ebc97f;
+  accent-color: #ebc97f;
+  overflow: hidden;
+}
+
+.tutorial-meter::-webkit-progress-bar { background: #3a352b; }
+.tutorial-meter::-webkit-progress-value { background: #ebc97f; }
+.tutorial-meter::-moz-progress-bar { background: #ebc97f; }
+
+#modal[data-kind="tutorial"] .tutorial-prompt {
+  margin: 1px 0;
+  color: #ededeb;
+  font: 500 14px/1.35 var(--sans);
+}
+
+#modal[data-kind="tutorial"] .tutorial-scoreline {
+  margin: 3px 0 0;
+  color: #ddd7cc;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+#modal[data-kind="tutorial"] .tutorial-board {
+  --practice-gap: 6px;
+  --practice-card: clamp(42px, 11vmin, 56px);
+  grid-template-areas: "table-label" "table-cards" "hand-label" "hand-cards";
+  grid-template-columns: minmax(0, 1fr);
+  gap: 3px;
+  align-content: center;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+#modal[data-kind="tutorial"] .tutorial-zone-label {
+  font-size: 11px;
+  line-height: 1.12;
+}
+
+#modal[data-kind="tutorial"] .tutorial-table-label { grid-area: table-label; }
+#modal[data-kind="tutorial"] .tutorial-hand-label { grid-area: hand-label; }
+
+#modal[data-kind="tutorial"] .tutorial-board[data-hand-only="true"] {
+  grid-template: "hand-label" auto "hand-cards" auto / minmax(0, 1fr);
+}
+
+#modal[data-kind="tutorial"] .tutorial-table,
+#modal[data-kind="tutorial"] .tutorial-hand {
+  align-items: center;
+  gap: var(--practice-gap);
+  min-height: 22px;
+  padding: 4px 3px 6px;
+}
+
+#modal[data-kind="tutorial"] .tutorial-board .playing-card { width: var(--practice-card); }
+
+#modal[data-kind="tutorial"] .tutorial-board .playing-card > svg {
+  position: absolute;
+  inset: 0;
+}
+
+#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(5)) .playing-card {
+  width: min(var(--practice-card), calc((100% - 4 * var(--practice-gap)) / 5));
+}
+
+#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(6)) .playing-card {
+  width: min(var(--practice-card), calc((100% - 5 * var(--practice-gap)) / 6));
+}
+
+#modal[data-kind="tutorial"] [data-coach="true"] {
+  outline: 2px dashed #a6ecff;
+  outline-offset: 2px;
+}
+
+#modal[data-kind="tutorial"] [data-coach="true"]:focus-visible {
+  outline-style: solid;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 4px #1b3741;
+}
+
+#modal[data-kind="tutorial"] .tutorial-feedback {
+  padding: 6px 9px;
+  color: #f4f2eb;
+  font-size: 13px;
+  line-height: 1.28;
+  background: #202020;
+}
+
+#modal[data-kind="tutorial"] .tutorial-feedback[data-tone="correct"] { background: #15251e; }
+#modal[data-kind="tutorial"] .tutorial-feedback[data-tone="retry"] { background: #2d2318; }
+#modal[data-kind="tutorial"] .tutorial-feedback[data-tone="hint"] { border-color: #72b4c9; }
+
+#modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-capture-options) .tutorial-feedback[data-tone="neutral"] { display: none; }
+
+#modal[data-kind="tutorial"] :is(.tutorial-actions, .tutorial-capture-options) {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+}
+
+#modal[data-kind="tutorial"] :is(.tutorial-actions, .tutorial-capture-options) .button {
+  min-height: 44px;
+  padding: 6px 10px;
+  font-size: 13px;
+  line-height: 1.15;
+}
+
+#modal[data-kind="tutorial"] .tutorial-actions .primary { flex-grow: 2; }
+#modal[data-kind="tutorial"] .tutorial-actions .icon { width: 15px; height: 15px; }
+#modal[data-kind="tutorial"] [data-action="tutorial-hint"][aria-pressed="true"] {
+  border-color: #a6ecff;
+  color: #a6ecff;
+}
+#modal[data-kind="tutorial"] .tutorial-capture-options { padding: 3px; }
+#modal[data-kind="tutorial"] .tutorial-capture-options .button { flex: 1 1 100%; text-align: left; }
+
+#modal[data-kind="tutorial"] .tutorial-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+#modal[data-kind="tutorial"] .tutorial-links button {
+  min-height: 34px;
+  padding: 3px 5px;
+  color: #d4d2cd;
+  font: 600 12px/1.18 var(--sans);
+  text-underline-offset: 3px;
+}
+
+#modal[data-kind="tutorial"] .tutorial-links button:not(:disabled):hover { text-decoration: underline; }
+
+@container practice-dialog (min-width: 455px) {
+  #modal[data-kind="tutorial"] .modal-top {
+    position: relative;
+    min-height: 16px;
+    padding-inline-end: 44px;
+  }
+
+  #modal[data-kind="tutorial"] .modal-top .icon-button {
+    position: absolute;
+    inset: 0 0 auto auto;
+  }
+
+  #modal[data-kind="tutorial"] #modal-title { padding-inline-end: 44px; }
+
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) {
+    grid-template:
+      "meter meter" auto
+      "prompt prompt" auto
+      "board board" auto
+      "choices choices" auto
+      "feedback actions" auto
+      "links links" auto / minmax(0, 1.2fr) minmax(0, 1fr);
+    column-gap: 10px;
+  }
+
+  #modal[data-kind="tutorial"] .tutorial-board[data-hand-only="false"] {
+    grid-template:
+      "table-label hand-label" auto
+      "table-cards hand-cards" auto / minmax(0, 1.45fr) minmax(0, 1fr);
+    column-gap: 10px;
+  }
+
+  .tutorial-game:has(.tutorial-board) .tutorial-meter { grid-area: meter; }
+  .tutorial-game:has(.tutorial-board) .tutorial-prompt { grid-area: prompt; }
+  .tutorial-game:has(.tutorial-board) .tutorial-board { grid-area: board; }
+  .tutorial-game:has(.tutorial-board) .tutorial-feedback { grid-area: feedback; }
+  .tutorial-game:has(.tutorial-board) .tutorial-capture-options { grid-area: choices; }
+  .tutorial-game:has(.tutorial-board) .tutorial-actions { grid-area: actions; align-self: center; }
+  .tutorial-game:has(.tutorial-board) .tutorial-links { grid-area: links; }
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board):has(.tutorial-capture-options) {
+    grid-template-areas: "meter meter" "prompt prompt" "board choices" "feedback actions" "links links";
+    grid-template-rows: auto auto auto auto auto;
+  }
+
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board):has(.tutorial-capture-options):has(.tutorial-feedback[data-tone="neutral"]) {
+    grid-template-areas: "meter meter" "prompt prompt" "board choices" "links actions";
+    grid-template-rows: auto auto auto auto;
+    align-items: center;
+  }
+
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) .tutorial-capture-options .button { min-height: 34px; }
+}
+
+@media (max-height: 420px) {
+  #modal[data-kind="tutorial"] { padding: 9px 12px; }
+  #modal[data-kind="tutorial"] .tutorial-board { --practice-card: 37px; }
+  #modal[data-kind="tutorial"] .tutorial-game { gap: 4px 9px; }
+  #modal[data-kind="tutorial"] .modal-top .icon-button { width: 32px; height: 32px; flex-basis: 32px; }
+  #modal[data-kind="tutorial"] #modal-title { margin-bottom: 6px; }
+  #modal[data-kind="tutorial"] .tutorial-links button { min-height: 30px; }
+}
+
+.is-rotated-view #modal[data-kind="tutorial"] .tutorial-board { --practice-card: 37px; }
+.is-rotated-view #modal[data-kind="tutorial"] .tutorial-game { gap: 4px 9px; }
+.is-rotated-view #modal[data-kind="tutorial"] .modal-top .icon-button { width: 32px; height: 32px; flex-basis: 32px; }
+.is-rotated-view #modal[data-kind="tutorial"] #modal-title { margin-bottom: 6px; }
+.is-rotated-view #modal[data-kind="tutorial"] .tutorial-links button { min-height: 30px; }

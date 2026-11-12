@@ -48,13 +48,24 @@ let renderedTurn = '';
 let pendingCardArrival = false;
 let pendingPassMove = null;
 let tutorialStep = 0;
-let tutorialLessons = [];
+let tutorialTrack = 'starter';
+let tutorialCourses;
 let tutorialComboPoints = null;
 let tutorialCardId = null;
 const tutorialCaptures = new Set();
 const tutorialSolved = new Map();
 let tutorialFeedback = '';
-let tutorialComplete = false;
+let tutorialHint = false;
+const beginnerGuide = {
+  'dejar-carta': ['Juega tu primera carta', 'Toca la Q de tu mano y pulsa Jugar carta.', 'Se juega una carta por turno. Si esa carta no puede recoger, se queda en la mesa.'],
+  igualdad: ['Recoge una pareja', 'Toca el 7 de tu mano. Luego toca el otro 7 en la mesa.', 'Las cartas del mismo valor se pueden recoger aunque tengan palos distintos.'],
+  'suma-dos': ['Suma dos cartas', 'Con tu 6, marca el 2 y el 4 de la mesa.', 'La suma usa exactamente dos cartas. El as vale 1 y las figuras no se usan para sumar.'],
+  escalera: ['Sigue la escalera', 'Toca tu 7. Marca el otro 7 y sigue con J, Q y K.', 'Después de recoger, lleva las cartas consecutivas. Después del 7 va la J. La escalera termina cuando falta una carta o llegas a K.'],
+  caida: ['Haz una caída', 'El rival acaba de jugar el 7 marcado. Recógelo con tu 7.', 'Sumas 2 puntos por igualar la carta que acaba de jugar tu rival.'],
+  limpia: ['Deja la mesa limpia', 'Toca tu 7. Recoge el 3 y el 4 por suma, y la J por escalera.', 'Una limpia deja la mesa vacía y aquí suma 2 puntos.'],
+  'ronda-privada': ['Reconoce tu ronda', 'Te repartieron tres cincos. ¿Qué ocurre con tu marcador?', 'Tres cartas del mismo valor al repartir son una ronda. Sumas 2 automáticamente y solo tú ves el aviso.'],
+  'desafio-final': ['Llega a 40', 'Tienes 38. El rival acaba de jugar un 6. Hazle una caída.', 'Igualaste el último 6 del rival. La caída te dio los 2 puntos que faltaban para ganar.'],
+};
 let modalKind = null;
 let lastFocus = null;
 let audioContext = null;
@@ -93,9 +104,9 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<
 const demoCard = (rank, suit) => ({ id: `${rank}-${suit}`, rank, suit });
 const getView = () => session.view(viewer);
 
-function cardMarkup(card, { back = false, selected = false, highlight = false, interactive = false, last = false, action = 'select-card' } = {}) {
+function cardMarkup(card, { back = false, selected = false, highlight = false, interactive = false, last = false, coach = false, action = 'select-card' } = {}) {
   const tag = interactive ? 'button' : 'div';
-  return `<${tag} class="playing-card ${back ? 'card-back' : ''} ${selected ? 'selected' : ''} ${highlight ? 'highlight' : ''} ${last ? 'last-card' : ''}" ${interactive ? `type="button" data-action="${action}" data-card="${esc(card.id)}" aria-label="${esc(cardLabel(card))}${last ? ' · Última carta rival' : ''}" aria-pressed="${selected}"` : `aria-label="${back ? 'Carta oculta' : esc(cardLabel(card))}" role="img"`}>${back ? cardBackSvg() : cardSvg(card)}</${tag}>`;
+  return `<${tag} class="playing-card ${back ? 'card-back' : ''} ${selected ? 'selected' : ''} ${highlight ? 'highlight' : ''} ${last ? 'last-card' : ''}" ${interactive ? `type="button" data-action="${action}" data-card="${esc(card.id)}" ${coach ? 'data-coach="true" ' : ''}aria-label="${esc(cardLabel(card))}${last ? ' · Última carta rival' : ''}${coach ? ' · Pista' : ''}" aria-pressed="${selected}"` : `aria-label="${back ? 'Carta oculta' : esc(cardLabel(card))}" role="img"`}>${back ? cardBackSvg() : cardSvg(card)}</${tag}>`;
 }
 
 function shell(content) {
@@ -103,7 +114,7 @@ function shell(content) {
     <header class="app-bar">
       <button type="button" class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark" aria-hidden="true">40<span>◆</span></span><span class="brand-word">Cuarenta</span></button>
       <nav class="app-tools" aria-label="Herramientas">
-        <button type="button" class="app-tool" data-action="tutorial" aria-label="Aprender a jugar" title="Aprender a jugar">${icon('book')}<span>Aprender</span></button>
+        ${screen === 'game' ? `<button type="button" class="app-tool" data-action="tutorial" aria-label="Aprender a jugar" title="Aprender a jugar">${icon('book')}<span>Aprender</span></button>` : ''}
         <button type="button" class="app-tool music-toggle" data-action="music" aria-label="Música de fondo" aria-pressed="${prefs.music}" title="${prefs.music ? 'Pausar' : 'Activar'} música de fondo">${icon('music')}</button>
         <button type="button" class="app-tool" data-action="settings" aria-label="Preferencias" title="Preferencias">${icon('settings')}</button>
       </nav>
@@ -132,6 +143,11 @@ function renderHome() {
     </div>
     <section class="setup-panel" aria-labelledby="setup-heading">
       <header class="setup-header"><h1 id="setup-heading">¿Cómo jugamos?</h1></header>
+      <button type="button" class="button learn-entry" data-action="tutorial">
+        <span class="learn-entry-icon">${icon('book')}</span>
+        <span class="learn-entry-copy"><strong>Aprender a jugar</strong><small>Práctica guiada · Fácil</small></span>
+        ${icon('arrow')}
+      </button>
       <form id="new-game-form">
         <div class="mode-options setup-modes" role="group" aria-label="Modo de juego">${modeButtons}</div>
         <div class="setup-controls">
@@ -278,7 +294,8 @@ function renderGame() {
   const chosen = moves[selectedMoveIndex];
   const captureIds = chosen?.captureIds || [];
 
-  let instruction = 'Tu turno. Elige una carta.';
+  const coaching = v.mode === 'solo' && v.difficulty === 'easy';
+  let instruction = coaching ? 'Toca una carta para ver qué puedes recoger.' : 'Tu turno. Elige una carta.';
   if (v.status === 'round-end') instruction = 'Fin del ciclo.';
   else if (v.status === 'finished') instruction = 'Partida terminada.';
   else if (locked) instruction = 'Cambio de turno.';
@@ -590,17 +607,29 @@ function startGame(options) {
   } catch (error) { toast(error.message); }
 }
 
-function readForm() {
+function newGameOptions(gameMode = mode, gameDifficulty = difficulty, points = comboPoints) {
   const clean = (value, fallback) => value.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 20) || fallback;
-  const names = [clean(draftNames.player, 'Tú'), clean(draftNames[mode], mode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2')];
+  const names = [clean(draftNames.player, 'Tú'), clean(draftNames[gameMode], gameMode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2')];
   if (names[0] === names[1]) names[1] = names[1].slice(0, 17) + ' 2';
-  return { mode, names, comboPoints, difficulty };
+  return { mode: gameMode, names, comboPoints: points, difficulty: gameDifficulty };
+}
+
+function requestNewGame(options) {
+  const prior = session.view(0);
+  if (!prior || prior.status === 'finished') {
+    startGame(options);
+    return;
+  }
+  showModal('replace', `${modalHeader('¿Empezar otra partida?')}<p class="modal-intro">Si repartes ahora, la partida guardada de ${esc(prior.players[0].name)} y ${esc(prior.players[1].name)} se reemplazará.</p><button id="confirm-new" class="button primary full-width">Sí, repartir cartas ${icon('cards')}</button><button class="button text-button full-width" data-action="close-modal">Conservar la partida</button>`);
+  modal.querySelector('#confirm-new').addEventListener('click', () => startGame(options), { once: true });
+  modal.querySelector('[data-action="close-modal"]').focus();
 }
 
 function showModal(kind, content) {
   cancelBot();
   if (!modal.open) lastFocus = document.activeElement;
   modalKind = kind;
+  modal.dataset.kind = kind;
   modal.innerHTML = content;
   if (!modal.open) modal.showModal();
 }
@@ -608,6 +637,7 @@ function showModal(kind, content) {
 function closeModal(resume = true) {
   if (modal.open) modal.close();
   modalKind = null;
+  delete modal.dataset.kind;
   if (lastFocus?.isConnected) lastFocus.focus();
   if (resume) scheduleBot();
 }
@@ -748,95 +778,146 @@ function resetTutorialAttempt() {
   tutorialCardId = null;
   tutorialCaptures.clear();
   tutorialFeedback = '';
+  tutorialHint = false;
 }
 
-function openTutorial(restart = false) {
+function openTutorial(track = tutorialTrack, restart = false) {
   const points = (screen === 'game' ? getView()?.rules.comboPoints : comboPoints) ?? 2;
-  if (restart || points !== tutorialComboPoints) {
-    tutorialLessons = createTutorialLessons(points);
+  if (points !== tutorialComboPoints) {
+    const all = createTutorialLessons(points);
+    tutorialCourses = {
+      starter: Object.keys(beginnerGuide).map(id => all.find(lesson => lesson.id === id)),
+      extra: all.filter(lesson => !Object.hasOwn(beginnerGuide, lesson.id)),
+    };
     tutorialComboPoints = points;
     tutorialSolved.clear();
-    tutorialStep = 0;
-    tutorialComplete = false;
+    restart = true;
+  }
+  if (restart || track !== tutorialTrack) {
+    const course = tutorialCourses[track];
+    if (restart) course.forEach(lesson => tutorialSolved.delete(lesson.id));
+    tutorialTrack = track;
+    const firstUnsolved = course.findIndex(lesson => !tutorialSolved.has(lesson.id));
+    tutorialStep = firstUnsolved === -1 ? course.length : firstUnsolved;
     resetTutorialAttempt();
   }
   showTutorial('#modal-title');
 }
 
+function tutorialLinks({ back = false, complete = false } = {}) {
+  return `<nav class="tutorial-links" aria-label="Opciones de práctica">
+    ${back ? '<button type="button" data-action="tutorial-prev">Anterior</button>' : ''}
+    <button type="button" data-action="tutorial-restart">${complete ? 'Repetir práctica' : 'Reiniciar'}</button>
+    ${tutorialTrack === 'starter'
+      ? '<button type="button" data-action="tutorial-extra">Más retos</button>'
+      : '<button type="button" data-action="tutorial-starter">Práctica fácil</button>'}
+  </nav>`;
+}
+
+function tutorialBoard(lesson, answer, guidedChoice) {
+  const play = lesson.type === 'play';
+  const hand = answer?.after?.hand ?? lesson.hand;
+  const table = answer?.after?.table ?? lesson.table;
+  const handOnly = !play && table.length === 0;
+  const lastCard = answer ? (answer.after?.move?.kind === 'drop' ? answer.after.move.cardId : null) : lesson.lastCardId;
+  const suggestedCaptures = tutorialCardId === guidedChoice?.cardId ? guidedChoice?.captureIds : [];
+  return `<div class="lesson-board tutorial-board${answer ? ' is-solved' : ''}" data-hand-only="${handOnly}">
+    ${tableArt(prefs.tableCity)}
+    ${handOnly ? '' : `<p class="tutorial-zone-label tutorial-table-label">${answer?.after?.move ? 'Mesa después de jugar' : 'En la mesa'}</p>
+    <div class="tutorial-table">${table.map(card => cardMarkup(card, {
+      selected: !answer && tutorialCaptures.has(card.id), last: card.id === lastCard,
+      interactive: play && Boolean(tutorialCardId) && !answer,
+      coach: suggestedCaptures?.includes(card.id) && !tutorialCaptures.has(card.id), action: 'tutorial-capture',
+    })).join('') || '<span class="tutorial-empty">Mesa vacía</span>'}</div>`}
+    <p class="tutorial-zone-label tutorial-hand-label">Tu mano</p>
+    <div class="tutorial-hand">${hand.map(card => cardMarkup(card, {
+      selected: !answer && card.id === tutorialCardId, interactive: play && !answer,
+      coach: card.id === guidedChoice?.cardId && card.id !== tutorialCardId, action: 'tutorial-card',
+    })).join('') || '<span class="tutorial-empty">Sin cartas</span>'}</div>
+  </div>`;
+}
+
+function tutorialHintText(lesson, route) {
+  if (lesson.type === 'quiz') return `Busca «${route.label}».`;
+  if (tutorialCardId !== route.cardId) {
+    const card = lesson.hand.find(item => item.id === route.cardId);
+    return `Toca la carta marcada en tu mano: ${cardLabel(card)}.`;
+  }
+  if (!route.captureIds.length) return 'Deja la mesa tal como está y pulsa Jugar carta.';
+  if ([...tutorialCaptures].some(id => !route.captureIds.includes(id))) return 'Desmarca las cartas que sobran y conserva las que indica la pista.';
+  if (route.captureIds.every(id => tutorialCaptures.has(id))) return 'Ya están todas las cartas. Pulsa Recoger cartas.';
+  return route.captureIds.length === 1 ? 'Toca la carta marcada en la mesa.' : 'Toca las cartas marcadas en la mesa.';
+}
+
 function showTutorial(focus, keepScroll = false) {
   const scroll = modal.open && modalKind === 'tutorial' ? modal.scrollTop : 0;
-  const lesson = tutorialLessons[tutorialStep];
-  const total = tutorialLessons.length;
-  if (tutorialComplete) {
-    showModal('tutorial', `${modalHeader('¡Listo para la mesa!', 'RETO COMPLETADO')}<div class="tutorial-game"><div class="winner-symbol">${icon('trophy')}</div><p class="tutorial-feedback" data-tone="correct">${total} de ${total} retos resueltos. Ya puedes poner en práctica las capturas, las rondas y el cierre.</p><div class="lesson-navigation tutorial-actions"><button class="button outline" data-action="tutorial-restart">Repetir retos</button><button class="button primary" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button></div></div>`);
+  const lessons = tutorialCourses[tutorialTrack];
+  const lesson = lessons[tutorialStep];
+  const courseTitle = tutorialTrack === 'starter' ? 'Práctica fácil' : 'Más retos';
+  const count = lessons.filter(item => tutorialSolved.has(item.id)).length;
+  if (!lesson) {
+    showModal('tutorial', `${modalHeader('¡Listo para jugar!', esc(courseTitle))}
+      <div class="tutorial-game tutorial-finish" data-track="${tutorialTrack}">
+        <div class="winner-symbol">${icon('trophy')}</div>
+        <p class="tutorial-feedback" data-tone="correct">${count} de ${lessons.length} retos completados. En una partida, al elegir tu carta, la mesa marca lo que puedes recoger.</p>
+        <div class="tutorial-actions">
+          <button type="button" class="button primary" data-action="tutorial-easy">Jugar en Fácil ${icon('arrow')}</button>
+        </div>
+        ${tutorialLinks({ complete: true })}
+      </div>`);
   } else {
-    const answer = tutorialSolved.get(tutorialStep);
+    const answer = tutorialSolved.get(lesson.id);
+    const [title, prompt, explanation] = beginnerGuide[lesson.id] ?? [lesson.title, lesson.prompt, lesson.explanation];
     const play = lesson.type === 'play';
-    const hand = answer?.after?.hand ?? lesson.hand;
-    const table = answer?.after?.table ?? lesson.table;
-    const lastCard = answer ? (answer.after?.move?.kind === 'drop' ? answer.after.move.cardId : null) : lesson.lastCardId;
-    const board = lesson.hand.length || lesson.table.length ? `<div class="lesson-board tutorial-board${answer ? ' is-solved' : ''}">
-      ${tableArt(prefs.tableCity)}
-      <p class="tutorial-zone-label">${answer?.after?.move ? 'MESA DESPUÉS DE JUGAR' : lastCard ? 'MESA · ÚLTIMA CARTA MARCADA' : 'EN LA MESA'}</p>
-      <div class="tutorial-table">${table.map(card => cardMarkup(card, {
-        highlight: !answer && tutorialCaptures.has(card.id), selected: !answer && tutorialCaptures.has(card.id), last: card.id === lastCard,
-        interactive: play && !!tutorialCardId && !answer, action: 'tutorial-capture',
-      })).join('') || '<span class="tutorial-empty">Mesa vacía</span>'}</div>
-      <p class="tutorial-zone-label">TU MANO</p>
-      <div class="tutorial-hand">${hand.map(card => cardMarkup(card, {
-        selected: !answer && card.id === tutorialCardId, interactive: play && !answer, action: 'tutorial-card',
-      })).join('') || '<span class="tutorial-empty">Sin cartas</span>'}</div>
-    </div>` : '';
-    const choices = !play && !answer ? `<div class="tutorial-capture-options">${lesson.choices.map(choice =>
-      `<button type="button" class="button outline" data-action="tutorial-answer" data-answer="${esc(choice.id)}">${esc(choice.label)}</button>`
-    ).join('')}</div>` : '';
+    const hasBoard = Boolean(lesson.hand.length || lesson.table.length);
+    const correct = lesson.choices.filter(choice => choice.correct);
+    const route = correct.find(choice => choice.cardId === tutorialCardId) ?? correct[0];
+    const guided = !answer && (tutorialHint || (tutorialTrack === 'starter' && tutorialStep === 0 && !tutorialCardId));
     const scores = answer?.after?.scores ?? lesson.scores;
-    const gained = scores && lesson.scores ? scores[0] - lesson.scores[0] : 0;
-    const score = Array.isArray(scores) ? `<p class="tutorial-scoreline">Tú <strong>${esc(scores[0])}</strong>${gained > 0 ? ` <span class="tutorial-score-gain">+${gained}</span>` : ''} · Rival <strong>${esc(scores[1])}</strong></p>` : '';
-    const progress = tutorialLessons.map((item, index) =>
-      `<button type="button" data-action="tutorial-step" data-step="${index}" data-solved="${tutorialSolved.has(index)}" aria-label="${index + 1}. ${esc(item.title)}${tutorialSolved.has(index) ? ', resuelto' : ''}" ${index === tutorialStep ? 'aria-current="step"' : ''} ${index > tutorialSolved.size ? 'disabled' : ''}>${index + 1}</button>`
-    ).join('');
-    const feedback = answer ? lesson.explanation : tutorialFeedback || (play
-      ? (tutorialCardId ? 'Marca las cartas que recogerías y confirma tu jugada.' : 'Primero toca una carta de tu mano.')
-      : 'Elige una respuesta para seguir.');
-    const tone = answer ? 'correct' : tutorialFeedback ? 'retry' : 'neutral';
-    const savedLegacy = screen === 'game' && legacyRules(getView());
-    const goal = lesson.goal && lesson.goal !== lesson.prompt ? `<p class="tutorial-goal">${esc(lesson.goal)}</p>` : '';
-    const setup = tutorialStep === 0 ? '<details class="tutorial-setup"><summary>Cómo se reparte y se juega</summary><p>Se juega entre dos con 40 cartas: A, 2, 3, 4, 5, 6, 7, J, Q y K de cada palo. Reciben cinco cartas cada uno y empieza quien no reparte. Juegan una carta por turno. Tras cuatro repartos se cuenta el cartón y se cambia de repartidor. La meta es llegar a 40 puntos, salvo las victorias inmediatas que practicarás más adelante.</p></details>' : '';
-    showModal('tutorial', `${modalHeader(esc(lesson.title), `APRENDE JUGANDO · ${tutorialStep + 1} DE ${total}`)}
-      <div class="tutorial-game">
-        <nav class="tutorial-progress" aria-label="Lecciones">${progress}</nav>
-        ${setup}
-        <p class="modal-intro">${esc(lesson.prompt)}</p>${goal}
-        ${savedLegacy ? '<p class="legacy-note">Estos retos usan las reglas V2. Tu partida guardada conserva el reglamento V1.</p>' : ''}
-        ${score}${board}${choices}
+    const gained = scores[0] - lesson.scores[0];
+    const score = scores.some(Boolean) ? `<p class="tutorial-scoreline">Tú <strong>${scores[0]}</strong>${gained > 0 ? ` <span class="tutorial-score-gain">+${gained}</span>` : ''} · Rival <strong>${scores[1]}</strong></p>` : '';
+    const choices = !play && !answer ? `<div class="tutorial-capture-options">${lesson.choices.map(choice =>
+      `<button type="button" class="button outline" data-action="tutorial-answer" data-answer="${esc(choice.id)}" ${guided && choice === route ? 'data-coach="true"' : ''}>${esc(choice.label)}</button>`
+    ).join('')}</div>` : '';
+    const tone = answer ? 'correct' : tutorialFeedback ? 'retry' : tutorialHint ? 'hint' : 'neutral';
+    const feedback = answer ? explanation : tutorialFeedback || (tutorialHint ? tutorialHintText(lesson, route) :
+      tutorialCardId ? 'Confirma cuando tengas lista tu jugada.' :
+        lesson.id === 'dejar-carta' ? 'La meta es llegar a 40 puntos. Juega una carta por turno.' :
+          play ? 'Empieza por una carta de tu mano.' : 'Toca una respuesta.');
+    const nextLabel = tutorialStep + 1 === lessons.length ? 'Terminar práctica' : 'Siguiente reto';
+    const playLabel = tutorialCaptures.size ? 'Recoger cartas' : 'Jugar carta';
+    showModal('tutorial', `${modalHeader(esc(title), `${courseTitle} · ${tutorialStep + 1} de ${lessons.length}`)}
+      <div class="tutorial-game" data-lesson="${esc(lesson.id)}" data-track="${tutorialTrack}">
+        <progress class="tutorial-meter" value="${count}" max="${lessons.length}" aria-label="Retos completados"></progress>
+        ${!answer || score ? `<div class="tutorial-prompt">${answer ? '' : `<p>${esc(prompt)}</p>`}${score}</div>` : ''}
+        ${hasBoard ? tutorialBoard(lesson, answer, guided ? route : null) : ''}
+        ${choices}
         <div class="tutorial-feedback" id="tutorial-feedback" data-tone="${tone}" role="status" tabindex="-1">${answer ? `<strong>${icon('check')} ¡Bien jugado!</strong> ` : ''}${esc(feedback)}</div>
         <div class="lesson-navigation tutorial-actions">
-          <button type="button" class="button outline" data-action="tutorial-prev" ${tutorialStep === 0 ? 'disabled' : ''}>${icon('back')} Anterior</button>
           ${answer
-            ? `<button type="button" class="button primary" data-action="tutorial-next">${tutorialStep + 1 === total ? 'Terminar práctica' : 'Siguiente reto'} ${icon('arrow')}</button>`
-            : play ? `<button type="button" class="button primary" data-action="tutorial-play" ${tutorialCardId ? '' : 'disabled'}>Confirmar jugada ${icon('arrow')}</button>` : ''}
+            ? `<button type="button" class="button primary" data-action="tutorial-next">${nextLabel} ${icon('arrow')}</button>`
+            : `<button type="button" class="button outline" data-action="tutorial-hint" aria-pressed="${tutorialHint}">Pista ${icon('spark')}</button>${play
+              ? `<button type="button" class="button primary" data-action="tutorial-play" ${tutorialCardId ? '' : 'disabled'}>${playLabel} ${icon('arrow')}</button>` : ''}`}
         </div>
+        ${tutorialLinks({ back: tutorialStep > 0 })}
       </div>`);
   }
-  const progressStrip = modal.querySelector('.tutorial-progress');
-  const currentStep = progressStrip?.querySelector('[aria-current="step"]');
-  if (currentStep) progressStrip.scrollLeft = currentStep.offsetLeft - (progressStrip.clientWidth - currentStep.offsetWidth) / 2;
   if (focus === '#modal-title') modal.querySelector(focus).tabIndex = -1;
   modal.scrollTop = focus === '#modal-title' ? 0 : scroll;
   if (focus) modal.querySelector(focus)?.focus({ preventScroll: keepScroll || focus !== '#tutorial-feedback' });
 }
 
 function selectTutorialStep(step) {
-  if (!Number.isInteger(step) || step < 0 || step >= tutorialLessons.length || step > tutorialSolved.size) return;
+  const course = tutorialCourses[tutorialTrack];
+  if (step < 0 || step > course.length) return;
   tutorialStep = step;
   resetTutorialAttempt();
   showTutorial('#modal-title');
 }
 
 function selectTutorialCard(cardId, fromTable) {
-  const lesson = tutorialLessons[tutorialStep];
-  if (!lesson || lesson.type !== 'play' || tutorialSolved.has(tutorialStep)) return;
+  const lesson = tutorialCourses[tutorialTrack][tutorialStep];
+  if (!lesson || lesson.type !== 'play' || tutorialSolved.has(lesson.id)) return;
   if (fromTable) {
     if (!tutorialCardId || !lesson.table.some(card => card.id === cardId)) return;
     if (tutorialCaptures.has(cardId)) tutorialCaptures.delete(cardId);
@@ -852,8 +933,8 @@ function selectTutorialCard(cardId, fromTable) {
 }
 
 function checkTutorialAnswer(answerId) {
-  const lesson = tutorialLessons[tutorialStep];
-  if (!lesson || tutorialSolved.has(tutorialStep)) return;
+  const lesson = tutorialCourses[tutorialTrack][tutorialStep];
+  if (!lesson || tutorialSolved.has(lesson.id)) return;
   if (lesson.type === 'play' && !tutorialCardId) return;
   const answer = lesson.type === 'play' ? lesson.choices.find(choice =>
     choice.cardId === tutorialCardId &&
@@ -861,11 +942,11 @@ function checkTutorialAnswer(answerId) {
     choice.captureIds.every(id => tutorialCaptures.has(id))
   ) : lesson.choices.find(choice => choice.id === answerId);
   if (!answer?.correct) {
-    tutorialFeedback = answer?.feedback || 'Esa combinación no cumple el reto. Revisa el valor de tu carta y marca solo las que corresponden.';
+    tutorialFeedback = answer?.feedback || 'Revisa las cartas marcadas. Puedes usar la pista e intentarlo otra vez.';
     showTutorial('#tutorial-feedback');
     return;
   }
-  tutorialSolved.set(tutorialStep, answer);
+  tutorialSolved.set(lesson.id, answer);
   const animated = animateTable() && (lesson.hand.length || lesson.table.length);
   showTutorial('#tutorial-feedback', animated);
   const event = answer.after?.event?.kind;
@@ -877,20 +958,15 @@ function checkTutorialAnswer(answerId) {
   const board = modal.querySelector('.tutorial-board');
   const duration = win || fall
     ? renderImpact(board, special ? 'ronda' : win ? 'win' : 'fall', label, impactCards.get(move?.cardId))
-    : renderCapture(move, viewer, board);
+    : renderCapture(move, 0, board);
   if (duration && (board.offsetTop < modal.scrollTop || board.offsetTop + board.offsetHeight > modal.scrollTop + modal.clientHeight)) {
     modal.scrollTop = Math.max(0, board.offsetTop - 12);
   }
 }
 
 function advanceTutorial() {
-  if (!tutorialSolved.has(tutorialStep)) return;
-  if (tutorialStep + 1 < tutorialLessons.length) {
-    selectTutorialStep(tutorialStep + 1);
-    return;
-  }
-  tutorialComplete = true;
-  showTutorial('#modal-title');
+  const lesson = tutorialCourses[tutorialTrack][tutorialStep];
+  if (lesson && tutorialSolved.has(lesson.id)) selectTutorialStep(tutorialStep + 1);
 }
 
 function showRoundSummary() {
@@ -958,8 +1034,15 @@ function handleAction(target) {
   else if (action === 'skip-feedback') { completeBotFeedback(getView()?.id); showResult(); }
   else if (action === 'reset-feedback') { prefs.feedbackChallenge = 0; savePreferences(prefs); showSettings(); }
   else if (action === 'tutorial') openTutorial();
-  else if (action === 'tutorial-restart') openTutorial(true);
-  else if (action === 'tutorial-step') selectTutorialStep(Number(target.dataset.step));
+  else if (action === 'tutorial-restart') openTutorial(tutorialTrack, true);
+  else if (action === 'tutorial-extra') openTutorial('extra');
+  else if (action === 'tutorial-starter') openTutorial('starter');
+  else if (action === 'tutorial-hint') {
+    tutorialHint = !tutorialHint;
+    tutorialFeedback = '';
+    showTutorial('[data-action="tutorial-hint"]');
+  }
+  else if (action === 'tutorial-easy') requestNewGame(newGameOptions('solo', 'easy', tutorialComboPoints));
   else if (action === 'tutorial-prev') selectTutorialStep(tutorialStep - 1);
   else if (action === 'tutorial-next') advanceTutorial();
   else if (action === 'tutorial-card') selectTutorialCard(target.dataset.card, false);
@@ -994,12 +1077,7 @@ document.addEventListener('input', event => {
 document.addEventListener('submit', event => {
   if (event.target.id !== 'new-game-form') return;
   event.preventDefault();
-  const options = readForm();
-  const prior = session.view(0);
-  if (prior && prior.status !== 'finished') {
-    showModal('replace', `${modalHeader('Una nueva partida.')}<p class="modal-intro">Empezar reemplazará la partida guardada de ${esc(prior.players[0].name)} y ${esc(prior.players[1].name)}. ¿Repartimos de nuevo?</p><button id="confirm-new" class="button primary full-width">Sí, repartir cartas ${icon('cards')}</button><button class="button text-button full-width" data-action="close-modal">Conservar la partida</button>`);
-    document.querySelector('#confirm-new').addEventListener('click', () => startGame(options), { once: true });
-  } else startGame(options);
+  requestNewGame(newGameOptions());
 });
 document.addEventListener('change', event => {
   if (event.target.id === 'music-enabled') {

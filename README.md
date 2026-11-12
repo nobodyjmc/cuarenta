@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.11.0
+# Cuarenta · Versión 0.12.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -39,7 +39,7 @@ Pulsa la nota musical o activa **Preferencias → Música de fondo** para escuch
 
 Una captura por suma empieza con **exactamente dos cartas numéricas** de la mesa. Por ejemplo, un 6 recoge 2 + 4; A + 2 + 3 no vale aunque dé 6. Después de la suma puedes recoger las cartas consecutivas de la escalera. El motor y el tutorial aplican la misma regla, con las opciones de ronda y caída propias de esta mesa. La mecánica de suma de dos cartas está descrita en el [reglamento del Torneo Internacional de Cuarenta](https://es.scribd.com/document/612816076/REGLAS-DEL-TORNEO-DE-CUARENTA).
 
-En **Aprender a jugar**, resuelve retos con cartas y preguntas de puntuación. Elige tu carta, marca las que recogerías y confirma. Puedes repetir una jugada hasta resolverla y volver a los retos completados. La práctica usa la variante de puntos elegida para caída y limpia y conserva tu partida guardada.
+Desde el inicio, toca **Aprender a jugar** para hacer ocho retos guiados. Practica dejar una carta, recoger por igualdad o suma, seguir la escalera, hacer caída y limpia, reconocer una ronda y cerrar con 40. En cada reto puedes pedir una **Pista** y volver a intentar la jugada. Al terminar puedes **Jugar en Fácil** contra Don Julio o abrir **Más retos** para practicar las reglas restantes. La práctica usa la variante de puntos de caída y limpia y conserva tu partida guardada.
 
 El archivo contiene todo el juego: no necesita instalación, conexión, cuentas ni recursos externos. Para volver, abre el mismo archivo en el mismo navegador. Si este permite el almacenamiento local, aparece **Continuar partida**. El guardado de archivos locales depende del navegador; mover el HTML, usar modo privado o borrar los datos puede impedir recuperar la partida. El juego avisa si no puede guardar.
 
