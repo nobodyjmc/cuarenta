@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.14.0
+# Cuarenta · Versión 0.15.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -9,7 +9,7 @@ Esta versión está preparada para GitHub Pages. En cada cambio de `main`, GitHu
 ### Guía rápida para el grupo
 
 1. Abre el enlace en Chrome, Edge o Safari desde PC o celular.
-2. Prueba **Jugar contra Don Julio** y cambia entre Fácil, Medio, Difícil y Experto en **Ajustes de partida**. En Experto, valora las jugadas para ajustar el reto.
+2. Pulsa **Jugar contra Don Julio** y elige Fácil, Medio, Difícil o Experto. En Experto, valora las jugadas para ajustar el reto.
 3. Prueba **Dos jugadores** para pasar el dispositivo entre turnos.
 4. Revisa las reglas de ronda: tres iguales al repartir suman 2 puntos; una caída inmediata a una carta de la ronda rival gana la partida.
 5. Recarga la página para comprobar que la partida puede continuar en el mismo navegador.
@@ -25,11 +25,11 @@ Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDAC
 ## Jugar ahora
 
 1. Abre **Jugar_Cuarenta.html** con doble clic en un navegador moderno de escritorio.
-2. Pulsa **Jugar contra Don Julio** para empezar en Fácil, **Aprender a jugar** para practicar o **Dos jugadores** para compartir el dispositivo.
+2. Pulsa **Jugar contra Don Julio** para elegir el nivel, **Aprender a jugar** para practicar o **Dos jugadores** para compartir el dispositivo.
 3. En **Preferencias → Ajustes de partida** puedes elegir el nivel, cambiar los nombres y configurar **2** o **4 puntos** por caída y limpia juntas. Si hay una partida guardada, **Continuar partida** aparece primero.
 4. Selecciona una carta y confirma la jugada. Si admite varias capturas, cambia entre las opciones antes de confirmar.
-5. Elige **Horizontal** o **Vertical** desde **Ajustes de partida** o desde la barra superior durante el juego. En el celular, tocar **Horizontal** gira la vista completa y **Vertical** la devuelve a la vista normal. El navegador recuerda tu elección.
-6. La mano, las cartas de la mesa, el marcador y el botón de jugar comparten pantalla. Usa el trofeo de la barra superior para abrir el historial, ver los datos del reparto y consultar las reglas. Desde Preferencias puedes abrir la práctica o preparar otra partida.
+5. Elige **Horizontal** o **Vertical** en **Ajustes de partida** o en **Preferencias** durante el juego. En el celular, tocar **Horizontal** gira la vista completa y **Vertical** la devuelve a la vista normal. El navegador recuerda tu elección.
+6. El turno, la mano, las cartas de la mesa y el botón de jugar comparten pantalla. Toca el marcador para abrir el historial, ver los datos del reparto y consultar las reglas. Desde Preferencias puedes abrir la práctica o preparar otra partida.
 
 Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo en **Preferencias → Reducir movimiento**. El aviso y las cartas de una ronda solo aparecen en la vista de quien la recibe. Los puntos se suman al marcador.
 

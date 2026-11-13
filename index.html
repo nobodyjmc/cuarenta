@@ -3429,250 +3429,360 @@ svg.aside-panel-icon {
 
 .app-viewport.is-playing.is-compact-play .privacy-curtain p:not(.eyebrow) { margin: 5px 0 8px; }
 
+/* The lesson uses the same playing surface and visual hierarchy as the table. */
 #modal[data-kind="tutorial"] {
+  --lesson-height: 100dvh;
+  --lesson-gap: clamp(7px, calc(var(--lesson-height) * .013), 12px);
+  --lesson-padding: clamp(10px, calc(var(--lesson-height) * .023), 20px);
   container: practice-dialog / inline-size;
-  width: min(720px, calc(100% - 20px));
-  max-height: calc(100dvh - 22px);
-  padding: clamp(11px, 2.2vw, 22px);
-  border-radius: clamp(12px, 2.5vw, 20px);
-  background: #131313;
-}
-
-.is-rotated-view #modal[open][data-kind="tutorial"] {
-  width: min(720px, calc(var(--rotated-width) - 20px));
+  box-sizing: border-box;
+  width: min(760px, calc(100% - 24px));
+  height: min(860px, calc(var(--lesson-height) - 24px));
   max-width: none;
-  max-height: calc(var(--rotated-height) - 20px);
-  padding: 10px 12px;
+  max-height: none;
+  padding: var(--lesson-padding);
+  border: 1px solid var(--card-edge);
+  border-radius: 16px;
+  background: #000;
+  color: var(--card-ivory);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
-#modal[data-kind="tutorial"] .modal-top {
-  gap: 10px;
-  margin-bottom: 3px;
+#modal[open][data-kind="tutorial"] {
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  gap: var(--lesson-gap);
 }
 
-#modal[data-kind="tutorial"] .modal-top .eyebrow {
-  color: #ebd4a5;
-  font-weight: 650;
-  line-height: 1.2;
+#modal[open][data-kind="tutorial"]:not(:has(> .tutorial-meter)) {
+  grid-template-rows: auto auto minmax(0, 1fr);
 }
 
-#modal[data-kind="tutorial"] .modal-top .icon-button { flex: 0 0 40px; }
+#modal[data-kind="tutorial"]::backdrop { background: #000d; }
 
-#modal[data-kind="tutorial"] #modal-title {
-  margin: 0 0 9px;
-  font-size: clamp(21px, 4.5vw, 29px);
-  line-height: 1.12;
+#modal[data-kind="tutorial"] .tutorial-header {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
 }
 
-#modal[data-kind="tutorial"] .tutorial-game { gap: 7px; }
+#modal[data-kind="tutorial"] .tutorial-header button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--card-ivory);
+}
 
-.tutorial-meter {
+#modal[data-kind="tutorial"] .tutorial-header button:hover { background: #ffffff12; }
+
+#modal[data-kind="tutorial"] .tutorial-header-label,
+#modal[data-kind="tutorial"] .tutorial-step-count {
+  font: 650 clamp(13px, 4.2cqw, 17px)/1.15 var(--sans);
+}
+
+#modal[data-kind="tutorial"] .tutorial-step-count {
+  color: #e9d8ae;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+#modal[data-kind="tutorial"] .tutorial-meter {
   display: block;
   width: 100%;
-  height: 5px;
+  height: 6px;
+  margin: 0;
   appearance: none;
   border: 0;
   border-radius: 10px;
   background: #3a352b;
-  color: #ebc97f;
-  accent-color: #ebc97f;
+  color: var(--card-gold);
+  accent-color: var(--card-gold);
   overflow: hidden;
 }
 
-.tutorial-meter::-webkit-progress-bar { background: #3a352b; }
-.tutorial-meter::-webkit-progress-value { background: #ebc97f; }
-.tutorial-meter::-moz-progress-bar { background: #ebc97f; }
+#modal[data-kind="tutorial"] .tutorial-meter::-webkit-progress-bar { background: #3a352b; }
+#modal[data-kind="tutorial"] .tutorial-meter::-webkit-progress-value { background: var(--card-gold); }
+#modal[data-kind="tutorial"] .tutorial-meter::-moz-progress-bar { background: var(--card-gold); }
+
+#modal[data-kind="tutorial"] #modal-title.tutorial-title {
+  margin: 0;
+  color: var(--card-ivory);
+  font: 700 clamp(27px, 9cqw, 54px)/1.05 Georgia, "Times New Roman", serif;
+  letter-spacing: -.055em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+#modal[data-kind="tutorial"] .tutorial-game {
+  display: flex;
+  flex-direction: column;
+  gap: var(--lesson-gap);
+  min-width: 0;
+  min-height: 0;
+}
 
 #modal[data-kind="tutorial"] .tutorial-prompt {
-  margin: 1px 0;
-  color: #ededeb;
-  font: 500 14px/1.35 var(--sans);
+  margin: 0 auto;
+  color: var(--card-ivory);
+  font: 700 clamp(14px, 4.4cqw, 18px)/1.25 var(--sans);
+  text-align: center;
+}
+
+#modal[data-kind="tutorial"] .tutorial-prompt > p:not(.tutorial-scoreline) {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--card-gold);
+  color: var(--card-ink);
+  text-wrap: balance;
 }
 
 #modal[data-kind="tutorial"] .tutorial-scoreline {
   margin: 3px 0 0;
-  color: #ddd7cc;
-  font-size: 12px;
-  line-height: 1.2;
+  color: #ddd1b7;
+  font: 500 13px/1.25 var(--sans);
 }
 
 #modal[data-kind="tutorial"] .tutorial-board {
-  --practice-gap: 6px;
-  --practice-card: clamp(42px, 11vmin, 56px);
-  grid-template-areas: "table-label" "table-cards" "hand-label" "hand-cards";
-  grid-template-columns: minmax(0, 1fr);
-  gap: 3px;
-  align-content: center;
-  padding: 8px;
-  border-radius: 12px;
+  --practice-gap: clamp(5px, 1.9cqw, 12px);
+  --practice-card: clamp(43px, calc((var(--lesson-height) - 335px) / 2.9), 116px);
+  flex: 1 0 auto;
+  grid-template: "table-label" auto "table-cards" 1fr "hand-label" auto "hand-cards" 1fr / minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  padding: clamp(8px, 2.5cqw, 16px);
+  border: 1px solid #ffffff1a;
+  border-radius: 16px;
+  background: var(--felt-surface);
+  box-shadow: inset 0 0 32px #0004;
+}
+
+#modal[data-kind="tutorial"] .tutorial-board[data-hand-only="true"] {
+  grid-template: "hand-label" auto "hand-cards" 1fr / minmax(0, 1fr);
+}
+
+#modal[data-kind="tutorial"] .tutorial-board > .table-city-art {
+  bottom: 6%;
+  max-height: 55%;
+  opacity: .4;
 }
 
 #modal[data-kind="tutorial"] .tutorial-zone-label {
-  font-size: 11px;
-  line-height: 1.12;
+  color: #fff1d1;
+  font: 700 clamp(15px, 4.7cqw, 21px)/1.15 var(--sans);
+  letter-spacing: normal;
+  text-align: center;
+  text-shadow: 0 1px 3px #0009;
 }
 
 #modal[data-kind="tutorial"] .tutorial-table-label { grid-area: table-label; }
 #modal[data-kind="tutorial"] .tutorial-hand-label { grid-area: hand-label; }
 
-#modal[data-kind="tutorial"] .tutorial-board[data-hand-only="true"] {
-  grid-template: "hand-label" auto "hand-cards" auto / minmax(0, 1fr);
-}
-
-#modal[data-kind="tutorial"] .tutorial-table,
-#modal[data-kind="tutorial"] .tutorial-hand {
+#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand) {
+  --practice-count: 1;
   align-items: center;
+  flex-wrap: nowrap;
   gap: var(--practice-gap);
   min-height: 22px;
-  padding: 4px 3px 6px;
+  padding: 4px 2px 6px;
 }
 
-#modal[data-kind="tutorial"] .tutorial-board .playing-card { width: var(--practice-card); }
+#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(2)) { --practice-count: 2; }
+#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(3)) { --practice-count: 3; }
+#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(4)) { --practice-count: 4; }
+#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(5)) { --practice-count: 5; }
+#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(6)) { --practice-count: 6; }
+
+#modal[data-kind="tutorial"] .tutorial-board .playing-card {
+  width: min(var(--practice-card), calc((100% - (var(--practice-count) - 1) * var(--practice-gap)) / var(--practice-count)));
+  height: auto;
+}
 
 #modal[data-kind="tutorial"] .tutorial-board .playing-card > svg {
   position: absolute;
   inset: 0;
 }
 
-#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(5)) .playing-card {
-  width: min(var(--practice-card), calc((100% - 4 * var(--practice-gap)) / 5));
-}
-
-#modal[data-kind="tutorial"] :is(.tutorial-table, .tutorial-hand):has(.playing-card:nth-child(6)) .playing-card {
-  width: min(var(--practice-card), calc((100% - 5 * var(--practice-gap)) / 6));
-}
-
 #modal[data-kind="tutorial"] [data-coach="true"] {
-  outline: 2px dashed #a6ecff;
+  z-index: 1;
+  outline: 2px solid #f5d598;
   outline-offset: 2px;
+  box-shadow: 0 0 14px #f4c16a8c, 0 4px 8px #0006;
 }
 
-#modal[data-kind="tutorial"] [data-coach="true"]:focus-visible {
-  outline-style: solid;
+#modal[data-kind="tutorial"] .playing-card[data-coach="true"] { transform: translateY(-2px); }
+
+#modal[data-kind="tutorial"] :is(button, [data-coach="true"]):focus-visible {
+  outline: 2px solid #fff0c5;
   outline-offset: 3px;
-  box-shadow: 0 0 0 4px #1b3741;
 }
 
 #modal[data-kind="tutorial"] .tutorial-feedback {
-  padding: 6px 9px;
-  color: #f4f2eb;
+  padding: 7px 10px;
+  border-color: #4a3c26;
+  border-radius: 9px;
+  background: #1b1711;
+  color: #fff0d2;
   font-size: 13px;
-  line-height: 1.28;
-  background: #202020;
+  line-height: 1.25;
 }
 
-#modal[data-kind="tutorial"] .tutorial-feedback[data-tone="correct"] { background: #15251e; }
+#modal[data-kind="tutorial"] .tutorial-feedback[data-tone="correct"] { background: #15251e; border-color: #648670; }
 #modal[data-kind="tutorial"] .tutorial-feedback[data-tone="retry"] { background: #2d2318; }
-#modal[data-kind="tutorial"] .tutorial-feedback[data-tone="hint"] { border-color: #72b4c9; }
-
-#modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-capture-options) .tutorial-feedback[data-tone="neutral"] { display: none; }
+#modal[data-kind="tutorial"] .tutorial-feedback[data-tone="neutral"] { display: none; }
 
 #modal[data-kind="tutorial"] :is(.tutorial-actions, .tutorial-capture-options) {
   display: flex;
-  gap: 6px;
+  justify-content: center;
+  gap: 7px;
   margin: 0;
 }
 
 #modal[data-kind="tutorial"] :is(.tutorial-actions, .tutorial-capture-options) .button {
   min-height: 44px;
-  padding: 6px 10px;
-  font-size: 13px;
-  line-height: 1.15;
+  padding: 7px 11px;
+  border-radius: 10px;
+  font: 700 clamp(14px, 4cqw, 17px)/1.15 var(--sans);
 }
 
-#modal[data-kind="tutorial"] .tutorial-actions .primary { flex-grow: 2; }
-#modal[data-kind="tutorial"] .tutorial-actions .icon { width: 15px; height: 15px; }
-#modal[data-kind="tutorial"] [data-action="tutorial-hint"][aria-pressed="true"] {
-  border-color: #a6ecff;
-  color: #a6ecff;
+#modal[data-kind="tutorial"] .tutorial-actions .button.primary {
+  flex-grow: 2;
+  background: var(--card-ivory);
+  border-color: var(--card-ivory);
+  color: var(--card-ink);
 }
-#modal[data-kind="tutorial"] .tutorial-capture-options { padding: 3px; }
-#modal[data-kind="tutorial"] .tutorial-capture-options .button { flex: 1 1 100%; text-align: left; }
+
+#modal[data-kind="tutorial"] .tutorial-actions .button.primary:hover:not(:disabled) {
+  background: #fff0d2;
+  border-color: #fff0d2;
+}
+
+#modal[data-kind="tutorial"] .tutorial-actions [data-action="tutorial-hint"] {
+  flex: 0 1 auto;
+  min-width: 122px;
+  border: 1px solid var(--card-gold);
+  background: #000;
+  color: var(--card-ivory);
+}
+
+#modal[data-kind="tutorial"] .tutorial-actions [data-action="tutorial-hint"][aria-pressed="true"] {
+  background: #342716;
+  color: #fff0c5;
+}
+
+#modal[data-kind="tutorial"] .tutorial-actions .icon { width: 16px; height: 16px; }
+#modal[data-kind="tutorial"] .tutorial-capture-options { padding-inline: 2px; }
+
+#modal[data-kind="tutorial"] .tutorial-capture-options .button {
+  flex: 1 1 100%;
+  border-color: #645136;
+  background: #15110c;
+  color: var(--card-ivory);
+  text-align: start;
+}
+
+#modal[data-kind="tutorial"] .tutorial-capture-options .button:hover { border-color: var(--card-gold); }
 
 #modal[data-kind="tutorial"] .tutorial-links {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 4px;
+  justify-content: center;
+  gap: 2px 10px;
 }
 
 #modal[data-kind="tutorial"] .tutorial-links button {
-  min-height: 34px;
-  padding: 3px 5px;
-  color: #d4d2cd;
-  font: 600 12px/1.18 var(--sans);
+  min-height: 32px;
+  padding: 3px 4px;
+  color: #c9b894;
+  font: 600 12px/1.15 var(--sans);
   text-underline-offset: 3px;
 }
 
-#modal[data-kind="tutorial"] .tutorial-links button:not(:disabled):hover { text-decoration: underline; }
+#modal[data-kind="tutorial"] .tutorial-links button:hover { text-decoration: underline; }
+#modal[data-kind="tutorial"] .tutorial-finish { justify-content: center; }
+
+@media (max-width: 760px), (max-height: 430px) {
+  #modal[data-kind="tutorial"] {
+    width: 100%;
+    height: var(--lesson-height);
+    padding: max(var(--lesson-padding), env(safe-area-inset-top, 0px)) max(var(--lesson-padding), env(safe-area-inset-right, 0px)) max(var(--lesson-padding), env(safe-area-inset-bottom, 0px)) max(var(--lesson-padding), env(safe-area-inset-left, 0px));
+    border: 0;
+    border-radius: 0;
+  }
+}
+
+.is-rotated-view #modal[open][data-kind="tutorial"] {
+  --lesson-height: var(--rotated-height);
+  width: var(--rotated-width);
+  height: var(--rotated-height);
+  max-height: none;
+  padding: max(var(--lesson-padding), env(safe-area-inset-right, 0px)) max(var(--lesson-padding), env(safe-area-inset-bottom, 0px)) max(var(--lesson-padding), env(safe-area-inset-left, 0px)) max(var(--lesson-padding), env(safe-area-inset-top, 0px));
+  border: 0;
+  border-radius: 0;
+}
 
 @container practice-dialog (min-width: 455px) {
-  #modal[data-kind="tutorial"] .modal-top {
-    position: relative;
-    min-height: 16px;
-    padding-inline-end: 44px;
-  }
-
-  #modal[data-kind="tutorial"] .modal-top .icon-button {
-    position: absolute;
-    inset: 0 0 auto auto;
-  }
-
-  #modal[data-kind="tutorial"] #modal-title { padding-inline-end: 44px; }
-
   #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) {
+    display: grid;
     grid-template:
-      "meter meter" auto
       "prompt prompt" auto
-      "board board" auto
+      "board board" minmax(min-content, 1fr)
       "choices choices" auto
       "feedback actions" auto
-      "links links" auto / minmax(0, 1.2fr) minmax(0, 1fr);
-    column-gap: 10px;
+      "links links" auto / minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board):not(:has(.tutorial-feedback:not([data-tone="neutral"]))) {
+    grid-template-areas: "prompt prompt" "board board" "choices choices" "actions actions" "links links";
   }
 
   #modal[data-kind="tutorial"] .tutorial-board[data-hand-only="false"] {
-    grid-template:
-      "table-label hand-label" auto
-      "table-cards hand-cards" auto / minmax(0, 1.45fr) minmax(0, 1fr);
+    --practice-card: clamp(40px, calc((var(--lesson-height) - 230px) / 1.8), 128px);
+    grid-template: "table-label hand-label" auto "table-cards hand-cards" 1fr / minmax(0, 1.25fr) minmax(0, 1fr);
     column-gap: 10px;
   }
 
-  .tutorial-game:has(.tutorial-board) .tutorial-meter { grid-area: meter; }
-  .tutorial-game:has(.tutorial-board) .tutorial-prompt { grid-area: prompt; }
-  .tutorial-game:has(.tutorial-board) .tutorial-board { grid-area: board; }
-  .tutorial-game:has(.tutorial-board) .tutorial-feedback { grid-area: feedback; }
-  .tutorial-game:has(.tutorial-board) .tutorial-capture-options { grid-area: choices; }
-  .tutorial-game:has(.tutorial-board) .tutorial-actions { grid-area: actions; align-self: center; }
-  .tutorial-game:has(.tutorial-board) .tutorial-links { grid-area: links; }
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) .tutorial-prompt { grid-area: prompt; }
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) .tutorial-board { grid-area: board; }
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) .tutorial-capture-options { grid-area: choices; }
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) .tutorial-feedback { grid-area: feedback; }
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) .tutorial-actions { grid-area: actions; align-self: center; }
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) .tutorial-links { grid-area: links; }
+
   #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board):has(.tutorial-capture-options) {
-    grid-template-areas: "meter meter" "prompt prompt" "board choices" "feedback actions" "links links";
-    grid-template-rows: auto auto auto auto auto;
+    grid-template:
+      "prompt prompt" auto
+      "board choices" minmax(min-content, 1fr)
+      "feedback actions" auto
+      "links links" auto / minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board):has(.tutorial-capture-options):has(.tutorial-feedback[data-tone="neutral"]) {
-    grid-template-areas: "meter meter" "prompt prompt" "board choices" "links actions";
-    grid-template-rows: auto auto auto auto;
-    align-items: center;
+  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board):has(.tutorial-capture-options):not(:has(.tutorial-feedback:not([data-tone="neutral"]))) {
+    grid-template-areas: "prompt prompt" "board choices" "actions actions" "links links";
   }
-
-  #modal[data-kind="tutorial"] .tutorial-game:has(.tutorial-board) .tutorial-capture-options .button { min-height: 34px; }
 }
 
-@media (max-height: 420px) {
-  #modal[data-kind="tutorial"] { padding: 9px 12px; }
-  #modal[data-kind="tutorial"] .tutorial-board { --practice-card: 37px; }
-  #modal[data-kind="tutorial"] .tutorial-game { gap: 4px 9px; }
-  #modal[data-kind="tutorial"] .modal-top .icon-button { width: 32px; height: 32px; flex-basis: 32px; }
-  #modal[data-kind="tutorial"] #modal-title { margin-bottom: 6px; }
-  #modal[data-kind="tutorial"] .tutorial-links button { min-height: 30px; }
+@media (max-height: 430px) {
+  #modal[data-kind="tutorial"] { --lesson-gap: 4px; --lesson-padding: 8px; }
+  #modal[data-kind="tutorial"] #modal-title.tutorial-title { font-size: clamp(22px, 5.6cqw, 31px); }
+  #modal[data-kind="tutorial"] .tutorial-board { padding: 5px 8px; }
+  #modal[data-kind="tutorial"] .tutorial-zone-label { font-size: 14px; }
+  #modal[data-kind="tutorial"] .tutorial-prompt > p:not(.tutorial-scoreline) { padding: 5px 9px; }
+  #modal[data-kind="tutorial"] .tutorial-links button { min-height: 28px; }
 }
 
-.is-rotated-view #modal[data-kind="tutorial"] .tutorial-board { --practice-card: 37px; }
-.is-rotated-view #modal[data-kind="tutorial"] .tutorial-game { gap: 4px 9px; }
-.is-rotated-view #modal[data-kind="tutorial"] .modal-top .icon-button { width: 32px; height: 32px; flex-basis: 32px; }
-.is-rotated-view #modal[data-kind="tutorial"] #modal-title { margin-bottom: 6px; }
-.is-rotated-view #modal[data-kind="tutorial"] .tutorial-links button { min-height: 30px; }
+.is-rotated-view #modal[data-kind="tutorial"] { --lesson-gap: 4px; --lesson-padding: 8px; }
+.is-rotated-view #modal[data-kind="tutorial"] #modal-title.tutorial-title { font-size: clamp(22px, 5.6cqw, 31px); }
+.is-rotated-view #modal[data-kind="tutorial"] .tutorial-board { padding: 5px 8px; }
+.is-rotated-view #modal[data-kind="tutorial"] .tutorial-zone-label { font-size: 14px; }
+.is-rotated-view #modal[data-kind="tutorial"] .tutorial-prompt > p:not(.tutorial-scoreline) { padding: 5px 9px; }
+.is-rotated-view #modal[data-kind="tutorial"] .tutorial-links button { min-height: 28px; }
 
 /* A quiet frame lets the selected felt and playing cards carry the color. */
 .app-viewport,
@@ -4047,6 +4157,448 @@ svg.aside-panel-icon {
   .quick-home .home-level { font-size: 14px; }
   .quick-home .home-actions .button { min-height: 44px; font-size: 15px; }
 }
+
+/* The match separates the score, shared table, hand, and confirmation. */
+.app-viewport.is-playing .app-bar {
+  grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr);
+  gap: 4px;
+}
+
+.app-viewport.is-playing .app-bar > .app-tool { justify-self: start; }
+.app-viewport.is-playing .app-bar .app-tool { color: var(--card-ivory); }
+.app-viewport.is-playing .app-bar .app-tool .icon { width: 21px; height: 21px; }
+
+.app-viewport.is-playing .game-brand {
+  margin: 0;
+  color: var(--card-ivory);
+  font: italic 700 clamp(27px, 6.6vw, 39px)/1.05 Georgia, "Times New Roman", serif;
+  letter-spacing: -.05em;
+  text-align: center;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] {
+  --play-height: var(--rotated-height, 100dvh);
+  --play-gap: clamp(5px, calc(var(--play-height) * .012), 12px);
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .game-layout {
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  width: min(100%, 760px);
+  min-height: 0;
+  margin: 0 auto;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout="vertical"] .game-layout { width: min(100%, 620px); }
+
+.app-viewport.is-playing .game-column {
+  display: grid;
+  grid-template:
+    "overview" auto
+    "table" minmax(0, 1fr)
+    "hand" auto
+    "action" auto / minmax(0, 1fr);
+  gap: var(--play-gap);
+  min-width: 0;
+  min-height: 0;
+}
+
+.app-viewport.is-playing .game-column.is-locked {
+  grid-template: "overview" auto "table" minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.app-viewport.is-playing .game-overview {
+  grid-area: overview;
+  display: grid;
+  grid-template: "score" auto "turn" auto / minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+  min-width: 0;
+  color: var(--card-ivory);
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] button.compact-score {
+  grid-area: score;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  gap: 0;
+  margin: 0;
+  padding: 3px 2px;
+  border: 1px solid #645943;
+  border-radius: 11px;
+  background: #0b0a08;
+  color: var(--card-ivory);
+  text-align: center;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] button.compact-score:hover {
+  border-color: #9c8556;
+  background: #17130e;
+}
+
+.app-viewport.is-playing button.compact-score:focus-visible {
+  outline: 2px solid var(--card-gold);
+  outline-offset: 2px;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] button.compact-score > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  min-width: 0;
+  gap: clamp(3px, 1.4vw, 8px);
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  line-height: 1.15;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .compact-score > .score-player > span {
+  max-width: none;
+  min-width: 0;
+  color: var(--card-ivory);
+  font-size: clamp(12px, 3.5vw, 16px);
+  font-weight: 660;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .compact-score strong {
+  flex: none;
+  color: var(--card-ivory);
+  font: 750 clamp(15px, 4.4vw, 21px)/1 var(--sans);
+  font-variant-numeric: tabular-nums;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] button.compact-score > .score-target {
+  padding-inline: clamp(7px, 2.5vw, 17px);
+  border-inline: 1px solid #645943;
+  color: var(--card-gold);
+  font-size: clamp(11px, 3.25vw, 15px);
+  white-space: nowrap;
+}
+
+.app-viewport.is-playing .game-turn {
+  grid-area: turn;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 23px;
+  margin: 0;
+  color: #c5baa6;
+  font: 650 clamp(14px, 4vw, 18px)/1.15 var(--sans);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.app-viewport.is-playing .game-turn[data-current="true"] { color: var(--card-ivory); }
+
+.app-viewport.is-playing .game-turn[data-current="true"]::before {
+  content: "";
+  flex: 0 0 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--card-gold);
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .game-column > .game-table {
+  grid-area: table;
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  align-items: stretch;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  padding: 0;
+  border-radius: clamp(13px, 3.6vw, 21px);
+  border: 1px solid color-mix(in srgb, var(--felt-center), #000 30%);
+  background: var(--felt-surface);
+}
+
+.app-viewport.is-playing .game-table > .table-city-art { bottom: 4%; }
+
+.app-viewport.is-playing .workspace[data-table-layout] .game-table > .table-center {
+  grid-area: 1 / 1;
+  display: grid;
+  grid-template: auto minmax(0, 1fr) / minmax(0, 1fr);
+  align-content: stretch;
+  justify-content: stretch;
+  gap: 0;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: clamp(7px, calc(var(--play-height) * .017), 14px) 3px 2px;
+  border: 0;
+  background: transparent;
+}
+
+.app-viewport.is-playing .table-zone-label {
+  margin: 0;
+  color: var(--card-ivory);
+  font: 750 clamp(15px, 4.3vw, 21px)/1.15 var(--sans);
+  text-align: center;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .table-cards {
+  --table-columns: clamp(1, var(--table-card-count, 1), 5);
+  --table-rows: 1;
+  --card-gap: clamp(4px, 2cqw, 13px);
+  --card-inline-padding: 16px;
+  --card-block-padding: 16px;
+  --card-width: calc((100cqw - var(--card-inline-padding) - (var(--table-columns) - 1) * var(--card-gap)) / var(--table-columns));
+  --card-height: calc((100cqh - var(--card-block-padding) - (var(--table-rows) - 1) * var(--card-gap)) / var(--table-rows) / 1.44);
+  align-content: center;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  gap: var(--card-gap);
+  padding: 7px 8px 9px;
+  overflow: visible;
+  container-type: size;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .table-cards[data-table-density="1"]:has(> .playing-card:nth-child(6)) {
+  --table-columns: 4;
+  --table-rows: 2;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .table-cards[data-table-density="2"] {
+  --table-columns: 7;
+  --table-rows: 2;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .table-cards[data-table-density="3"] {
+  --table-columns: 8;
+  --table-rows: 3;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .table-cards[data-table-density="4"] {
+  --table-columns: 10;
+  --table-rows: 4;
+  --card-gap: 4px;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .table-cards > .playing-card {
+  width: max(1px, min(115px, var(--card-width), var(--card-height)));
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .own-zone {
+  grid-area: hand;
+  grid-template: auto auto / minmax(0, 1fr);
+  gap: 3px;
+  min-width: 0;
+  min-height: 0;
+  padding: 1px 3px 0;
+  container-type: inline-size;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .own-zone:has(.ronda-notice) {
+  grid-template: auto auto auto / minmax(0, 1fr);
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .own-hand {
+  --hand-columns: 5;
+  --hand-gap: clamp(5px, 2cqw, 12px);
+  gap: var(--hand-gap);
+  min-height: 0;
+  padding: 5px 4px;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .own-hand:not(:has(> .playing-card:nth-child(5))) { --hand-columns: 4; }
+.app-viewport.is-playing .workspace[data-table-layout] .own-hand:not(:has(> .playing-card:nth-child(4))) { --hand-columns: 3; }
+
+.app-viewport.is-playing .workspace[data-table-layout] .own-hand > .playing-card {
+  width: max(1px, min(105px, calc((100cqw - 12px - (var(--hand-columns) - 1) * var(--hand-gap)) / var(--hand-columns)), calc(var(--play-height) * .162)));
+}
+
+.app-viewport.is-playing .own-hand > .playing-card > svg {
+  position: absolute;
+  inset: 0;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] :is(.table-cards > .highlight, .own-hand > .selected) {
+  outline: 2px solid var(--card-gold);
+  outline-offset: 2px;
+  box-shadow: 0 3px 12px #0008, 0 0 8px #e4bb724d;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .action-panel {
+  grid-area: action;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .action-copy {
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+
+.app-viewport.is-playing .action-copy:has(strong:empty) { display: none; }
+
+.app-viewport.is-playing .action-copy strong {
+  color: var(--card-ivory);
+  font-size: clamp(13px, 3.8vw, 17px);
+  line-height: 1.2;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .move-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  gap: 6px;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .move-controls:has(.option-button) {
+  grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .move-controls .button {
+  min-height: 44px;
+  padding: 6px 8px;
+  border-radius: 11px;
+  font-size: clamp(13px, 4vw, 17px);
+  font-weight: 750;
+  white-space: normal;
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .move-controls .option-button {
+  border-color: #665537;
+  background: #18140d;
+  color: var(--card-ivory);
+  font-size: clamp(11px, 3.1vw, 14px);
+}
+
+.app-viewport.is-playing .workspace[data-table-layout] .move-controls .icon { display: block; }
+
+.app-viewport.is-playing .game-column.is-locked .privacy-curtain {
+  justify-content: center;
+  gap: 9px;
+  padding: 10px;
+}
+
+.app-viewport.is-playing .game-column.is-locked .privacy-curtain h2 {
+  margin: 0;
+  color: var(--card-ivory);
+  font: 700 clamp(22px, 6vw, 36px)/1.08 Georgia, "Times New Roman", serif;
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] { --play-gap: 5px; }
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .game-layout { width: min(100%, 1080px); }
+
+.app-viewport.is-playing.is-compact-play .game-column {
+  grid-template:
+    "overview overview" auto
+    "table hand" minmax(0, 1fr)
+    "action action" auto / minmax(0, 1.32fr) minmax(0, 1fr);
+}
+
+.app-viewport.is-playing.is-compact-play .game-column.is-locked {
+  grid-template: "overview" auto "table" minmax(0, 1fr) / minmax(0, 1fr);
+}
+
+.app-viewport.is-playing.is-compact-play .game-overview {
+  grid-template: "score turn" auto / minmax(0, 1.35fr) minmax(0, .65fr);
+  gap: 8px;
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] button.compact-score { min-height: 34px; }
+.app-viewport.is-playing.is-compact-play .game-turn { font-size: 14px; }
+.app-viewport.is-playing.is-compact-play .table-zone-label { font-size: 16px; }
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .own-zone {
+  align-content: center;
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .own-hand {
+  --hand-gap: clamp(3px, 2cqw, 8px);
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .own-hand > .playing-card {
+  width: max(1px, min(73px, calc((100cqw - 12px - (var(--hand-columns) - 1) * var(--hand-gap)) / var(--hand-columns)), calc(var(--play-height) * .18)));
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .action-panel {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.app-viewport.is-playing.is-compact-play .action-copy {
+  justify-content: flex-start;
+  text-align: start;
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .move-controls {
+  grid-column: 2;
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .move-controls .button {
+  min-height: 38px;
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .game-column.is-dealing .own-hand > .playing-card {
+    --deal-x: clamp(25px, 11vmin, 80px);
+    --deal-y: clamp(-85px, -17vmin, -36px);
+    animation: felt-deal 420ms cubic-bezier(.18, .69, .24, 1) calc(25ms + var(--deal-delay, 0ms)) backwards;
+  }
+
+  .game-column.is-dealing .own-hand > .playing-card:nth-child(2) { --deal-delay: 52ms; }
+  .game-column.is-dealing .own-hand > .playing-card:nth-child(3) { --deal-delay: 104ms; }
+  .game-column.is-dealing .own-hand > .playing-card:nth-child(4) { --deal-delay: 156ms; }
+  .game-column.is-dealing .own-hand > .playing-card:nth-child(5) { --deal-delay: 208ms; }
+
+  :root:not(.reduce-motion) .game-column.is-fresh-turn .game-turn[data-current="true"]::before { animation: felt-turn 640ms ease-out; }
+}
+
+.app-viewport.is-playing .game-column.is-locked .privacy-curtain { background: transparent; }
+
+#modal .settings-orientation .table-layout-choice { justify-content: space-between; }
+#modal .solo-levels { display: grid; gap: 8px; margin-top: 16px; }
+
+#modal .level-option {
+  justify-content: space-between;
+  min-height: 62px;
+  padding: 9px 12px;
+  border: 1px solid #50442f;
+  border-radius: 10px;
+  background: #16130e;
+  color: var(--card-ivory);
+  text-align: start;
+  white-space: normal;
+}
+
+#modal .level-option > span { display: grid; gap: 2px; }
+#modal .level-option strong { font-size: 16px; }
+#modal .level-option small { color: #d7ccb7; font-size: 12px; }
+#modal .level-option:is(.is-selected, :hover, :focus-visible) { border-color: var(--card-gold); }
+#modal .level-option .icon { width: 17px; height: 17px; color: var(--card-gold); }
+
+@media (orientation: landscape) and (max-height: 520px) {
+  #modal .solo-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.is-rotated-view #modal[data-kind="solo-levels"] { max-width: none; }
+.is-rotated-view #modal .solo-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 </style>
 </head>
@@ -7540,6 +8092,12 @@ let comboPoints = 2;
 let difficulty = 'easy';
 const draftNames = { player: '', solo: '', pass: '' };
 const difficultyNames = { easy: 'Fácil', medium: 'Medio', hard: 'Difícil', expert: 'Experto' };
+const levelDescriptions = {
+  easy: 'Para aprender y practicar con calma.',
+  medium: 'El rival busca puntos y buenas capturas.',
+  hard: 'El rival anticipa tu próxima jugada.',
+  expert: 'El rival analiza varias jugadas por delante.',
+};
 const tableLayouts = { horizontal: 'Horizontal', vertical: 'Vertical' };
 const feltNames = {
   quito: 'Verde', azul: 'Azul Metro', borgona: 'Borgoña', oceano: 'Turquesa',
@@ -7636,10 +8194,10 @@ function shell(content) {
   const playing = screen === 'game';
   return `<div class="app-shell app-viewport ${playing ? 'is-playing' : 'is-lobby'}">
     <header class="app-bar">
-      <button type="button" class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark" aria-hidden="true">40<span>◆</span></span><span class="brand-word">Cuarenta</span></button>
-      ${playing ? tableLayoutPicker() : ''}
+      ${playing
+        ? `<button type="button" class="app-tool" data-action="home" aria-label="Volver al inicio" title="Volver al inicio">${icon('back')}</button><h1 class="game-brand">El Cuarenta</h1>`
+        : '<button type="button" class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark" aria-hidden="true">40<span>◆</span></span><span class="brand-word">Cuarenta</span></button>'}
       <nav class="app-tools" aria-label="Herramientas">
-        ${playing ? `<button type="button" class="app-tool" data-action="game-summary" aria-label="Marcador e historial" title="Marcador e historial">${icon('trophy')}</button>` : ''}
         <button type="button" class="app-tool" data-action="settings" aria-label="Preferencias" title="Preferencias">${icon('settings')}</button>
       </nav>
     </header>
@@ -7682,7 +8240,7 @@ function scorePanel(v) {
       <div class="score-name"><span class="score-dot${index ? ' opponent-dot' : ''}" aria-hidden="true"></span><span>${esc(player.name)}</span>${current ? '<span class="score-turn">Turno</span>' : ''}</div>
       <strong class="score-number">${player.score}</strong>
       <div class="score-track" aria-hidden="true"><span class="${index ? 'opponent-fill' : ''}" style="width:${Math.min(100, player.score / 40 * 100)}%"></span></div>
-      <small class="score-meta">${gathered}${closing}</small>
+      <small class="score-meta">${gathered} · ${player.handCount} en mano${closing}</small>
     </div>`;
   }).join('');
   return `<section class="score-panel" aria-labelledby="score-heading">
@@ -7780,6 +8338,26 @@ function releaseNativeRotation() {
   rotationOwnsFullscreen = false;
 }
 
+function describePlay(move) {
+  if (!move) return 'Toca una carta de tu mano.';
+  if (move.rondaFall) return '¡Caída a la ronda! Victoria inmediata.';
+  if (move.winsGame) return 'Con esta jugada llegas a 40.';
+  if (move.fall && move.clean) return `Caída y limpia · +${move.points} puntos`;
+  if (move.fall) return `Caída · +${move.points} puntos`;
+  if (!move.captureIds.length) return 'La carta quedará en la mesa.';
+
+  const rank = impactCards.get(move.cardId).rank;
+  const bonus = move.clean && move.points ? ` · Limpia +${move.points}` : '.';
+  // The engine orders the base of a capture before any cards in the ladder.
+  if (move.kind === 'sum') {
+    const [first, second] = move.captureIds.slice(0, 2).map(id => impactCards.get(id).rank);
+    const ladder = move.captureIds.length > 2 ? ' y la escalera' : '';
+    return `Con tu ${rank} recoges ${first} + ${second}${ladder}${bonus}`;
+  }
+  if (move.captureIds.length > 1) return `Recoges ${move.captureIds.length + 1} cartas con tu ${rank}${bonus}`;
+  return `Tu ${rank} recoge el ${rank} de la mesa${bonus}`;
+}
+
 function renderGame(dealDelay) {
   const v = getView();
   if (!v) { screen = 'home'; renderHome(); return; }
@@ -7791,81 +8369,76 @@ function renderGame(dealDelay) {
   const chosen = moves[selectedMoveIndex];
   const captureIds = chosen?.captureIds || [];
 
-  const coaching = v.mode === 'solo' && v.difficulty === 'easy';
-  let instruction = coaching ? 'Elige una carta para ver qué puedes recoger.' : 'Tu turno. Elige una carta.';
-  if (v.status === 'round-end') instruction = 'Fin del ciclo.';
-  else if (v.status === 'finished') instruction = 'Partida terminada.';
-  else if (locked) instruction = 'Cambio de turno.';
-  else if (!myTurn) instruction = `${other.name} está pensando…`;
-  else if (chosen?.rondaFall) instruction = '¡Caída a la ronda! Victoria inmediata.';
-  else if (chosen?.winsGame) instruction = 'Con esta jugada llegas a 40.';
-  else if (chosen?.fall && chosen.clean) instruction = `Caída y limpia · +${chosen.points}`;
-  else if (chosen?.fall) instruction = `Caída · +${chosen.points}`;
-  else if (chosen?.clean && chosen.points) instruction = `Limpia · +${chosen.points}`;
-  else if (captureIds.length) instruction = `Recoges ${captureIds.length + 1} cartas.`;
-  else if (chosen) instruction = 'Dejas la carta en la mesa.';
+  let turn = 'Tu turno';
+  if (v.status === 'round-end') turn = 'Fin del ciclo';
+  else if (v.status === 'finished') turn = 'Partida terminada';
+  else if (locked) turn = 'Cambio de turno';
+  else if (!myTurn) turn = `${other.name} está pensando…`;
 
-  const hiddenCards = count => Array.from({ length: count }, () => cardMarkup(null, { back: true })).join('');
   const tableCount = v.table.length;
   const density = tableCount > 22 ? 4 : tableCount > 14 ? 3 : tableCount > 8 ? 2 : 1;
   const tableCards = tableCount ? v.table.map(card => cardMarkup(card, {
     highlight: captureIds.includes(card.id),
     last: v.lastPlay?.cardId === card.id,
-  })).join('') : '<div class="empty-table">Mesa limpia</div>';
-  const myHand = locked ? hiddenCards(me.handCount) : (me.hand || []).map(card => cardMarkup(card, {
+  })).join('') : '<div class="empty-table">Mesa vacía</div>';
+  const myHand = (me.hand || []).map(card => cardMarkup(card, {
     interactive: myTurn,
     selected: card.id === selectedId,
   })).join('');
   const ronda = locked ? null : v.rondas?.[viewer];
   const hasRonda = ronda && me.hand?.some(card => ronda.cardIds.includes(card.id));
-  const recipient = locked ? esc(v.players[v.turn].name) : '';
-  const compactScore = v.players.map(player => {
+  const score = v.players.map(player => {
     const active = !locked && v.status === 'playing' && player.id === v.turn;
-    return `<span class="${active ? 'is-current' : ''}"><span title="${esc(player.name)}">${esc(player.name)}${active ? '<span class="sr-only">, turno actual</span>' : ''}</span><strong>${player.score}<small> / 40</small></strong></span>`;
-  }).join('');
-  const playButton = v.status === 'round-end' ? '<button class="button primary" data-action="round-summary">Ver el conteo</button>'
-    : v.status === 'finished' ? '<button class="button primary" data-action="result">Ver resultado</button>'
-      : `<button class="button primary play-button" data-action="play" ${!chosen || locked ? 'disabled' : ''}>${captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`;
+    return `<span class="score-player${active ? ' is-current' : ''}"><span title="${esc(player.name)}">${esc(player.name)}</span><strong>${player.score}</strong></span>`;
+  });
+  const scoreLabel = v.players.map(player => `${player.name} ${player.score}`).join(', ');
+  const playButton = v.status === 'round-end' ? '<button class="button primary play-button" data-action="round-summary">Ver el conteo</button>'
+    : v.status === 'finished' ? '<button class="button primary play-button" data-action="result">Ver resultado</button>'
+      : `<button class="button primary play-button" data-action="play" ${chosen ? '' : 'disabled'}>${captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`;
 
   app.innerHTML = shell(`
-    <h1 class="sr-only">Partida de Cuarenta</h1>
     <div class="game-layout">
-      <section class="game-column" aria-label="Partida de Cuarenta">
-        <div class="game-table ${locked ? 'table-locked' : ''}" aria-label="Mesa de Cuarenta">
-          ${tableArt(prefs.tableCity)}
-          <div class="compact-score" aria-label="Puntuación actual">${compactScore}</div>
-          <div class="opponent-zone">
-            <div class="opponent-hand" aria-label="${other.handCount} cartas ocultas">${hiddenCards(other.handCount)}</div>
-          </div>
-          <div class="table-center">
-            <div class="table-cards" data-table-density="${density}" style="--table-card-count:${tableCount}" aria-label="Cartas sobre la mesa">${tableCards}</div>
-          </div>
-          <div class="own-zone">
-            ${hasRonda ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(ronda.rank)} · +2 puntos</div>` : ''}
-            <div class="own-hand ${myTurn ? '' : 'waiting-hand'}" aria-label="${locked ? 'Mano oculta' : 'Tu mano'}">${myHand}</div>
-          </div>
-          ${locked ? `<div class="privacy-curtain">${tableArt(prefs.tableCity)}
-            <div class="privacy-icon">${icon('eye')}</div>
-            <h2>Pasa el dispositivo a ${recipient}</h2>
-            <button class="button gold" data-action="reveal">Ver mi mano ${icon('arrow')}</button>
-          </div>` : ''}
+      <section class="game-column${locked ? ' is-locked' : ''}" aria-label="Partida de Cuarenta">
+        <div class="game-overview">
+          <button type="button" class="compact-score" data-action="game-summary" aria-label="${esc(scoreLabel)}. Abrir marcador e historial" title="Marcador e historial">
+            ${score[0]}<span class="score-target">A 40 puntos</span>${score[1]}
+          </button>
+          <p class="game-turn" data-current="${myTurn}">${esc(turn)}</p>
         </div>
+        <section class="game-table${locked ? ' table-locked' : ''}" aria-label="Mesa">
+          ${tableArt(prefs.tableCity)}
+          ${locked ? `<div class="privacy-curtain">
+            <div class="privacy-icon">${icon('eye')}</div>
+            <h2>Pásale el celular a ${esc(v.players[v.turn].name)}</h2>
+            <button class="button gold" data-action="reveal">Ver mi mano ${icon('arrow')}</button>
+          </div>` : `<div class="table-center">
+            <p class="table-zone-label">Mesa</p>
+            <div class="table-cards" data-table-density="${density}" style="--table-card-count:${tableCount}" aria-label="Cartas sobre la mesa">${tableCards}</div>
+          </div>`}
+        </section>
+        ${locked ? '' : `<section class="own-zone" aria-label="Tu mano">
+          <p class="table-zone-label">Tu mano</p>
+          ${hasRonda ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(ronda.rank)} · +2 puntos</div>` : ''}
+          <div class="own-hand ${myTurn ? '' : 'waiting-hand'}">${myHand || '<span class="empty-table">Sin cartas</span>'}</div>
+        </section>
         <div class="action-panel">
-          <div class="action-copy"><strong>${esc(instruction)}</strong></div>
+          ${myTurn ? `<p class="action-copy"><strong>${esc(describePlay(chosen))}</strong></p>` : ''}
           <div class="move-controls">
-            ${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Opción ${selectedMoveIndex + 1} de ${moves.length}</button>` : ''}
+            ${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Otra captura · ${selectedMoveIndex + 1}/${moves.length}</button>` : ''}
             ${playButton}
           </div>
-        </div>
+        </div>`}
       </section>
     </div>`);
   updateGameOrientation();
+  const column = app.querySelector('.game-column');
   const table = app.querySelector('.game-table');
   const dealKey = `${v.id}/${v.round}/${v.deal}`;
   // Deal the visible hand after the player unlocks it in pass-and-play.
   if (!locked && v.status === 'playing' && renderedDeal !== dealKey) {
     renderedDeal = dealKey;
     table.classList.add('is-dealing');
+    column.classList.add('is-dealing');
     if (dealDelay && prefs.sound) {
       setTimeout(() => {
         if (screen === 'game' && renderedDeal === dealKey && !modal.open) playSound('deal');
@@ -7874,11 +8447,10 @@ function renderGame(dealDelay) {
       playSound('deal');
     }
   }
-  table.classList.toggle('is-own-turn', myTurn);
   const turnKey = `${v.id}/${v.revision}/${viewer}`;
   if (myTurn && renderedTurn !== turnKey) {
     renderedTurn = turnKey;
-    table.classList.add('is-fresh-turn');
+    column.classList.add('is-fresh-turn');
   }
   table.classList.toggle('is-fresh-play', pendingCardArrival);
   pendingCardArrival = false;
@@ -8149,6 +8721,19 @@ function modalHeader(title, eyebrow = 'EN TU MESA') {
   return `<div class="modal-top"><p class="eyebrow">${eyebrow}</p><button class="icon-button" data-action="close-modal" aria-label="Cerrar">${icon('close')}</button></div><h2 id="modal-title">${title}</h2>`;
 }
 
+function showSoloLevels() {
+  const options = Object.entries(difficultyNames).map(([key, label]) => `
+    <button type="button" class="button level-option${key === difficulty ? ' is-selected' : ''}" data-action="start-solo" data-difficulty="${key}">
+      <span><strong>${label}</strong><small>${levelDescriptions[key]}</small></span>
+      ${icon(key === difficulty ? 'check' : 'arrow')}
+    </button>`).join('');
+  showModal('solo-levels', `${modalHeader('Elige tu nivel', `CONTRA ${esc(newGameOptions().names[1])}`)}
+    <div class="solo-levels" role="group" aria-label="Nivel de juego">${options}</div>`);
+  const title = modal.querySelector('#modal-title');
+  title.tabIndex = -1;
+  title.focus({ preventScroll: true });
+}
+
 function showSetupOptions(gameMode = 'solo') {
   const local = gameMode === 'pass';
   const opponentLabel = local ? 'Nombre del segundo jugador' : 'Nombre del bot (opcional)';
@@ -8277,7 +8862,7 @@ function showSettings() {
   const shortcuts = `<nav class="settings-shortcuts" aria-label="Opciones de la mesa">${links.map(([action, symbol, label]) =>
     `<button type="button" class="felt-shortcut settings-table-shortcut" data-action="${action}">${icon(symbol)} ${label} ${icon('arrow')}</button>`
   ).join('')}</nav>`;
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${shortcuts}${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Sonidos al repartir, jugar y recoger cartas.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${shortcuts}${screen === 'game' ? `<div class="settings-orientation">${tableLayoutPicker()}</div>` : ''}${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Sonidos al repartir, jugar y recoger cartas.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
 }
 
 function shouldAskBotFeedback(v) {
@@ -8341,6 +8926,16 @@ function tutorialLinks({ back = false, complete = false } = {}) {
   </nav>`;
 }
 
+function tutorialHeader(title, { step, total, solved } = {}) {
+  return `<header class="tutorial-header">
+    <button type="button" data-action="close-modal" aria-label="Salir de la práctica">${icon('back')}</button>
+    <span class="tutorial-header-label">${tutorialTrack === 'starter' ? 'Aprender a jugar' : 'Más retos'}</span>
+    ${step ? `<span class="tutorial-step-count">${step} de ${total}</span>` : ''}
+  </header>
+  ${step ? `<progress class="tutorial-meter" value="${solved}" max="${total}" aria-label="Retos completados"></progress>` : ''}
+  <h2 id="modal-title" class="tutorial-title">${esc(title)}</h2>`;
+}
+
 function tutorialBoard(lesson, answer, guidedChoice) {
   const play = lesson.type === 'play';
   const hand = answer?.after?.hand ?? lesson.hand;
@@ -8350,7 +8945,7 @@ function tutorialBoard(lesson, answer, guidedChoice) {
   const suggestedCaptures = tutorialCardId === guidedChoice?.cardId ? guidedChoice?.captureIds : [];
   return `<div class="lesson-board tutorial-board${answer ? ' is-solved' : ''}" data-hand-only="${handOnly}">
     ${tableArt(prefs.tableCity)}
-    ${handOnly ? '' : `<p class="tutorial-zone-label tutorial-table-label">${answer?.after?.move ? 'Mesa después de jugar' : 'En la mesa'}</p>
+    ${handOnly ? '' : `<p class="tutorial-zone-label tutorial-table-label">Mesa</p>
     <div class="tutorial-table">${table.map(card => cardMarkup(card, {
       selected: !answer && tutorialCaptures.has(card.id), last: card.id === lastCard,
       interactive: play && Boolean(tutorialCardId) && !answer,
@@ -8380,10 +8975,9 @@ function showTutorial(focus, keepScroll = false) {
   const scroll = modal.open && modalKind === 'tutorial' ? modal.scrollTop : 0;
   const lessons = tutorialCourses[tutorialTrack];
   const lesson = lessons[tutorialStep];
-  const courseTitle = tutorialTrack === 'starter' ? 'Práctica fácil' : 'Más retos';
   const count = lessons.filter(item => tutorialSolved.has(item.id)).length;
   if (!lesson) {
-    showModal('tutorial', `${modalHeader('¡Listo para jugar!', esc(courseTitle))}
+    showModal('tutorial', `${tutorialHeader('¡Listo para jugar!')}
       <div class="tutorial-game tutorial-finish" data-track="${tutorialTrack}">
         <div class="winner-symbol">${icon('trophy')}</div>
         <p class="tutorial-feedback" data-tone="correct">${count} de ${lessons.length} retos completados. En una partida, al elegir tu carta, la mesa marca lo que puedes recoger.</p>
@@ -8399,7 +8993,8 @@ function showTutorial(focus, keepScroll = false) {
     const hasBoard = Boolean(lesson.hand.length || lesson.table.length);
     const correct = lesson.choices.filter(choice => choice.correct);
     const route = correct.find(choice => choice.cardId === tutorialCardId) ?? correct[0];
-    const guided = !answer && (tutorialHint || (tutorialTrack === 'starter' && tutorialStep === 0 && !tutorialCardId));
+    const firstSteps = lesson.id === 'dejar-carta' || lesson.id === 'igualdad';
+    const guided = !answer && (tutorialHint || (firstSteps && !tutorialCardId));
     const scores = answer?.after?.scores ?? lesson.scores;
     const gained = scores[0] - lesson.scores[0];
     const score = scores.some(Boolean) ? `<p class="tutorial-scoreline">Tú <strong>${scores[0]}</strong>${gained > 0 ? ` <span class="tutorial-score-gain">+${gained}</span>` : ''} · Rival <strong>${scores[1]}</strong></p>` : '';
@@ -8407,24 +9002,25 @@ function showTutorial(focus, keepScroll = false) {
       `<button type="button" class="button outline" data-action="tutorial-answer" data-answer="${esc(choice.id)}" ${guided && choice === route ? 'data-coach="true"' : ''}>${esc(choice.label)}</button>`
     ).join('')}</div>` : '';
     const tone = answer ? 'correct' : tutorialFeedback ? 'retry' : tutorialHint ? 'hint' : 'neutral';
-    const feedback = answer ? explanation : tutorialFeedback || (tutorialHint ? tutorialHintText(lesson, route) :
-      tutorialCardId ? 'Confirma cuando tengas lista tu jugada.' :
-        lesson.id === 'dejar-carta' ? 'La meta es llegar a 40 puntos. Juega una carta por turno.' :
-          play ? 'Empieza por una carta de tu mano.' : 'Toca una respuesta.');
+    const feedback = answer ? explanation : tutorialFeedback || (tutorialHint ? tutorialHintText(lesson, route) : '');
+    let instruction = prompt;
+    if (lesson.id === 'igualdad') {
+      instruction = !tutorialCardId ? 'Toca el 7 de tu mano.'
+        : tutorialCaptures.size ? 'Pulsa Recoger cartas.' : 'Toca el 7 de la mesa.';
+    }
     const nextLabel = tutorialStep + 1 === lessons.length ? 'Terminar práctica' : 'Siguiente reto';
     const playLabel = tutorialCaptures.size ? 'Recoger cartas' : 'Jugar carta';
-    showModal('tutorial', `${modalHeader(esc(title), `${courseTitle} · ${tutorialStep + 1} de ${lessons.length}`)}
+    showModal('tutorial', `${tutorialHeader(title, { step: tutorialStep + 1, total: lessons.length, solved: count })}
       <div class="tutorial-game" data-lesson="${esc(lesson.id)}" data-track="${tutorialTrack}">
-        <progress class="tutorial-meter" value="${count}" max="${lessons.length}" aria-label="Retos completados"></progress>
-        ${!answer || score ? `<div class="tutorial-prompt">${answer ? '' : `<p>${esc(prompt)}</p>`}${score}</div>` : ''}
+        ${!answer || score ? `<div class="tutorial-prompt">${answer ? '' : `<p>${esc(instruction)}</p>`}${score}</div>` : ''}
         ${hasBoard ? tutorialBoard(lesson, answer, guided ? route : null) : ''}
         ${choices}
-        <div class="tutorial-feedback" id="tutorial-feedback" data-tone="${tone}" role="status" tabindex="-1">${answer ? `<strong>${icon('check')} ¡Bien jugado!</strong> ` : ''}${esc(feedback)}</div>
+        ${feedback ? `<div class="tutorial-feedback" id="tutorial-feedback" data-tone="${tone}" role="status" tabindex="-1">${answer ? `<strong>${icon('check')} ¡Bien jugado!</strong> ` : ''}${esc(feedback)}</div>` : ''}
         <div class="lesson-navigation tutorial-actions">
           ${answer
             ? `<button type="button" class="button primary" data-action="tutorial-next">${nextLabel} ${icon('arrow')}</button>`
-            : `<button type="button" class="button outline" data-action="tutorial-hint" aria-pressed="${tutorialHint}">Pista ${icon('spark')}</button>${play
-              ? `<button type="button" class="button primary" data-action="tutorial-play" ${tutorialCardId ? '' : 'disabled'}>${playLabel} ${icon('arrow')}</button>` : ''}`}
+            : `<button type="button" class="button outline" data-action="tutorial-hint" aria-pressed="${tutorialHint}">Pista ${icon('spark')}</button>${play && tutorialCardId
+              ? `<button type="button" class="button primary" data-action="tutorial-play">${playLabel} ${icon('arrow')}</button>` : ''}`}
         </div>
         ${tutorialLinks({ back: tutorialStep > 0 })}
       </div>`);
@@ -8513,7 +9109,12 @@ function showResult() {
 function handleAction(target) {
   const action = target.dataset.action;
   if (action === 'home') { cancelBot(); closeModal(false); screen = 'home'; selectedId = null; pendingPassMove = null; render(); }
-  else if (action === 'quick-play') requestNewGame(newGameOptions());
+  else if (action === 'quick-play') showSoloLevels();
+  else if (action === 'start-solo' && Object.hasOwn(difficultyNames, target.dataset.difficulty)) {
+    difficulty = target.dataset.difficulty;
+    updateHomeMatchLabels();
+    requestNewGame(newGameOptions());
+  }
   else if (action === 'local-game') showSetupOptions('pass');
   else if (action === 'start-local') requestNewGame(newGameOptions('pass'));
   else if (action === 'combo') {
@@ -8547,8 +9148,19 @@ function handleAction(target) {
     }
     announce(`Turno de ${v.players[viewer].name}.`);
   }
-  else if (action === 'select-card') { selectedId = target.dataset.card; selectedMoveIndex = 0; render(); document.querySelector(`[data-card="${CSS.escape(selectedId)}"]`)?.focus(); }
-  else if (action === 'next-capture') { selectedMoveIndex++; const moves = legalMoves(getView(), viewer).filter(m => m.cardId === selectedId); selectedMoveIndex %= moves.length; render(); }
+  else if (action === 'select-card') {
+    selectedId = target.dataset.card;
+    selectedMoveIndex = 0;
+    render();
+    app.querySelector(`[data-card="${CSS.escape(selectedId)}"]`)?.focus({ preventScroll: true });
+  }
+  else if (action === 'next-capture') {
+    selectedMoveIndex++;
+    const moves = legalMoves(getView(), viewer).filter(move => move.cardId === selectedId);
+    selectedMoveIndex %= moves.length;
+    render();
+    app.querySelector('[data-action="next-capture"]')?.focus({ preventScroll: true });
+  }
   else if (action === 'play') {
     const v = getView(); const move = legalMoves(v, viewer).filter(m => m.cardId === selectedId)[selectedMoveIndex];
     if (!move || locked) return;
