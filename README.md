@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.15.0
+# Cuarenta · Versión 0.15.1
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -35,7 +35,7 @@ Las caídas y las victorias tienen un efecto sobre la mesa. Puedes desactivarlo 
 
 En **Preferencias → Diseño de mesa** puedes combinar ocho colores con ilustraciones de Quito, Guayaquil, Cuenca, Loja, Manta y Ambato. La vista previa se actualiza al instante. El diseño se guarda en el navegador y aparece en las partidas y en el tutorial. Las cartas se animan al repartir y al entrar a la mesa. Las capturas muestran cuántas cartas se recogieron. El juego respeta la reducción de movimiento del sistema y la de Preferencias.
 
-**Reminiscencias** suena al empezar o continuar una partida por primera vez. En **Preferencias → Música de fondo** puedes elegir *Nuestro Juramento*, ajustar el volumen o apagar la música. El navegador recuerda esos ajustes. La música se pausa al salir de la pestaña.
+**Reminiscencias** suena al empezar o continuar una partida por primera vez. En **Preferencias → Sonido y música** puedes elegir *Nuestro Juramento*, ajustar el volumen o apagar la música. El navegador recuerda esos ajustes. La música se pausa al salir de la pestaña.
 
 Activa **Preferencias → Sonidos de la mesa** para escuchar las cartas deslizarse al repartir, jugar y recoger. La caída y la victoria usan variaciones suaves de la misma baraja. Los efectos de la partida y la práctica provienen de [Casino Audio de Kenney (CC0)](https://kenney.nl/assets/casino-audio).
 

@@ -4589,3 +4589,214 @@ svg.aside-panel-icon {
 
 .is-rotated-view #modal[data-kind="solo-levels"] { max-width: none; }
 .is-rotated-view #modal .solo-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Preferences share the table's black, ivory and gold palette. */
+#modal[data-kind="settings"] {
+  --settings-surface: #15120e;
+  --settings-line: #3d3426;
+  --settings-muted: #c5b89d;
+  width: min(620px, calc(100% - 24px));
+  height: min(790px, calc(100dvh - 32px));
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: 1px solid var(--settings-line);
+  border-radius: 18px;
+  background: #080705;
+  color: var(--card-ivory);
+  overflow: hidden;
+}
+
+#modal[open][data-kind="settings"] {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+
+.is-rotated-view #modal[open][data-kind="settings"] {
+  width: min(620px, calc(var(--rotated-width) - 24px));
+  height: min(790px, calc(var(--rotated-height) - 24px));
+  padding: 0;
+}
+
+#modal[data-kind="settings"]::backdrop { background: #000c; }
+
+#modal .settings-header {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--settings-line);
+}
+
+#modal .settings-header .icon-button {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--card-ivory);
+}
+
+#modal .settings-header .icon-button:hover { background: var(--settings-surface); }
+
+#modal .settings-header h2 {
+  color: var(--card-ivory);
+  font: italic 700 clamp(25px, 6.8vw, 37px)/1.06 Georgia, "Times New Roman", serif;
+  letter-spacing: -.045em;
+  text-align: center;
+}
+
+#modal .settings-header h2:focus { outline: 0; }
+
+#modal .settings-content {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  min-height: 0;
+  padding: 13px clamp(12px, 3.5vw, 24px) 16px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #655536 transparent;
+  scrollbar-width: thin;
+}
+
+#modal .settings-group { min-width: 0; }
+
+#modal .settings-group h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px 2px;
+  color: var(--card-ivory);
+  font: 700 15px/1.2 var(--sans);
+}
+
+#modal .settings-group h3 .icon { width: 16px; height: 16px; color: var(--card-gold); }
+
+#modal .settings-controls {
+  padding-inline: 10px;
+  border: 1px solid var(--settings-line);
+  border-radius: 12px;
+  background: var(--settings-surface);
+}
+
+#modal .settings-shortcuts { gap: 0; margin: 0; }
+
+#modal .settings-link {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 5px 2px;
+  color: var(--card-ivory);
+  font: 650 14px/1.2 var(--sans);
+  text-align: start;
+}
+
+#modal .settings-link + .settings-link,
+#modal .settings-orientation + .settings-shortcuts,
+#modal .settings-calibration { border-top: 1px solid var(--settings-line); }
+#modal .settings-link:hover { color: #fff3d8; }
+#modal .settings-link .icon { width: 16px; height: 16px; color: var(--card-gold); }
+
+#modal .settings-orientation .table-layout-choice {
+  gap: 6px;
+  min-height: 50px;
+  margin: 0;
+}
+
+#modal .settings-orientation .table-layout-label { color: var(--card-ivory); font-size: 13px; }
+#modal .settings-orientation .table-layout-picker { border-color: var(--settings-line); background: #0b0906; }
+
+#modal .settings-orientation .table-layout-picker button {
+  min-height: 36px;
+  padding-inline: 8px;
+  color: var(--settings-muted);
+  font-size: 12px;
+}
+
+#modal .settings-orientation .table-layout-picker button[aria-pressed="true"] {
+  background: #3a2d18;
+  color: var(--card-ivory);
+  box-shadow: inset 0 0 0 1px #866b38;
+}
+
+#modal[data-kind="settings"] .music-settings { margin: 0; padding: 0; border: 0; background: transparent; }
+
+#modal[data-kind="settings"] .preference-row {
+  min-height: 46px;
+  gap: 8px;
+  padding: 7px 2px;
+  border-color: var(--settings-line);
+}
+
+#modal[data-kind="settings"] .preference-row:last-child { border-bottom: 0; }
+#modal[data-kind="settings"] .preference-row strong { color: var(--card-ivory); font-size: 14px; font-weight: 650; }
+#modal[data-kind="settings"] .preference-row small { margin-top: 2px; color: var(--settings-muted); font-size: 12px; line-height: 1.25; }
+#modal[data-kind="settings"] .preference-row .switch { background: #353129; box-shadow: inset 0 0 0 1px #6d604b; }
+#modal[data-kind="settings"] .preference-row .switch::after { background: #f3e8ce; }
+#modal[data-kind="settings"] .preference-row input:checked + .switch { background: var(--card-gold); }
+#modal[data-kind="settings"] .preference-row input:checked + .switch::after { background: #281e10; }
+
+#modal[data-kind="settings"] .music-options {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: 8px;
+  margin: 0;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--settings-line);
+  color: var(--settings-muted);
+}
+
+#modal[data-kind="settings"] .music-options select {
+  min-width: 0;
+  padding-inline: 6px;
+  border-color: #5b4b30;
+  background: #090806;
+  color: var(--card-ivory);
+  font-size: 16px;
+}
+
+#modal[data-kind="settings"] .music-volume output { color: var(--card-ivory); }
+#modal[data-kind="settings"] #music-volume { accent-color: var(--card-gold); }
+
+#modal .settings-calibration {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 8px;
+  margin-top: -1px;
+  padding: 8px 2px;
+  color: var(--settings-muted);
+  font-size: 12px;
+}
+
+#modal .settings-calibration strong { color: var(--card-ivory); }
+#modal .settings-calibration button { min-height: 36px; padding-inline: 4px; color: var(--card-gold); }
+
+#modal .settings-footer { padding: 7px clamp(12px, 3.5vw, 24px) 10px; border-top: 1px solid var(--settings-line); }
+#modal .settings-done { justify-content: center; width: 100%; min-height: 44px; border-radius: 10px; }
+
+#modal[data-kind="settings"] :is(button, select, input):focus-visible { outline-color: var(--card-gold); outline-offset: 2px; }
+
+@media (max-width: 650px) and (orientation: portrait) {
+  :root:not(.is-rotated-view) #modal[open][data-kind="settings"] {
+    width: 100%;
+    height: 100dvh;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+
+  :root:not(.is-rotated-view) #modal .settings-header { padding-top: max(8px, env(safe-area-inset-top, 0px)); }
+  :root:not(.is-rotated-view) #modal .settings-footer { padding-bottom: max(10px, env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  #modal .settings-header { padding-block: 2px; }
+  #modal .settings-footer { padding-block: 4px; }
+}
+
+.is-rotated-view #modal .settings-header { padding-block: 2px; }
+.is-rotated-view #modal .settings-footer { padding-block: 4px; }

@@ -756,38 +756,81 @@ function showTableAppearance() {
   title.focus({ preventScroll: true });
 }
 
-function musicSettings() {
+function settingSwitch(label, input, description = '') {
+  return `<label class="preference-row">
+    <span><strong>${label}</strong>${description ? `<small>${description}</small>` : ''}</span>
+    ${input}
+    <span class="switch" aria-hidden="true"></span>
+  </label>`;
+}
+
+function preferenceSwitch(key, label, description) {
+  return settingSwitch(label, `<input type="checkbox" role="switch" data-preference="${key}"${prefs[key] ? ' checked' : ''}>`, description);
+}
+
+function audioSettings() {
   const volume = Math.round(prefs.musicVolume * 100);
   const tracks = MUSIC_TRACKS.map(({ id, title }) =>
     `<option value="${esc(id)}"${id === prefs.musicTrack ? ' selected' : ''}>${esc(title)}</option>`
   ).join('');
-  return `<section class="music-settings" aria-labelledby="music-settings-title">
-    <h3 id="music-settings-title">Música de fondo</h3>
-    <label class="preference-row music-toggle-row">
-      <span><strong>Reproducir música</strong><small>Versiones instrumentales</small></span>
-      <input type="checkbox" id="music-enabled"${prefs.music ? ' checked' : ''}>
-      <span class="switch" aria-hidden="true"></span>
-    </label>
-    <div class="music-options">
-      <label for="music-track">Pista<select id="music-track">${tracks}</select></label>
-      <div class="music-volume">
-        <label for="music-volume">Volumen</label><output id="music-level" for="music-volume">${volume}%</output>
-        <input type="range" id="music-volume" min="0" max="100" value="${volume}">
+  return `<section class="settings-group music-settings" aria-labelledby="audio-settings-title">
+    <h3 id="audio-settings-title">${icon('music')} Sonido y música</h3>
+    <div class="settings-controls">
+      ${settingSwitch('Música de fondo', `<input type="checkbox" role="switch" id="music-enabled"${prefs.music ? ' checked' : ''}>`)}
+      <div class="music-options">
+        <label for="music-track">Pista<select id="music-track">${tracks}</select></label>
+        <div class="music-volume">
+          <label for="music-volume">Volumen</label><output id="music-level" for="music-volume">${volume}%</output>
+          <input type="range" id="music-volume" min="0" max="100" value="${volume}">
+        </div>
       </div>
+      <p class="music-status" id="music-status" role="status" hidden></p>
+      ${preferenceSwitch('sound', 'Sonidos de la mesa', 'Reparto, jugadas y capturas.')}
     </div>
-    <p class="music-status" id="music-status" role="status" hidden></p>
   </section>`;
 }
 
 function showSettings() {
-  const adjustment = prefs.feedbackChallenge > 0 ? 'más difícil' : prefs.feedbackChallenge < 0 ? 'más accesible' : 'estándar';
+  const inGame = screen === 'game';
   const links = [['felt-settings', 'palette', 'Diseño de mesa']];
-  if (screen === 'game') links.push(['tutorial', 'book', 'Aprender a jugar'], ['new', 'cards', 'Nueva partida']);
+  if (inGame) links.push(['tutorial', 'book', 'Aprender a jugar'], ['new', 'cards', 'Nueva partida']);
   else links.unshift(['setup-options', 'cards', 'Ajustes de partida']);
-  const shortcuts = `<nav class="settings-shortcuts" aria-label="Opciones de la mesa">${links.map(([action, symbol, label]) =>
-    `<button type="button" class="felt-shortcut settings-table-shortcut" data-action="${action}">${icon(symbol)} ${label} ${icon('arrow')}</button>`
-  ).join('')}</nav>`;
-  showModal('settings', `${modalHeader('A tu manera.', 'PREFERENCIAS')}${shortcuts}${screen === 'game' ? `<div class="settings-orientation">${tableLayoutPicker()}</div>` : ''}${musicSettings()}<div class="preference-list">${[['sound', 'Sonidos de la mesa', 'Sonidos al repartir, jugar y recoger cartas.'], ['reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo tiene activada la reducción de movimiento.' : 'Desactiva las animaciones de la mesa.'], ['quickBot', 'Máquina más rápida', 'Menos espera entre jugadas.'], ['feedbackMode', 'Retroalimentación del Experto', 'Al final de cada partida Experto puedes valorar el reto.']].map(([key, title, sub]) => `<label class="preference-row"><span><strong>${title}</strong><small>${sub}</small></span><input type="checkbox" data-preference="${key}" ${prefs[key] ? 'checked' : ''}><span class="switch" aria-hidden="true"></span></label>`).join('')}</div><p class="preferences-note">Ajuste actual del reto: ${adjustment}. Se guarda en este navegador.${prefs.feedbackChallenge ? ' <button class="button text-button" data-action="reset-feedback">Restablecer ajuste</button>' : ''}</p><button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+  const shortcuts = links.map(([action, symbol, label]) =>
+    `<button type="button" class="settings-link" data-action="${action}">${icon(symbol)} <span>${label}</span> ${icon('arrow')}</button>`
+  ).join('');
+  const adjustment = prefs.feedbackChallenge > 0 ? 'Más difícil' : prefs.feedbackChallenge < 0 ? 'Más accesible' : 'Estándar';
+  showModal('settings', `
+    <header class="settings-header">
+      <button type="button" class="icon-button" data-action="close-modal" aria-label="Cerrar preferencias">${icon('back')}</button>
+      <h2 id="modal-title" tabindex="-1">Preferencias</h2>
+    </header>
+    <div class="settings-content">
+      <section class="settings-group" aria-labelledby="settings-table-title">
+        <h3 id="settings-table-title">${icon('cards')} Mesa</h3>
+        <div class="settings-controls">
+          ${inGame ? `<div class="settings-orientation">${tableLayoutPicker()}</div>` : ''}
+          <nav class="settings-shortcuts" aria-label="Opciones de la mesa">${shortcuts}</nav>
+        </div>
+      </section>
+      ${audioSettings()}
+      <section class="settings-group" aria-labelledby="settings-play-title">
+        <h3 id="settings-play-title">${icon('settings')} Jugabilidad</h3>
+        <div class="settings-controls">
+          ${preferenceSwitch('reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo ya lo tiene activado.' : 'Reduce las animaciones de la mesa.')}
+          ${preferenceSwitch('quickBot', 'Máquina más rápida', 'Menos espera entre turnos.')}
+          ${preferenceSwitch('feedbackMode', 'Valoración del Experto', 'Al final de una partida en Experto.')}
+          <div class="settings-calibration">
+            <span>Ajuste del Experto <strong>${adjustment}</strong></span>
+            ${prefs.feedbackChallenge ? '<button type="button" class="button text-button" data-action="reset-feedback">Restablecer</button>' : ''}
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer class="settings-footer">
+      <button type="button" class="button primary settings-done" data-action="close-modal">Listo ${icon('check')}</button>
+    </footer>`);
+  modal.scrollTop = 0;
+  modal.querySelector('#modal-title').focus({ preventScroll: true });
 }
 
 function shouldAskBotFeedback(v) {
@@ -1131,7 +1174,7 @@ document.addEventListener('click', event => {
   if (button && !button.disabled) handleAction(button);
   // Another game interaction can recover playback after the browser pauses audio.
   if (event.isTrusted && screen === 'game' && !musicIsActive() &&
-      !event.target.closest('.music-toggle-row, #music-track')) startMusic();
+      !event.target.closest('label:has(#music-enabled), #music-track')) startMusic();
 });
 document.addEventListener('input', event => {
   if (event.target.id === 'player-name' || event.target.id === 'opponent-name') {
