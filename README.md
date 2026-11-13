@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.15.3
+# Cuarenta · Versión 0.16.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -41,7 +41,7 @@ Los **Sonidos de la mesa** vienen activados y se oyen desde el primer reparto vi
 
 Una captura por suma empieza con **exactamente dos cartas numéricas** de la mesa. Por ejemplo, un 6 recoge 2 + 4; A + 2 + 3 no vale aunque dé 6. Después de la suma puedes recoger las cartas consecutivas de la escalera. El motor y el tutorial aplican la misma regla, con las opciones de ronda y caída propias de esta mesa. La mecánica de suma de dos cartas está descrita en el [reglamento del Torneo Internacional de Cuarenta](https://es.scribd.com/document/612816076/REGLAS-DEL-TORNEO-DE-CUARENTA).
 
-Desde el inicio, toca **Aprender a jugar** para hacer ocho retos guiados. Practica dejar una carta, recoger por igualdad o suma, seguir la escalera, hacer caída y limpia, reconocer una ronda y cerrar con 40. En cada reto puedes pedir una **Pista** y volver a intentar la jugada. Al terminar puedes **Jugar en Fácil** contra Don Julio o abrir **Más retos** para practicar las reglas restantes. La práctica usa la variante de puntos de caída y limpia y conserva tu partida guardada.
+Desde el inicio, toca **Aprender a jugar** para jugar un ciclo guiado en Fácil contra Don Julio. Puedes elegir cualquier jugada válida. La mesa marca las cartas que recoge cada opción y **Pista** te sugiere una jugada. Los repartos están preparados para practicar igualdad, suma, escalera, caída, limpia y ronda. Al cerrar el ciclo ves cómo se cuenta el cartón. Abre **Retos de reglas** para practicar situaciones como el cierre desde 38 o la caída a la ronda. Al terminar puedes jugar en Fácil, elegir otro nivel o jugar con otra persona. La práctica usa tu variante de puntos de caída y limpia y conserva tu partida guardada.
 
 El archivo contiene todo el juego: no necesita instalación, conexión, cuentas ni recursos externos. Para volver, abre el mismo archivo en el mismo navegador. Si este permite el almacenamiento local, aparece **Continuar partida**. El guardado de archivos locales depende del navegador; mover el HTML, usar modo privado o borrar los datos puede impedir recuperar la partida. El juego avisa si no puede guardar.
 
@@ -106,6 +106,7 @@ El resto de reglas permanece: cartón limitado a 30, 2 al siguiente repartidor e
 | `dist/js/session.js` | Sesión en un dispositivo, validación del guardado y persistencia local. |
 | `dist/js/cards.js` | Baraja vectorial, reversos y etiquetas de accesibilidad. |
 | `dist/js/app.js` | Pantallas, interacción, tutorial y flujo de la partida. |
+| `dist/js/practice.js` | Repartos y sugerencias de la partida guiada. |
 | `dist/js/tutorial.js` | Retos de aprendizaje y comprobación de jugadas con el motor. |
 | `dist/styles.css` | Estilo y adaptación a tamaños de pantalla. |
 | `scripts/serve.mjs` | Servidor estático opcional limitado a loopback. |

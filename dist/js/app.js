@@ -1,9 +1,10 @@
-import { createDeck, DEFAULT_BOT_NAME, legalMoves } from './engine.js';
+import { applyMove, createDeck, DEFAULT_BOT_NAME, legalMoves, publicView } from './engine.js';
 import { chooseBotMove } from './bot.js';
 import { cardSvg, cardBackSvg, cardLabel } from './cards.js';
 import { playCardSound } from './card-sounds.js';
 import { LocalSession, FELT_THEMES, loadPreferences, savePreferences } from './session.js';
 import { createTutorialLessons } from './tutorial.js';
+import { choosePracticeReply, createPracticeGame, practiceHint } from './practice.js';
 import { MUSIC_TRACKS, TableMusic } from './music.js';
 import { TABLE_CITIES, tableArt } from './table-art.js';
 import { HOME_ART, HOME_ART_WIDTH, HOME_ART_HEIGHT } from './home-art.js';
@@ -55,6 +56,8 @@ let renderedDeal = '';
 let renderedTurn = '';
 let pendingCardArrival = false;
 let pendingPassMove = null;
+let practice;
+let practiceReplyTimer;
 let tutorialStep = 0;
 let tutorialTrack = 'starter';
 let tutorialCourses;
@@ -284,6 +287,29 @@ function describePlay(move) {
   return `Tu ${rank} recoge el ${rank} de la mesa${bonus}`;
 }
 
+function tableCardsMarkup(view, captureIds = []) {
+  const count = view.table.length;
+  const density = count > 22 ? 4 : count > 14 ? 3 : count > 8 ? 2 : 1;
+  const cards = view.table.map(card => cardMarkup(card, {
+    highlight: captureIds.includes(card.id),
+    last: view.lastPlay?.cardId === card.id,
+  })).join('');
+  return `<div class="table-cards" data-table-density="${density}" style="--table-card-count:${count}" aria-label="Cartas sobre la mesa">${cards || '<div class="empty-table">Mesa vacía</div>'}</div>`;
+}
+
+function handMarkup(player, { active, selected, suggested, action = 'select-card' }) {
+  const cards = player.hand?.map(card => cardMarkup(card, {
+    interactive: active, selected: card.id === selected, coach: card.id === suggested, action,
+  })).join('');
+  return `<div class="own-hand ${active ? '' : 'waiting-hand'}">${cards || '<span class="empty-table">Sin cartas</span>'}</div>`;
+}
+
+function scorePlayers(view, active) {
+  return view.players.map(player => `<span class="score-player${active && player.id === view.turn ? ' is-current' : ''}">
+    <span title="${esc(player.name)}">${esc(player.name)}</span><strong>${player.score}</strong>
+  </span>`);
+}
+
 function renderGame(dealDelay) {
   const v = getView();
   if (!v) { screen = 'home'; renderHome(); return; }
@@ -301,22 +327,9 @@ function renderGame(dealDelay) {
   else if (locked) turn = 'Cambio de turno';
   else if (!myTurn) turn = `${other.name} está pensando…`;
 
-  const tableCount = v.table.length;
-  const density = tableCount > 22 ? 4 : tableCount > 14 ? 3 : tableCount > 8 ? 2 : 1;
-  const tableCards = tableCount ? v.table.map(card => cardMarkup(card, {
-    highlight: captureIds.includes(card.id),
-    last: v.lastPlay?.cardId === card.id,
-  })).join('') : '<div class="empty-table">Mesa vacía</div>';
-  const myHand = (me.hand || []).map(card => cardMarkup(card, {
-    interactive: myTurn,
-    selected: card.id === selectedId,
-  })).join('');
   const ronda = locked ? null : v.rondas?.[viewer];
   const hasRonda = ronda && me.hand?.some(card => ronda.cardIds.includes(card.id));
-  const score = v.players.map(player => {
-    const active = !locked && v.status === 'playing' && player.id === v.turn;
-    return `<span class="score-player${active ? ' is-current' : ''}"><span title="${esc(player.name)}">${esc(player.name)}</span><strong>${player.score}</strong></span>`;
-  });
+  const score = scorePlayers(v, !locked && v.status === 'playing');
   const scoreLabel = v.players.map(player => `${player.name} ${player.score}`).join(', ');
   const playButton = v.status === 'round-end' ? '<button class="button primary play-button" data-action="round-summary">Ver el conteo</button>'
     : v.status === 'finished' ? '<button class="button primary play-button" data-action="result">Ver resultado</button>'
@@ -339,13 +352,13 @@ function renderGame(dealDelay) {
             <button class="button gold" data-action="reveal">Ver mi mano ${icon('arrow')}</button>
           </div>` : `<div class="table-center">
             <p class="table-zone-label">Mesa</p>
-            <div class="table-cards" data-table-density="${density}" style="--table-card-count:${tableCount}" aria-label="Cartas sobre la mesa">${tableCards}</div>
+            ${tableCardsMarkup(v, captureIds)}
           </div>`}
         </section>
         ${locked ? '' : `<section class="own-zone" aria-label="Tu mano">
           <p class="table-zone-label">Tu mano</p>
           ${hasRonda ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(ronda.rank)} · +2 puntos</div>` : ''}
-          <div class="own-hand ${myTurn ? '' : 'waiting-hand'}">${myHand || '<span class="empty-table">Sin cartas</span>'}</div>
+          ${handMarkup(me, { active: myTurn, selected: selectedId })}
         </section>
         <div class="action-panel">
           ${myTurn ? `<p class="action-copy"><strong>${esc(describePlay(chosen))}</strong></p>` : ''}
@@ -628,6 +641,7 @@ function requestNewGame(options) {
 
 function showModal(kind, content) {
   cancelBot();
+  if (kind !== 'practice') cancelPracticeReply();
   if (!modal.open) lastFocus = document.activeElement;
   modalKind = kind;
   modal.dataset.kind = kind;
@@ -636,6 +650,7 @@ function showModal(kind, content) {
 }
 
 function closeModal(resume = true) {
+  cancelPracticeReply();
   if (modal.open) modal.close();
   modalKind = null;
   delete modal.dataset.kind;
@@ -865,6 +880,180 @@ function rateBot(rating) {
   toast(saved ? `Gracias por tu valoración. ${adjustment}` : 'Gracias por tu valoración; no se pudieron guardar los ajustes en este navegador.');
 }
 
+function cancelPracticeReply() {
+  clearTimeout(practiceReplyTimer);
+  practiceReplyTimer = null;
+}
+
+function openPractice(restart = false) {
+  const points = (screen === 'game' ? getView()?.rules.comboPoints : comboPoints) ?? 2;
+  const dealing = restart || practice?.state.rules.comboPoints !== points;
+  if (dealing) {
+    const state = createPracticeGame(points);
+    practice = { state, selected: null, option: 0, hint: practiceHint(state), recap: '', learned: new Set() };
+    playSound('deal');
+  }
+  showPractice('#modal-title', dealing);
+  schedulePracticeReply();
+}
+
+function practiceMoves(view = publicView(practice.state, 0)) {
+  return legalMoves(view, 0).filter(move => move.cardId === practice.selected);
+}
+
+function practiceTechniques(move) {
+  const techniques = [move.kind];
+  if (move.captureIds.length > (move.kind === 'sum' ? 2 : 1)) techniques.push('ladder');
+  if (move.fall) techniques.push('fall');
+  if (move.clean) techniques.push('clean');
+  return techniques;
+}
+
+function explainPracticeMove(move) {
+  const techniques = practiceTechniques(move);
+  const explanations = [];
+  if (move.kind === 'drop') return 'Cuando tu carta no puede recoger, queda en la mesa.';
+  if (move.kind === 'sum') explanations.push('La suma usa exactamente dos cartas numéricas.');
+  else if (!move.fall) explanations.push('Igualas una carta de la mesa.');
+  if (techniques.includes('ladder')) explanations.push('La escalera sigue en orden: después del 7 van J, Q y K.');
+  if (move.fall) explanations.push('Igualar la última carta del rival es una caída.');
+  if (move.clean) explanations.push('Al vaciar la mesa haces una limpia.');
+  return explanations.join(' ');
+}
+
+function practiceCoach(view, chosen) {
+  if (view.turn === 1) return [practice.recap || 'Don Julio está pensando…', ''];
+  if (chosen) return [describePlay(chosen), explainPracticeMove(chosen)];
+  if (practice.hint) {
+    const card = impactCards.get(practice.hint.cardId);
+    return [`Prueba con ${cardLabel(card)}.`, view.revision === 0
+      ? 'Toca la carta marcada y pulsa Jugar carta. Juegas una carta por turno.'
+      : `${describePlay(practice.hint)} Toca la carta marcada para ver la jugada.`];
+  }
+  return ['Elige una carta de tu mano', practice.recap || 'La mesa marcará las cartas que puedes recoger.'];
+}
+
+function practiceFinish(view) {
+  const summary = view.roundSummary;
+  const tied = summary && summary.captured[0] === summary.captured[1];
+  const explanation = summary
+    ? tied ? `Empataron en cartas. ${view.dealer === 0 ? 'Don Julio recibe dos puntos porque le toca repartir' : 'Recibes dos puntos porque te toca repartir'} en el siguiente ciclo.`
+      : 'Con 20 cartas recogidas se cobran 6 puntos de cartón. Si recoges más, sumas uno por carta adicional y redondeas al par superior. El cartón suma hasta 30.'
+    : view.lastEvent?.text;
+  const score = scorePlayers(view, false);
+  return `<section class="practice-finish">
+    <h3>${summary ? 'Completaste el ciclo' : 'Terminaste la partida'}</h3>
+    <div class="compact-score" aria-label="Marcador de la práctica">${score[0]}<span class="score-target">A 40 puntos</span>${score[1]}</div>
+    ${summary ? `<div class="practice-results">
+      ${view.players.map((player, index) => `<div><strong>${esc(player.name)}</strong><span>${summary.captured[index]} cartas · +${summary.awarded[index]} por cartón</span></div>`).join('')}
+    </div>` : ''}
+    <p>${esc(explanation)}</p>
+    ${summary ? '<p>En una partida normal se vuelve a repartir hasta que alguien gana.</p>' : ''}
+    <p>En niveles más altos, Don Julio calcula más jugadas. En Dos jugadores, se pasan el dispositivo entre turnos. Las reglas son las mismas.</p>
+    <div class="practice-finish-actions">
+      <button type="button" class="button gold" data-action="tutorial-easy">Jugar en Fácil ${icon('arrow')}</button>
+      <button type="button" class="button outline" data-action="quick-play">Elegir nivel</button>
+      <button type="button" class="button outline" data-action="local-game">Dos jugadores</button>
+    </div>
+  </section>`;
+}
+
+function showPractice(focus, dealing = false) {
+  const view = publicView(practice.state, 0);
+  const playing = view.status === 'playing';
+  const myTurn = playing && view.turn === 0;
+  const moves = practiceMoves(view);
+  const chosen = moves[practice.option];
+  const [instruction, detail] = practiceCoach(view, chosen);
+  const score = scorePlayers(view, playing);
+  const ronda = view.rondas[0];
+  const hasRonda = ronda?.cardIds.some(id => view.players[0].hand.some(card => card.id === id));
+  const scroll = modal.open && modalKind === 'practice' ? modal.scrollTop : 0;
+  showModal('practice', `<header class="practice-header">
+    <button type="button" data-action="close-modal" aria-label="Salir de la partida guiada">${icon('back')}</button>
+    <h2 id="modal-title" tabindex="-1">Aprender a jugar</h2>
+    <span class="practice-step">${playing ? `Reparto ${view.deal} de 4` : 'Fin de práctica'}</span>
+  </header>
+  <progress class="practice-meter" value="${playing ? view.revision : 40}" max="40" aria-label="Progreso de la partida guiada"></progress>
+  <section class="practice-game" data-revision="${view.revision}" data-turn="${view.turn}" data-status="${view.status}" aria-label="Partida guiada en Fácil">
+    ${playing ? `<div class="game-column${dealing ? ' is-dealing' : ''}">
+      <div class="game-overview">
+        <div class="compact-score" aria-label="Marcador de la práctica">${score[0]}<span class="score-target">A 40 puntos</span>${score[1]}</div>
+        <p class="game-turn" data-current="${myTurn}">${myTurn ? 'Tu turno' : 'Juega Don Julio'}</p>
+      </div>
+      <section class="game-table" aria-label="Mesa">
+        ${tableArt(prefs.tableCity)}
+        <div class="table-center"><p class="table-zone-label">Mesa</p>${tableCardsMarkup(view, chosen?.captureIds)}</div>
+      </section>
+      <section class="own-zone" aria-label="Tu mano">
+        <p class="table-zone-label">Tu mano</p>
+        ${hasRonda ? `<div class="ronda-notice">${icon('spark')} Tu ronda de ${esc(ronda.rank)} · Tres iguales · +2 puntos</div>` : ''}
+        ${handMarkup(view.players[0], {
+          active: myTurn, selected: practice.selected, suggested: practice.hint?.cardId, action: 'practice-card',
+        })}
+      </section>
+      <div class="action-panel">
+        <div class="practice-coach" tabindex="-1" aria-live="polite">
+          <strong>${esc(instruction)}</strong><span>${esc(detail)}</span>
+        </div>
+        <div class="move-controls">
+          ${moves.length > 1 ? `<button type="button" class="button outline option-button" data-action="practice-next-capture">Otra captura · ${practice.option + 1}/${moves.length}</button>` : ''}
+          <button type="button" class="button outline practice-hint" data-action="practice-hint" ${myTurn ? '' : 'disabled'}>Pista</button>
+          <button type="button" class="button gold play-button" data-action="practice-play" ${chosen ? '' : 'disabled'}>${chosen?.captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>
+        </div>
+      </div>
+    </div>` : practiceFinish(view)}
+  </section>
+  <nav class="practice-links" aria-label="Opciones de la partida guiada">
+    <button type="button" data-action="practice-lessons">Retos de reglas</button>
+    <button type="button" data-action="practice-restart">${playing ? 'Reiniciar' : 'Repetir práctica'}</button>
+  </nav>`);
+  modal.scrollTop = playing ? scroll : 0;
+  if (focus) modal.querySelector(playing ? focus : '#modal-title')?.focus({ preventScroll: true });
+}
+
+function playPracticeMove(move, playerId) {
+  const focusedAction = document.activeElement?.dataset.action;
+  const focus = playerId === 1 && ['close-modal', 'practice-lessons', 'practice-restart'].includes(focusedAction)
+    ? `[data-action="${focusedAction}"]`
+    : '.practice-coach';
+  const previous = practice.state;
+  const next = applyMove(previous, { ...move, playerId, expectedRevision: previous.revision });
+  practice.state = next;
+  practice.selected = null;
+  practice.option = 0;
+  practice.hint = null;
+  const played = impactCards.get(move.cardId).rank;
+  if (playerId === 0) {
+    practiceTechniques(move).forEach(technique => practice.learned.add(technique));
+    practice.recap = describePlay(move);
+  }
+  else {
+    const action = move.captureIds.length ? `recogió ${move.captureIds.length + 1} cartas con un ${played}` : `dejó un ${played} en la mesa`;
+    const points = move.points ? ` y ganó ${move.points} puntos` : '';
+    practice.recap = next.deal !== previous.deal ? 'Tienes cinco cartas nuevas. La mesa sigue como quedó.' : `Don Julio ${action}${points}.`;
+    const hint = practiceHint(next);
+    if (hint && practiceTechniques(hint).some(technique => !practice.learned.has(technique))) practice.hint = hint;
+  }
+  const dealing = next.deal !== previous.deal;
+  if (dealing) playSound('deal');
+  else playMoveSound(move, next.status === 'finished');
+  showPractice(focus, dealing);
+  schedulePracticeReply();
+}
+
+function schedulePracticeReply() {
+  cancelPracticeReply();
+  if (!modal.open || modalKind !== 'practice' || document.hidden ||
+      practice.state.status !== 'playing' || practice.state.turn !== 1) return;
+  practiceReplyTimer = setTimeout(() => {
+    practiceReplyTimer = null;
+    if (!modal.open || modalKind !== 'practice' || document.hidden) return;
+    const reply = choosePracticeReply(practice.state);
+    if (reply) playPracticeMove(reply, 1);
+  }, prefs.quickBot ? 250 : 500);
+}
+
 function resetTutorialAttempt() {
   tutorialCardId = null;
   tutorialCaptures.clear();
@@ -897,6 +1086,7 @@ function openTutorial(track = tutorialTrack, restart = false) {
 
 function tutorialLinks({ back = false, complete = false } = {}) {
   return `<nav class="tutorial-links" aria-label="Opciones de práctica">
+    <button type="button" data-action="tutorial">Partida guiada</button>
     ${back ? '<button type="button" data-action="tutorial-prev">Anterior</button>' : ''}
     <button type="button" data-action="tutorial-restart">${complete ? 'Repetir práctica' : 'Reiniciar'}</button>
     ${tutorialTrack === 'starter'
@@ -1175,7 +1365,36 @@ function handleAction(target) {
   else if (action === 'feedback-rating') rateBot(target.dataset.rating);
   else if (action === 'skip-feedback') { completeBotFeedback(getView()?.id); showResult(); }
   else if (action === 'reset-feedback') { prefs.feedbackChallenge = 0; savePreferences(prefs); showSettings(); }
-  else if (action === 'tutorial') openTutorial();
+  else if (action === 'tutorial') openPractice();
+  else if (action === 'practice-restart') openPractice(true);
+  else if (action === 'practice-lessons') openTutorial();
+  else if (action === 'practice-card') {
+    practice.selected = target.dataset.card;
+    const hint = practice.hint;
+    const guidedOption = hint?.cardId === practice.selected ? practiceMoves().findIndex(move =>
+      move.captureIds.length === hint.captureIds.length && move.captureIds.every(id => hint.captureIds.includes(id))) : -1;
+    practice.option = Math.max(0, guidedOption);
+    practice.hint = null;
+    showPractice(`[data-action="practice-card"][data-card="${CSS.escape(practice.selected)}"]`);
+  }
+  else if (action === 'practice-next-capture') {
+    const moves = practiceMoves();
+    practice.option = (practice.option + 1) % moves.length;
+    showPractice('[data-action="practice-next-capture"]');
+  }
+  else if (action === 'practice-hint') {
+    const hint = practiceHint(practice.state);
+    if (hint) {
+      practice.hint = hint;
+      practice.selected = null;
+      practice.option = 0;
+      showPractice('[data-action="practice-hint"]');
+    }
+  }
+  else if (action === 'practice-play') {
+    const move = practiceMoves()[practice.option];
+    if (move) playPracticeMove(move, 0);
+  }
   else if (action === 'tutorial-restart') openTutorial(tutorialTrack, true);
   else if (action === 'tutorial-extra') openTutorial('extra');
   else if (action === 'tutorial-starter') openTutorial('starter');
@@ -1184,7 +1403,8 @@ function handleAction(target) {
     tutorialFeedback = '';
     showTutorial('[data-action="tutorial-hint"]');
   }
-  else if (action === 'tutorial-easy') requestNewGame(newGameOptions('solo', 'easy', tutorialComboPoints));
+  else if (action === 'tutorial-easy') requestNewGame(newGameOptions('solo', 'easy',
+    modalKind === 'practice' ? practice.state.rules.comboPoints : tutorialComboPoints));
   else if (action === 'tutorial-prev') selectTutorialStep(tutorialStep - 1);
   else if (action === 'tutorial-next') advanceTutorial();
   else if (action === 'tutorial-card') selectTutorialCard(target.dataset.card, false);
@@ -1260,10 +1480,12 @@ function resumeMusic() {
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { cancelBot(); pauseMusic(); }
-  else { scheduleBot(); resumeMusic(); }
+  if (document.hidden) { cancelBot(); cancelPracticeReply(); pauseMusic(); }
+  else { scheduleBot(); schedulePracticeReply(); resumeMusic(); }
 });
-window.addEventListener('pagehide', () => { cancelBot(); pauseMusic(); });
-window.addEventListener('pageshow', event => { if (event.persisted) resumeMusic(); });
+window.addEventListener('pagehide', () => { cancelBot(); cancelPracticeReply(); pauseMusic(); });
+window.addEventListener('pageshow', event => {
+  if (event.persisted) { schedulePracticeReply(); resumeMusic(); }
+});
 render();
 if (session.warning) toast(session.warning);
