@@ -116,7 +116,7 @@ export class LocalSession {
 
 export function loadPreferences(storage) {
   const fallback = {
-    sound: false,
+    sound: true,
     music: true,
     musicVolume: DEFAULT_MUSIC_VOLUME,
     musicTrack: DEFAULT_MUSIC_TRACK,
@@ -132,7 +132,7 @@ export function loadPreferences(storage) {
     const saved = JSON.parse((storage ?? globalThis.localStorage).getItem(PREFS_KEY) || '{}');
     const feedbackChallenge = Number.isInteger(saved.feedbackChallenge) ? Math.max(-3, Math.min(3, saved.feedbackChallenge)) : 0;
     return {
-      sound: saved.sound === true,
+      sound: saved.sound === undefined || saved.sound === true,
       music: saved.music === undefined || saved.music === true,
       musicVolume: Number.isFinite(saved.musicVolume) ? Math.max(0, Math.min(1, saved.musicVolume)) : DEFAULT_MUSIC_VOLUME,
       musicTrack: saved.musicTrack === 'patio' ? 'reminiscencias' :

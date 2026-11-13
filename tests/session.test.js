@@ -95,13 +95,13 @@ test('preferences accept booleans only, clamp local bot feedback, and tolerate u
   });
   assert.equal(savePreferences({ feedbackMode: true, feedbackChallenge: 9, tableLayout: 'vertical' }, storage), true);
   assert.deepEqual(loadPreferences(storage), {
-    sound: false, reducedMotion: false, quickBot: false, feedbackMode: true,
+    sound: true, reducedMotion: false, quickBot: false, feedbackMode: true,
     feedbackChallenge: 3, tableLayout: 'vertical', feltTheme: 'quito', tableCity: 'quito',
     music: true, musicVolume: .32, musicTrack: 'reminiscencias',
   });
   assert.equal(savePreferences({}, { setItem() { throw Error('blocked'); } }), false);
   assert.deepEqual(loadPreferences({ getItem() { throw Error('blocked'); } }), {
-    sound: false, reducedMotion: false, quickBot: false, feedbackMode: true,
+    sound: true, reducedMotion: false, quickBot: false, feedbackMode: true,
     feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', tableCity: 'quito',
     music: true, musicVolume: .32, musicTrack: 'reminiscencias',
   });

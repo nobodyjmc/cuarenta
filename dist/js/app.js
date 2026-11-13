@@ -1074,9 +1074,27 @@ function advanceTutorial() {
 }
 
 function showRoundSummary() {
-  const v = getView(); if (v.status !== 'round-end') return;
-  const summary = v.roundSummary;
-  showModal('round', `${modalHeader('Contemos el cartón.', `FIN DEL CICLO ${v.round}`)}<p class="modal-intro">${summary?.leftover || 0} cartas quedaron sobre la mesa y se descartan. El cartón suma hasta un máximo de 30 puntos.</p><div class="round-results">${v.players.map((p, i) => `<div><span>${esc(p.name)}</span><strong>${summary?.captured?.[i] ?? p.capturedCount}<small>cartas recogidas</small></strong><p>Base ${summary?.base?.[i] ?? 0} · Cobras <b>+${summary?.awarded?.[i] ?? 0}</b></p><div class="round-total">${p.score} / 40</div></div>`).join('')}</div><button class="button primary full-width" data-action="next-round">Barajar y seguir ${icon('arrow')}</button>`);
+  const v = getView();
+  if (v.status !== 'round-end') return;
+  const { captured, base, awarded, leftover } = v.roundSummary;
+  const tied = captured[0] === captured[1];
+  const nextDealer = 1 - v.dealer;
+  const nextName = esc(v.players[nextDealer].name);
+  const tieReason = awarded[nextDealer]
+    ? `${nextName} suma ${awarded[nextDealer]} puntos porque reparte el siguiente ciclo.`
+    : `${nextName} reparte el siguiente ciclo. El tope de 30 puntos impide sumar la bonificación.`;
+  const results = v.players.map((player, index) => `
+    <div>
+      <span>${esc(player.name)}</span>
+      <strong>${captured[index]}<small>cartas recogidas</small></strong>
+      <p><b>+${awarded[index]} puntos</b>${base[index] > awarded[index] ? ' · Tope de 30' : ''}</p>
+      <div class="round-total">${player.score} / 40</div>
+    </div>`).join('');
+  showModal('round', `${modalHeader('Conteo del cartón', `FIN DEL CICLO ${v.round}`)}
+    ${tied ? `<p class="round-explanation"><strong>Dos por dar.</strong> ${tieReason}</p>` : ''}
+    <div class="round-results">${results}</div>
+    ${leftover ? `<p class="round-leftover">${leftover === 1 ? 'Se descarta 1 carta que quedó en la mesa.' : `Se descartan ${leftover} cartas que quedaron en la mesa.`}</p>` : ''}
+    <button class="button primary full-width" data-action="next-round">Barajar y seguir ${icon('arrow')}</button>`);
 }
 
 function showResult() {

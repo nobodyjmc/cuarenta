@@ -4179,6 +4179,8 @@ svg.aside-panel-icon {
 .app-viewport.is-playing .workspace[data-table-layout] {
   --play-height: var(--rotated-height, 100dvh);
   --play-gap: clamp(5px, calc(var(--play-height) * .012), 12px);
+  --table-card-max: 96px;
+  --hand-card-max: 88px;
   grid-template-rows: minmax(0, 1fr);
   gap: 0;
 }
@@ -4353,7 +4355,7 @@ svg.aside-panel-icon {
 .app-viewport.is-playing .workspace[data-table-layout] .table-cards {
   --table-columns: clamp(1, var(--table-card-count, 1), 5);
   --table-rows: 1;
-  --card-gap: clamp(4px, 2cqw, 13px);
+  --card-gap: clamp(7px, 2.1cqw, 13px);
   --card-inline-padding: 16px;
   --card-block-padding: 16px;
   --card-width: calc((100cqw - var(--card-inline-padding) - (var(--table-columns) - 1) * var(--card-gap)) / var(--table-columns));
@@ -4393,7 +4395,7 @@ svg.aside-panel-icon {
 }
 
 .app-viewport.is-playing .workspace[data-table-layout] .table-cards > .playing-card {
-  width: max(1px, min(115px, var(--card-width), var(--card-height)));
+  width: max(1px, min(var(--table-card-max), var(--card-width), var(--card-height)));
 }
 
 .app-viewport.is-playing .workspace[data-table-layout] .own-zone {
@@ -4418,11 +4420,8 @@ svg.aside-panel-icon {
   padding: 5px 4px;
 }
 
-.app-viewport.is-playing .workspace[data-table-layout] .own-hand:not(:has(> .playing-card:nth-child(5))) { --hand-columns: 4; }
-.app-viewport.is-playing .workspace[data-table-layout] .own-hand:not(:has(> .playing-card:nth-child(4))) { --hand-columns: 3; }
-
 .app-viewport.is-playing .workspace[data-table-layout] .own-hand > .playing-card {
-  width: max(1px, min(105px, calc((100cqw - 12px - (var(--hand-columns) - 1) * var(--hand-gap)) / var(--hand-columns)), calc(var(--play-height) * .162)));
+  width: max(1px, min(var(--hand-card-max), calc((100cqw - 12px - (var(--hand-columns) - 1) * var(--hand-gap)) / var(--hand-columns)), calc(var(--play-height) * .145)));
 }
 
 .app-viewport.is-playing .own-hand > .playing-card > svg {
@@ -4502,14 +4501,25 @@ svg.aside-panel-icon {
   font: 700 clamp(22px, 6vw, 36px)/1.08 Georgia, "Times New Roman", serif;
 }
 
-.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] { --play-gap: 5px; }
+@media (max-width: 620px) {
+  .app-viewport.is-playing .workspace[data-table-layout] {
+    --table-card-max: 70px;
+    --hand-card-max: 60px;
+  }
+}
+
+.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] {
+  --play-gap: 5px;
+  --table-card-max: 58px;
+  --hand-card-max: 49px;
+}
 .app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .game-layout { width: min(100%, 1080px); }
 
 .app-viewport.is-playing.is-compact-play .game-column {
   grid-template:
     "overview overview" auto
     "table hand" minmax(0, 1fr)
-    "action action" auto / minmax(0, 1.32fr) minmax(0, 1fr);
+    "action action" auto / minmax(0, 1.5fr) minmax(0, 1fr);
 }
 
 .app-viewport.is-playing.is-compact-play .game-column.is-locked {
@@ -4531,10 +4541,6 @@ svg.aside-panel-icon {
 
 .app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .own-hand {
   --hand-gap: clamp(3px, 2cqw, 8px);
-}
-
-.app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .own-hand > .playing-card {
-  width: max(1px, min(73px, calc((100cqw - 12px - (var(--hand-columns) - 1) * var(--hand-gap)) / var(--hand-columns)), calc(var(--play-height) * .18)));
 }
 
 .app-viewport.is-playing.is-compact-play .workspace[data-table-layout] .action-panel {
@@ -4573,6 +4579,73 @@ svg.aside-panel-icon {
 .app-viewport.is-playing .game-column.is-locked .privacy-curtain { background: transparent; }
 
 #modal .settings-orientation .table-layout-choice { justify-content: space-between; }
+
+/* Standard game dialogs use the same typography and controls as the table. */
+#modal:has(> .modal-top) {
+  --line: #4a3c28;
+  --muted: #c5b89d;
+  --accent: var(--card-gold);
+  --accent-dark: var(--card-gold);
+  --accent-focus: var(--card-gold);
+  background: #0c0a07;
+  border-color: var(--line);
+  color: var(--card-ivory);
+  scrollbar-color: #6a5638 transparent;
+}
+
+.is-rotated-view #modal[open]:has(> .modal-top) { max-width: none; }
+
+#modal:has(> .modal-top)::backdrop { background: #000c; }
+#modal > .modal-top { margin-bottom: 8px; }
+#modal > .modal-top .eyebrow { color: #c5b89d; font-size: 11px; font-weight: 650; }
+
+#modal > .modal-top .icon-button {
+  width: 44px;
+  height: 44px;
+  border-color: var(--line);
+  border-radius: 12px;
+  background: #17130d;
+  color: var(--card-ivory);
+}
+
+#modal > .modal-top .icon-button:hover { background: #2a2114; }
+
+#modal > .modal-top + #modal-title {
+  color: var(--card-ivory);
+  font: italic 700 clamp(25px, 6.5vw, 40px)/1.1 Georgia, "Times New Roman", serif;
+  letter-spacing: -.045em;
+  text-wrap: balance;
+}
+
+#modal:has(> .modal-top) :is(button, summary, select, input):focus-visible {
+  outline-color: var(--card-gold);
+  outline-offset: 2px;
+}
+
+#modal:has(> .modal-top) .text-button { color: var(--card-gold); }
+
+#modal .round-explanation {
+  margin: 10px 0;
+  padding: 9px 11px;
+  border: 1px solid #6a522e;
+  border-radius: 9px;
+  background: #20180e;
+  color: var(--card-ivory);
+  font-size: 13px;
+}
+
+#modal .round-explanation strong { color: var(--card-gold); }
+#modal .round-results { margin: 12px 0; border-color: var(--line); background: #16120d; }
+#modal .round-results > div { min-width: 0; padding: 11px 8px; background: transparent; overflow-wrap: anywhere; }
+#modal .round-results > div > strong { margin-top: 4px; color: var(--card-ivory); font-size: 29px; }
+#modal .round-results > div > span,
+#modal .round-results small,
+#modal .round-results p { color: var(--muted); }
+#modal .round-results p { margin: 6px 0; font-size: 12px; }
+#modal .round-results p b { color: var(--card-gold); }
+#modal .round-total { padding-top: 6px; color: var(--card-ivory); }
+#modal .round-leftover { margin: 0 0 10px; color: var(--muted); font-size: 12px; }
+
 #modal .solo-levels { display: grid; gap: 8px; margin-top: 16px; }
 
 #modal .level-option {
@@ -6709,7 +6782,7 @@ class LocalSession {
 
 function loadPreferences(storage) {
   const fallback = {
-    sound: false,
+    sound: true,
     music: true,
     musicVolume: DEFAULT_MUSIC_VOLUME,
     musicTrack: DEFAULT_MUSIC_TRACK,
@@ -6725,7 +6798,7 @@ function loadPreferences(storage) {
     const saved = JSON.parse((storage ?? globalThis.localStorage).getItem(PREFS_KEY) || '{}');
     const feedbackChallenge = Number.isInteger(saved.feedbackChallenge) ? Math.max(-3, Math.min(3, saved.feedbackChallenge)) : 0;
     return {
-      sound: saved.sound === true,
+      sound: saved.sound === undefined || saved.sound === true,
       music: saved.music === undefined || saved.music === true,
       musicVolume: Number.isFinite(saved.musicVolume) ? Math.max(0, Math.min(1, saved.musicVolume)) : DEFAULT_MUSIC_VOLUME,
       musicTrack: saved.musicTrack === 'patio' ? 'reminiscencias' :
@@ -9536,9 +9609,27 @@ function advanceTutorial() {
 }
 
 function showRoundSummary() {
-  const v = getView(); if (v.status !== 'round-end') return;
-  const summary = v.roundSummary;
-  showModal('round', `${modalHeader('Contemos el cartón.', `FIN DEL CICLO ${v.round}`)}<p class="modal-intro">${summary?.leftover || 0} cartas quedaron sobre la mesa y se descartan. El cartón suma hasta un máximo de 30 puntos.</p><div class="round-results">${v.players.map((p, i) => `<div><span>${esc(p.name)}</span><strong>${summary?.captured?.[i] ?? p.capturedCount}<small>cartas recogidas</small></strong><p>Base ${summary?.base?.[i] ?? 0} · Cobras <b>+${summary?.awarded?.[i] ?? 0}</b></p><div class="round-total">${p.score} / 40</div></div>`).join('')}</div><button class="button primary full-width" data-action="next-round">Barajar y seguir ${icon('arrow')}</button>`);
+  const v = getView();
+  if (v.status !== 'round-end') return;
+  const { captured, base, awarded, leftover } = v.roundSummary;
+  const tied = captured[0] === captured[1];
+  const nextDealer = 1 - v.dealer;
+  const nextName = esc(v.players[nextDealer].name);
+  const tieReason = awarded[nextDealer]
+    ? `${nextName} suma ${awarded[nextDealer]} puntos porque reparte el siguiente ciclo.`
+    : `${nextName} reparte el siguiente ciclo. El tope de 30 puntos impide sumar la bonificación.`;
+  const results = v.players.map((player, index) => `
+    <div>
+      <span>${esc(player.name)}</span>
+      <strong>${captured[index]}<small>cartas recogidas</small></strong>
+      <p><b>+${awarded[index]} puntos</b>${base[index] > awarded[index] ? ' · Tope de 30' : ''}</p>
+      <div class="round-total">${player.score} / 40</div>
+    </div>`).join('');
+  showModal('round', `${modalHeader('Conteo del cartón', `FIN DEL CICLO ${v.round}`)}
+    ${tied ? `<p class="round-explanation"><strong>Dos por dar.</strong> ${tieReason}</p>` : ''}
+    <div class="round-results">${results}</div>
+    ${leftover ? `<p class="round-leftover">${leftover === 1 ? 'Se descarta 1 carta que quedó en la mesa.' : `Se descartan ${leftover} cartas que quedaron en la mesa.`}</p>` : ''}
+    <button class="button primary full-width" data-action="next-round">Barajar y seguir ${icon('arrow')}</button>`);
 }
 
 function showResult() {
