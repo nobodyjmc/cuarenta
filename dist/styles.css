@@ -1967,9 +1967,9 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
 }
 
 .hero-table-inner > .table-city-art { bottom: 7%; opacity: .79; }
-.game-table > .table-city-art { bottom: 19%; max-height: 65%; opacity: .45; }
+.game-table > .table-city-art { bottom: 19%; max-height: 72%; opacity: .62; }
 .tutorial-board > .table-city-art { bottom: 10%; opacity: .26; }
-.felt-preview > .table-city-art { bottom: -6%; max-height: 115%; opacity: .75; }
+.felt-preview > .table-city-art { inset-block: 0; height: 100%; max-height: none; opacity: .94; }
 .privacy-curtain > .table-city-art { opacity: .42; }
 
 .hero-table-inner::after,
@@ -2069,27 +2069,26 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
 }
 
 .felt-preview {
-  display: grid;
-  place-items: center;
-  min-height: clamp(88px, 25vw, 128px);
-  padding: 10px;
-  border: 1px solid #9ec2e994;
+  min-height: clamp(112px, 32vw, 178px);
+  border: 1px solid #69573b;
   border-radius: 14px;
-  text-align: center;
 }
 
-.felt-preview-label {
-  display: inline-flex;
-  align-items: center;
-  min-height: 32px;
-  max-width: 100%;
-  padding: 4px 12px;
-  border: 1px solid #d9eaff65;
-  border-radius: var(--radius-control);
-  background: #051831df;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 700;
+.table-preview { display: grid; gap: 7px; min-width: 0; margin: 0 0 3px; }
+
+.table-preview figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 3px 9px;
+  padding-inline: 2px;
+  color: #c5b89d;
+  font: 500 12px/1.35 var(--sans);
+}
+
+.table-preview figcaption strong {
+  color: var(--card-ivory);
+  font: 700 19px/1.12 Georgia, "Times New Roman", serif;
 }
 
 .city-options,
@@ -2134,8 +2133,8 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
 }
 
 .city-option[aria-pressed="true"]::before {
-  border-color: var(--accent-focus);
-  background: var(--accent-focus);
+  border-color: var(--card-gold);
+  background: var(--card-gold);
 }
 
 .felt-option {
@@ -2149,9 +2148,10 @@ body,.app-shell,.main-shell{background:var(--paper);color:var(--ink)}
 
 .felt-option[aria-pressed="true"],
 .city-option[aria-pressed="true"] {
-  border-color: var(--accent-focus);
-  box-shadow: inset 0 0 0 1px var(--accent-focus);
-  background: color-mix(in srgb, var(--pearl) 88%, var(--accent-focus));
+  border-color: var(--card-gold);
+  box-shadow: inset 0 0 0 1px var(--card-gold);
+  background: #2c2316;
+  color: var(--card-ivory);
 }
 
 .felt-swatch {
@@ -3560,7 +3560,7 @@ svg.aside-panel-icon {
 #modal[data-kind="tutorial"] .tutorial-board > .table-city-art {
   bottom: 6%;
   max-height: 55%;
-  opacity: .4;
+  opacity: .48;
 }
 
 #modal[data-kind="tutorial"] .tutorial-zone-label {
@@ -4316,7 +4316,7 @@ svg.aside-panel-icon {
   background: var(--felt-surface);
 }
 
-.app-viewport.is-playing .game-table > .table-city-art { bottom: 4%; }
+.app-viewport.is-playing .game-table > .table-city-art { bottom: 5%; }
 
 .app-viewport.is-playing .workspace[data-table-layout] .game-table > .table-center {
   grid-area: 1 / 1;
@@ -4591,7 +4591,7 @@ svg.aside-panel-icon {
 .is-rotated-view #modal .solo-levels { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
 /* Preferences share the table's black, ivory and gold palette. */
-#modal[data-kind="settings"] {
+#modal:is([data-kind="settings"], [data-kind="table-design"]) {
   --settings-surface: #15120e;
   --settings-line: #3d3426;
   --settings-muted: #c5b89d;
@@ -4607,18 +4607,18 @@ svg.aside-panel-icon {
   overflow: hidden;
 }
 
-#modal[open][data-kind="settings"] {
+#modal[open]:is([data-kind="settings"], [data-kind="table-design"]) {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
-.is-rotated-view #modal[open][data-kind="settings"] {
+.is-rotated-view #modal[open]:is([data-kind="settings"], [data-kind="table-design"]) {
   width: min(620px, calc(var(--rotated-width) - 24px));
   height: min(790px, calc(var(--rotated-height) - 24px));
   padding: 0;
 }
 
-#modal[data-kind="settings"]::backdrop { background: #000c; }
+#modal:is([data-kind="settings"], [data-kind="table-design"])::backdrop { background: #000c; }
 
 #modal .settings-header {
   display: grid;
@@ -4659,6 +4659,10 @@ svg.aside-panel-icon {
   scrollbar-color: #655536 transparent;
   scrollbar-width: thin;
 }
+
+#modal .settings-content.felt-settings { gap: 8px; margin: 0; }
+
+#modal[data-kind="table-design"] { height: min(560px, calc(100dvh - 32px)); }
 
 #modal .settings-group { min-width: 0; }
 
@@ -4781,7 +4785,7 @@ svg.aside-panel-icon {
 #modal[data-kind="settings"] :is(button, select, input):focus-visible { outline-color: var(--card-gold); outline-offset: 2px; }
 
 @media (max-width: 650px) and (orientation: portrait) {
-  :root:not(.is-rotated-view) #modal[open][data-kind="settings"] {
+  :root:not(.is-rotated-view) #modal[open]:is([data-kind="settings"], [data-kind="table-design"]) {
     width: 100%;
     height: 100dvh;
     margin: 0;

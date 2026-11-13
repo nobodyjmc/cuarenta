@@ -29,6 +29,7 @@ const feltNames = {
   violeta: 'Violeta', cobre: 'Cobre', oliva: 'Oliva', carbon: 'Carbón',
 };
 const cityNames = Object.fromEntries(TABLE_CITIES.map(({ id, name }) => [id, name]));
+const cityDetails = Object.fromEntries(TABLE_CITIES.map(({ id, detail }) => [id, detail]));
 const landscapeGame = window.matchMedia('(orientation: landscape) and (max-width: 1199px) and (max-height: 850px), (orientation: landscape) and (max-width: 1400px) and (pointer: coarse)');
 const mobileView = window.matchMedia('(pointer: coarse), (max-width: 600px)');
 const systemReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -723,6 +724,7 @@ function setTableAppearance({ theme = prefs.feltTheme, city = prefs.tableCity })
     const artwork = tableArt(city);
     for (const svg of document.querySelectorAll('.table-city-art')) svg.outerHTML = artwork;
     for (const label of document.querySelectorAll('[data-table-city-name]')) label.textContent = cityNames[city];
+    for (const label of document.querySelectorAll('[data-table-city-detail]')) label.textContent = cityDetails[city];
   }
   prefs.feltTheme = theme;
   prefs.tableCity = city;
@@ -741,19 +743,33 @@ function showTableAppearance() {
   const colors = FELT_THEMES.map(theme =>
     `<button type="button" class="felt-option" data-action="felt-theme" data-felt="${theme}" aria-pressed="${theme === prefs.feltTheme}"><span class="felt-swatch" data-felt-option="${theme}" aria-hidden="true"></span><span>${feltNames[theme]}</span></button>`
   ).join('');
-  showModal('table-design', `${modalHeader('Diseño de mesa', 'PREFERENCIAS')}
-    <div class="felt-settings">
-      <div class="felt-preview">${tableArt(prefs.tableCity)}<span class="felt-preview-label" data-table-city-name>${cityNames[prefs.tableCity]}</span></div>
+  showModal('table-design', `${settingsHeader('Diseño de mesa')}
+    <div class="settings-content felt-settings">
+      <figure class="table-preview">
+        <div class="felt-preview">${tableArt(prefs.tableCity)}</div>
+        <figcaption><strong data-table-city-name>${cityNames[prefs.tableCity]}</strong><span data-table-city-detail>${cityDetails[prefs.tableCity]}</span></figcaption>
+      </figure>
       <p id="table-city-label" class="table-choice-label">Ciudad</p>
       <div class="city-options" role="group" aria-labelledby="table-city-label">${cities}</div>
       <p id="table-color-label" class="table-choice-label">Color</p>
       <div class="felt-options" role="group" aria-labelledby="table-color-label">${colors}</div>
     </div>
-    <button class="button primary full-width" data-action="close-modal">Volver a la mesa ${icon('arrow')}</button>`);
+    ${settingsFooter()}`);
   modal.scrollTop = 0;
-  const title = modal.querySelector('#modal-title');
-  title.tabIndex = -1;
-  title.focus({ preventScroll: true });
+  modal.querySelector('#modal-title').focus({ preventScroll: true });
+}
+
+function settingsHeader(title) {
+  return `<header class="settings-header">
+    <button type="button" class="icon-button" data-action="close-modal" aria-label="Cerrar ${title.toLowerCase()}">${icon('back')}</button>
+    <h2 id="modal-title" tabindex="-1">${title}</h2>
+  </header>`;
+}
+
+function settingsFooter() {
+  return `<footer class="settings-footer">
+    <button type="button" class="button primary settings-done" data-action="close-modal">Listo ${icon('check')}</button>
+  </footer>`;
 }
 
 function settingSwitch(label, input, description = '') {
@@ -800,10 +816,7 @@ function showSettings() {
   ).join('');
   const adjustment = prefs.feedbackChallenge > 0 ? 'Más difícil' : prefs.feedbackChallenge < 0 ? 'Más accesible' : 'Estándar';
   showModal('settings', `
-    <header class="settings-header">
-      <button type="button" class="icon-button" data-action="close-modal" aria-label="Cerrar preferencias">${icon('back')}</button>
-      <h2 id="modal-title" tabindex="-1">Preferencias</h2>
-    </header>
+    ${settingsHeader('Preferencias')}
     <div class="settings-content">
       <section class="settings-group" aria-labelledby="settings-table-title">
         <h3 id="settings-table-title">${icon('cards')} Mesa</h3>
@@ -826,9 +839,7 @@ function showSettings() {
         </div>
       </section>
     </div>
-    <footer class="settings-footer">
-      <button type="button" class="button primary settings-done" data-action="close-modal">Listo ${icon('check')}</button>
-    </footer>`);
+    ${settingsFooter()}`);
   modal.scrollTop = 0;
   modal.querySelector('#modal-title').focus({ preventScroll: true });
 }
