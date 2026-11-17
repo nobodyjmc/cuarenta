@@ -1,6 +1,6 @@
 {
   "name": "cuarenta-local",
-  "version": "0.16.1",
+  "version": "0.17.0",
   "private": true,
   "type": "module",
   "description": "Cuarenta ecuatoriano para jugar en un dispositivo, sin dependencias de instalacion.",
@@ -11,6 +11,7 @@
     "build": "node scripts/build-standalone.mjs",
     "prepare:pages": "node scripts/prepare-pages.mjs",
     "start": "node scripts/serve.mjs",
+    "start:private": "node scripts/serve.mjs --lan",
     "test": "node --test"
   }
 }

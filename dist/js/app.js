@@ -8,6 +8,7 @@ import { choosePracticeReply, createPracticeGame, practiceHint } from './practic
 import { MUSIC_TRACKS, TableMusic } from './music.js';
 import { TABLE_CITIES, tableArt } from './table-art.js';
 import { HOME_ART, HOME_ART_WIDTH, HOME_ART_HEIGHT } from './home-art.js';
+import { canUsePrivateTables, PrivateTableClient } from './private-client.js';
 
 const app = document.querySelector('#app');
 const modal = document.querySelector('#modal');
@@ -79,6 +80,14 @@ const beginnerGuide = {
 };
 let modalKind = null;
 let lastFocus = null;
+const privateTable = new PrivateTableClient({ onRoom: receivePrivateRoom, onConnection: updatePrivateConnection });
+const PRIVATE_RESTORE_KEY = 'cuarenta.private.open.v1';
+let privateAvailable = false;
+let privateOpen = false;
+let privateGame = false;
+let privateRoom = null;
+let privateConnection = 'disconnected';
+let privatePending = false;
 let audioContext = null;
 const tableMusic = new TableMusic({ audio: document.querySelector('#table-audio'), getContext: getAudioContext });
 let musicActivated = false;
@@ -112,7 +121,7 @@ const iconPaths = {
 };
 const icon = (name, className = '') => `<svg class="icon ${className}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name] || iconPaths.cards}</svg>`;
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-const getView = () => session.view(viewer);
+const getView = () => privateGame ? privateRoom?.view : session.view(viewer);
 
 function cardMarkup(card, { back = false, selected = false, highlight = false, interactive = false, last = false, coach = false, action = 'select-card' } = {}) {
   const tag = interactive ? 'button' : 'div';
@@ -148,6 +157,7 @@ function renderHome() {
       <button class="button primary start-button" type="button" data-action="quick-play"><span>Jugar contra ${esc(newGameOptions().names[1])}</span>${icon('arrow')}</button>
       <button class="button learn-entry" type="button" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button>
       <button class="button local-entry" type="button" data-action="local-game">${icon('people')}<span>Dos jugadores</span>${icon('arrow')}</button>
+      ${privateAvailable ? `<button class="button local-entry private-entry" type="button" data-action="private-table">${icon('shield')}<span>${privateTable.credential ? 'Volver a mi mesa privada' : 'Mesa privada'}</span>${icon('arrow')}</button>` : ''}
     </div>
   </section>`);
   app.querySelector('.home-cover-art').src = HOME_ART;
@@ -315,7 +325,8 @@ function renderGame(dealDelay) {
   if (!v) { screen = 'home'; renderHome(); return; }
   const me = v.players[viewer];
   const other = v.players[1 - viewer];
-  const myTurn = v.turn === viewer && v.status === 'playing' && !locked;
+  const myTurn = v.turn === viewer && v.status === 'playing' && !locked &&
+    (!privateGame || privateConnection === 'connected');
   const moves = myTurn ? legalMoves(v, viewer).filter(move => move.cardId === selectedId) : [];
   selectedMoveIndex = Math.min(selectedMoveIndex, Math.max(0, moves.length - 1));
   const chosen = moves[selectedMoveIndex];
@@ -325,7 +336,8 @@ function renderGame(dealDelay) {
   if (v.status === 'round-end') turn = 'Fin del ciclo';
   else if (v.status === 'finished') turn = 'Partida terminada';
   else if (locked) turn = 'Cambio de turno';
-  else if (!myTurn) turn = `${other.name} está pensando…`;
+  else if (privateGame && privateConnection !== 'connected') turn = 'Reconectando a la mesa…';
+  else if (!myTurn) turn = privateGame ? `Turno de ${other.name}` : `${other.name} está pensando…`;
 
   const ronda = locked ? null : v.rondas?.[viewer];
   const hasRonda = ronda && me.hand?.some(card => ronda.cardIds.includes(card.id));
@@ -497,11 +509,12 @@ function toggleMusic(enabled) {
 function cancelBot() { clearTimeout(botTimer); botTimer = null; }
 function scheduleBot(delay = 0) {
   cancelBot();
+  if (privateGame) return;
   const v = session.view(0);
   if (screen !== 'game' || document.hidden || modal.open || !v || v.mode !== 'solo' || v.turn !== 1 || v.status !== 'playing') return;
   const revision = v.revision;
   botTimer = setTimeout(() => {
-    if (session.revision !== revision || screen !== 'game' || document.hidden || modal.open) return;
+    if (privateGame || session.revision !== revision || screen !== 'game' || document.hidden || modal.open) return;
     try {
       const botView = session.view(1);
       const command = chooseBotMove(botView, {
@@ -609,6 +622,7 @@ function afterMove(move, actor) {
 }
 
 function startGame(options) {
+  stopPrivateTable();
   cancelBot(); closeModal(false);
   try {
     session.dispatch({ type: 'NEW_GAME', options });
@@ -650,6 +664,7 @@ function showModal(kind, content) {
 }
 
 function closeModal(resume = true) {
+  if (!privateGame && (modalKind === 'private-wait' || modalKind === 'private-setup')) stopPrivateTable();
   cancelPracticeReply();
   if (modal.open) modal.close();
   modalKind = null;
@@ -660,6 +675,202 @@ function closeModal(resume = true) {
 
 function modalHeader(title, eyebrow = 'EN TU MESA') {
   return `<div class="modal-top"><p class="eyebrow">${eyebrow}</p><button class="icon-button" data-action="close-modal" aria-label="Cerrar">${icon('close')}</button></div><h2 id="modal-title">${title}</h2>`;
+}
+
+function rememberOpenTable(code) {
+  try {
+    if (code) sessionStorage.setItem(PRIVATE_RESTORE_KEY, code);
+    else sessionStorage.removeItem(PRIVATE_RESTORE_KEY);
+  } catch { /* Storage is optional. */ }
+}
+
+function shouldRestoreTable() {
+  try {
+    return privateTable.credential && sessionStorage.getItem(PRIVATE_RESTORE_KEY) === privateTable.credential.code;
+  } catch { return false; }
+}
+
+function stopPrivateTable() {
+  if (!privateOpen) return;
+  privateOpen = false;
+  privateGame = false;
+  privateRoom = null;
+  rememberOpenTable('');
+  privateTable.disconnect();
+  const entry = app.querySelector('.private-entry span');
+  if (entry && privateTable.credential) entry.textContent = 'Volver a mi mesa privada';
+}
+
+function normalizePrivateCode(value) {
+  return String(value ?? '').trim().toUpperCase();
+}
+
+function showPrivateSetup(code = '', message = '') {
+  const invitation = /^[2-9A-HJ-NP-Z]{10}$/.test(code);
+  const create = `<button id="private-create" type="submit" class="button ${invitation ? 'outline' : 'primary'}">Crear mesa ${icon('cards')}</button>`;
+  const join = `<button id="private-join" type="submit" class="button ${invitation ? 'primary' : 'outline'}">Unirme ${icon('arrow')}</button>`;
+  privateOpen = true;
+  showModal('private-setup', `${modalHeader(invitation ? 'Únete a la mesa' : 'Mesa privada', 'DOS DISPOSITIVOS')}
+    <form id="private-setup" class="private-form">
+      <label for="private-name">Tu nombre</label>
+      <input id="private-name" name="name" maxlength="20" autocomplete="nickname" placeholder="Tu nombre" required>
+      <label for="private-code">Código de mesa</label>
+      <input id="private-code" name="code" maxlength="10" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Código de invitación" value="${esc(code)}">
+      <p class="private-message" role="status">${esc(message)}</p>
+      <div class="private-actions">${invitation ? join + create : create + join}</div>
+      ${privateTable.credential ? '<button type="button" class="button text-button full-width" data-action="private-resume">Volver a mi mesa</button>' : ''}
+    </form>`);
+  modal.querySelector('#private-name').value = draftNames.player;
+}
+
+async function openPrivateTable(code = '') {
+  if (!privateAvailable) return;
+  showPrivateSetup(code);
+  if (privateTable.credential && (!code || privateTable.credential.code === code)) {
+    await runPrivateSetup(() => privateTable.restore());
+  }
+}
+
+async function runPrivateSetup(operation) {
+  const form = modal.querySelector('#private-setup');
+  if (!form || form.inert) return;
+  const message = form.querySelector('.private-message');
+  form.inert = true;
+  message.textContent = 'Conectando…';
+  try {
+    await operation();
+  } catch (error) {
+    if (form.isConnected) message.textContent = error.message;
+  } finally {
+    form.inert = false;
+    if (form.isConnected && message.textContent === 'Conectando…') message.textContent = '';
+  }
+}
+
+function showPrivateWaiting(room) {
+  const invitation = new URL(location.pathname, location.origin);
+  invitation.searchParams.set('mesa', room.code);
+  const loopback = ['localhost', '127.0.0.1', '[::1]'].includes(invitation.hostname);
+  showModal('private-wait', `${modalHeader('Invita a la otra persona', 'MESA PRIVADA')}
+    <p class="modal-intro">${loopback ? 'Para jugar desde otro dispositivo, usa el enlace de red que muestra el servidor. Después podrás compartir el código de esta mesa.' : 'Comparte el enlace o el código de la mesa.'}</p>
+    <div class="private-invitation">
+      <strong id="private-room-code">${esc(room.code)}</strong>
+      <label for="private-invite">Enlace de invitación</label>
+      <input id="private-invite" type="url" value="${esc(invitation.href)}" readonly>
+      <div class="private-actions">
+        <button type="button" class="button primary" data-action="private-copy">Copiar enlace</button>
+        ${navigator.share ? '<button type="button" class="button outline" data-action="private-share">Compartir</button>' : ''}
+      </div>
+    </div>
+    <p class="private-message" role="status">${privateConnection === 'reconnecting' ? 'Reconectando a la mesa…' : 'Esperando a la otra persona…'}</p>`);
+}
+
+async function copyPrivateInvitation(share = false) {
+  const input = modal.querySelector('#private-invite');
+  const message = modal.querySelector('.private-message');
+  if (!input) return;
+  try {
+    if (share) {
+      await navigator.share({ title: 'El Cuarenta', text: 'Juega conmigo en mi mesa privada.', url: input.value });
+      return;
+    }
+    if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(input.value);
+    else {
+      input.select();
+      if (!document.execCommand('copy')) throw new Error('Copia manual');
+    }
+    if (message?.isConnected) message.textContent = 'Enlace copiado. La mesa sigue abierta.';
+  } catch (error) {
+    if (error.name === 'AbortError' || !input.isConnected) return;
+    input.focus();
+    input.select();
+    if (message?.isConnected) message.textContent = 'Mantén pulsado el enlace y selecciona Copiar.';
+  }
+}
+
+function receivePrivateRoom(room) {
+  if (!privateOpen || !room) return;
+  const prior = privateRoom;
+  privateRoom = room;
+  rememberOpenTable(room.code);
+  if (!room.view) {
+    if (modalKind !== 'private-wait') showPrivateWaiting(room);
+    return;
+  }
+  const entering = !privateGame || room.view.id !== prior?.view?.id;
+  if (entering) {
+    privateGame = true;
+    closeModal(false);
+    screen = 'game';
+    viewer = room.seat;
+    locked = false;
+    pendingPassMove = null;
+    selectedId = null;
+    selectedMoveIndex = 0;
+    const locationWithoutInvite = new URL(location.href);
+    locationWithoutInvite.searchParams.delete('mesa');
+    history.replaceState(history.state, '', locationWithoutInvite);
+    render();
+    focusGame();
+    startMusic();
+    presentGameStatus();
+    return;
+  }
+  if (room.view.revision === prior?.view?.revision) {
+    if (modalKind === 'result') showResult();
+    return;
+  }
+  if (modalKind === 'round' && room.view.status !== 'round-end') closeModal(false);
+  selectedId = null;
+  selectedMoveIndex = 0;
+  pendingCardArrival = room.view.lastPlay?.cardId !== prior?.view?.lastPlay?.cardId &&
+    room.view.table.some(card => card.id === room.view.lastPlay?.cardId);
+  announce(room.view.lastEvent?.text || 'La mesa se actualizó.');
+  render();
+  presentGameStatus();
+}
+
+function updatePrivateConnection(status, error) {
+  const previous = privateConnection;
+  privateConnection = status;
+  if (!privateOpen || previous === status) return;
+  if (status === 'expired') {
+    privateGame = false;
+    privateRoom = null;
+    rememberOpenTable('');
+    screen = 'home';
+    render();
+    showPrivateSetup('', error?.message || 'Esta mesa se cerró. Puedes crear otra.');
+  } else if (privateGame) {
+    render();
+  } else if (modalKind === 'private-wait') {
+    const message = modal.querySelector('.private-message');
+    if (message) message.textContent = status === 'connected' ? 'Esperando a la otra persona…' : 'Reconectando a la mesa…';
+  }
+}
+
+async function sendPrivateMove(button, command, fields = {}) {
+  const view = getView();
+  if (!privateGame || privateConnection !== 'connected' || privatePending || !view) return;
+  privatePending = true;
+  button.disabled = true;
+  try {
+    await privateTable[command]({ ...fields, gameId: view.id, expectedRevision: view.revision });
+  } catch (error) {
+    if (privateGame) toast(error.message);
+  } finally {
+    if (button.isConnected) button.disabled = false;
+    privatePending = false;
+  }
+}
+
+async function enablePrivateTables() {
+  privateAvailable = await canUsePrivateTables();
+  if (!privateAvailable || screen !== 'home') return;
+  render();
+  const params = new URLSearchParams(location.search);
+  const code = normalizePrivateCode(params.get('mesa'));
+  if (code || shouldRestoreTable()) void openPrivateTable(code);
 }
 
 function showSoloLevels() {
@@ -715,9 +926,9 @@ function showGameSummary() {
   const history = locked ? v.history.filter(event => event.kind !== 'ronda') : v.history;
   const level = v.mode === 'solo' ? ` · ${difficultyNames[v.difficulty || 'medium']}` : '';
   showModal('game-summary', `${modalHeader('Resumen de partida')}
-    <p class="modal-intro">Ciclo ${v.round} · Reparto ${v.deal}/4 · ${v.deckCount} por repartir${level}</p>
+    <p class="modal-intro">${privateGame ? `Mesa privada ${esc(privateRoom.code)} · ` : ''}Ciclo ${v.round} · Reparto ${v.deal}/4 · ${v.deckCount} por repartir${level}</p>
     ${gameSidebar(v, history)}
-    ${session.warning ? `<p class="modal-intro">${esc(session.warning)}</p>` : ''}`);
+    ${!privateGame && session.warning ? `<p class="modal-intro">${esc(session.warning)}</p>` : ''}`);
 }
 
 function showRules() {
@@ -1290,12 +1501,15 @@ function showRoundSummary() {
 function showResult() {
   const v = getView(); if (v.status !== 'finished') return;
   const feedback = shouldAskBotFeedback(v) ? `<section class="end-feedback" aria-label="Retroalimentación de la partida"><p class="eyebrow">CIERRE DE PARTIDA · EXPERTO</p><h3>¿Cómo estuvo el reto del Experto en esta partida?</h3><p class="modal-intro">Tu respuesta ajusta la dificultad de las próximas partidas en este navegador.</p><div class="feedback-options"><button class="button feedback-option" data-action="feedback-rating" data-rating="too-easy"><strong>Demasiado fácil</strong><small>Aumentar el reto</small></button><button class="button feedback-option" data-action="feedback-rating" data-rating="good"><strong>Buen reto</strong><small>Mantener el ajuste</small></button><button class="button feedback-option" data-action="feedback-rating" data-rating="too-hard"><strong>Demasiado difícil</strong><small>Hacerlo más accesible</small></button></div><button class="button text-button full-width" data-action="skip-feedback">Omitir valoración</button></section>` : '';
-  showModal('result', `${modalHeader('¡Chica ganada!', 'UNA BUENA PARTIDA')}<div class="winner-symbol">${icon('trophy')}</div><h3 class="winner-name">${esc(v.players[v.winner]?.name || 'La mesa')}</h3><p class="winner-subtitle">${esc(v.lastEvent?.text || 'Llegó el momento de volver a repartir.')}</p><div class="final-score">${v.players.map(p => `<div><strong>${p.score}</strong><span>${esc(p.name)}</span></div>`).join('<span class="score-divider">:</span>')}</div>${feedback}<button class="button primary full-width" data-action="rematch">Una revancha ${icon('cards')}</button><button class="button text-button full-width" data-action="home">Volver al inicio</button>`);
+  const waiting = privateGame && privateRoom.rematch[viewer];
+  const invited = privateGame && privateRoom.rematch[1 - viewer];
+  const rematchLabel = waiting ? 'Esperando la respuesta…' : invited ? 'Aceptar revancha' : privateGame ? 'Pedir revancha' : 'Una revancha';
+  showModal('result', `${modalHeader('¡Chica ganada!', privateGame ? 'MESA PRIVADA' : 'UNA BUENA PARTIDA')}<div class="winner-symbol">${icon('trophy')}</div><h3 class="winner-name">${esc(v.players[v.winner]?.name || 'La mesa')}</h3><p class="winner-subtitle">${esc(v.lastEvent?.text || 'Llegó el momento de volver a repartir.')}</p><div class="final-score">${v.players.map(p => `<div><strong>${p.score}</strong><span>${esc(p.name)}</span></div>`).join('<span class="score-divider">:</span>')}</div>${feedback}<button class="button primary full-width" data-action="rematch" ${waiting ? 'disabled' : ''}>${rematchLabel} ${icon('cards')}</button><button class="button text-button full-width" data-action="home">Volver al inicio</button>`);
 }
 
 function handleAction(target) {
   const action = target.dataset.action;
-  if (action === 'home') { cancelBot(); closeModal(false); screen = 'home'; selectedId = null; pendingPassMove = null; render(); }
+  if (action === 'home') { stopPrivateTable(); cancelBot(); closeModal(false); screen = 'home'; selectedId = null; pendingPassMove = null; render(); }
   else if (action === 'quick-play') showSoloLevels();
   else if (action === 'start-solo' && Object.hasOwn(difficultyNames, target.dataset.difficulty)) {
     difficulty = target.dataset.difficulty;
@@ -1303,6 +1517,9 @@ function handleAction(target) {
     requestNewGame(newGameOptions());
   }
   else if (action === 'local-game') showSetupOptions('pass');
+  else if (action === 'private-table') void openPrivateTable();
+  else if (action === 'private-resume') void runPrivateSetup(() => privateTable.restore());
+  else if (action === 'private-copy' || action === 'private-share') void copyPrivateInvitation(action === 'private-share');
   else if (action === 'start-local') requestNewGame(newGameOptions('pass'));
   else if (action === 'combo') {
     comboPoints = Number(target.dataset.points);
@@ -1313,6 +1530,7 @@ function handleAction(target) {
     }
   }
   else if (action === 'resume') {
+    stopPrivateTable();
     screen = 'game';
     viewer = 0;
     locked = session.view(0).mode === 'pass';
@@ -1351,10 +1569,18 @@ function handleAction(target) {
   else if (action === 'play') {
     const v = getView(); const move = legalMoves(v, viewer).filter(m => m.cardId === selectedId)[selectedMoveIndex];
     if (!move || locked) return;
+    if (privateGame) {
+      void sendPrivateMove(target, 'play', { cardId: move.cardId, captureIds: move.captureIds });
+      return;
+    }
     try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(move, viewer); }
     catch (error) { toast(error.message); selectedId = null; render(); }
   }
-  else if (action === 'next-round') { closeModal(false); try { const next = session.dispatch({ type: 'NEXT_ROUND' }); locked = next.mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); } }
+  else if (action === 'next-round') {
+    if (privateGame) { void sendPrivateMove(target, 'nextRound'); return; }
+    closeModal(false);
+    try { const next = session.dispatch({ type: 'NEXT_ROUND' }); locked = next.mode === 'pass'; selectedId = null; render(); presentGameStatus(); } catch (error) { toast(error.message); }
+  }
   else if (action === 'rules') showRules();
   else if (action === 'setup-options') showSetupOptions();
   else if (action === 'game-summary') showGameSummary();
@@ -1415,7 +1641,11 @@ function handleAction(target) {
   else if (action === 'new') showModal('new', `${modalHeader('¿Volvemos a repartir?')}<p class="modal-intro">Volverás a elegir el modo de juego. Tu partida actual seguirá guardada hasta que inicies otra.</p><button class="button primary full-width" data-action="home">Ir al inicio ${icon('arrow')}</button><button class="button text-button full-width" data-action="close-modal">Seguir esta partida</button>`);
   else if (action === 'round-summary') showRoundSummary();
   else if (action === 'result') showResult();
-  else if (action === 'rematch') { const v = getView(); startGame({ mode: v.mode, names: v.players.map(p => p.name), comboPoints: v.rules.comboPoints, difficulty: v.difficulty || 'medium' }); }
+  else if (action === 'rematch') {
+    if (privateGame) { void sendPrivateMove(target, 'rematch'); return; }
+    const v = getView();
+    startGame({ mode: v.mode, names: v.players.map(p => p.name), comboPoints: v.rules.comboPoints, difficulty: v.difficulty || 'medium' });
+  }
 }
 
 document.addEventListener('click', event => {
@@ -1424,6 +1654,32 @@ document.addEventListener('click', event => {
   // Another game interaction can recover playback after the browser pauses audio.
   if (event.isTrusted && screen === 'game' && !musicIsActive() &&
       !event.target.closest('label:has(#music-enabled), #music-track')) startMusic();
+});
+document.addEventListener('submit', event => {
+  if (event.target.id !== 'private-setup') return;
+  event.preventDefault();
+  const form = event.target;
+  const name = form.elements.name.value.trim();
+  const code = normalizePrivateCode(form.elements.code.value);
+  const message = form.querySelector('.private-message');
+  if (!name) {
+    message.textContent = 'Escribe tu nombre.';
+    form.elements.name.focus();
+    return;
+  }
+  const join = event.submitter?.id === 'private-join' || (!event.submitter && Boolean(code));
+  if (join && !/^[2-9A-HJ-NP-Z]{10}$/.test(code)) {
+    message.textContent = 'Ingresa el código de 10 caracteres de la invitación.';
+    form.elements.code.focus();
+    return;
+  }
+  void runPrivateSetup(() => join ? privateTable.join(code, { name }) : privateTable.create({ name, comboPoints }));
+});
+document.addEventListener('keydown', event => {
+  if (event.key === 'Enter' && !event.isComposing && event.target.matches('#private-code')) {
+    event.preventDefault();
+    event.target.form.requestSubmit(modal.querySelector('#private-join'));
+  }
 });
 document.addEventListener('input', event => {
   if (event.target.id === 'player-name' || event.target.id === 'opponent-name') {
@@ -1488,4 +1744,5 @@ window.addEventListener('pageshow', event => {
   if (event.persisted) { schedulePracticeReply(); resumeMusic(); }
 });
 render();
+void enablePrivateTables();
 if (session.warning) toast(session.warning);

@@ -4878,6 +4878,58 @@ svg.aside-panel-icon {
 .is-rotated-view #modal .settings-header { padding-block: 2px; }
 .is-rotated-view #modal .settings-footer { padding-block: 4px; }
 
+.quick-home .home-actions .private-entry { border-color: #59452a; }
+
+#modal :is(.private-form, .private-invitation) {
+  display: grid;
+  gap: 8px;
+  margin-block-start: 12px;
+}
+
+#modal :is(.private-form, .private-invitation) label {
+  margin-block-start: 4px;
+  color: var(--card-ivory);
+  font-size: 14px;
+}
+
+#modal :is(.private-form, .private-invitation) input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #59452a;
+  border-radius: 9px;
+  padding: 8px 11px;
+  background: #18130d;
+  color: var(--card-ivory);
+  font: 500 16px/1.2 var(--sans);
+}
+
+#modal .private-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-block: 4px;
+}
+
+#modal .private-actions .button {
+  justify-content: center;
+  min-height: 44px;
+  padding-inline: 6px;
+}
+
+#modal .private-actions:has(> :only-child) { grid-template-columns: 1fr; }
+#modal .private-message { color: var(--card-gold); font-size: 14px; }
+#modal .private-message:empty { display: none; }
+#private-code { text-transform: uppercase; }
+#private-room-code {
+  width: fit-content;
+  border: 1px solid #59452a;
+  border-radius: 9px;
+  padding: 8px 12px;
+  color: var(--card-gold);
+  font: 700 clamp(19px, 6vw, 27px)/1.18 ui-monospace, monospace;
+  letter-spacing: .085em;
+}
+
 /* The guided match shares the game cards and the selected city felt. */
 #modal[data-kind="practice"] {
   --practice-height: 100dvh;

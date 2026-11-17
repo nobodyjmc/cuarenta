@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.16.1
+# Cuarenta · Versión 0.17.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -18,7 +18,16 @@ Para informar un error, abre **Issues → Bug report** en el repositorio e inclu
 
 ### Privacidad y límites de esta prueba
 
-Las partidas, las preferencias y las valoraciones del bot se guardan únicamente en el almacenamiento local de cada navegador. El juego no tiene cuentas, servidor de partidas, analítica ni telemetría; por eso las valoraciones no llegan automáticamente al equipo del proyecto. No hay multijugador en línea todavía. Esta entrega es un prototipo de prueba, no una aplicación publicada en App Store o Play Store.
+Las partidas locales, las preferencias y las valoraciones del bot se guardan en cada navegador. Las valoraciones ajustan el nivel Experto en ese navegador. La edición de GitHub Pages ofrece las modalidades locales. La beta **Mesa privada** está disponible en la edición servida por Node.js.
+
+### Probar Mesa privada con dos dispositivos
+
+1. En este directorio, ejecuta `npm run start:private`. Deja abierta la terminal durante la prueba.
+2. Conecta ambos dispositivos a la misma red y abre en los dos la dirección **En la misma red** que imprime la terminal. Usa la dirección de la red de tu PC también en el primer dispositivo, así el enlace generado será accesible para el segundo.
+3. Uno elige **Mesa privada → Crear mesa**, escribe su nombre y comparte el enlace. El otro abre el enlace, escribe su nombre y toca **Unirme**. El código también sirve si los dos abren la misma dirección.
+4. Cada persona juega desde su pantalla con su propia mano. Si se corta la conexión, el juego vuelve a consultar la mesa. También puedes recargar la misma pestaña para recuperar tu asiento mientras la sala siga abierta.
+
+El servidor valida cada jugada y conserva las salas en memoria. Las salas en espera caducan a los 30 minutos. Una sala con partida caduca a las dos horas sin jugadas o a las doce horas de creada. Reiniciar el servidor cierra sus salas. Para una prueba por internet, aloja esta edición en un servicio Node.js con HTTPS y una sola instancia. Ejecuta `npm run start:private`; el servidor usa el puerto que el alojamiento indique en `PORT`.
 
 Las compilaciones de Pages y las pruebas se describen en [VALIDACION.md](VALIDACION.md); la arquitectura y el uso local se explican en el resto de este README.
 

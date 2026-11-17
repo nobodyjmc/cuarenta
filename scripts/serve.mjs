@@ -1,10 +1,12 @@
 import { createServer as createHttpServer } from 'node:http';
 import { readFile, realpath, stat } from 'node:fs/promises';
+import { networkInterfaces } from 'node:os';
 import { dirname, extname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createPrivateRooms } from './private-rooms.mjs';
 
 export const APP_ID = 'cuarenta-local';
-export const APP_VERSION = '0.16.1';
+export const APP_VERSION = '0.17.0';
 export const DEFAULT_PORT = 4173;
 const DEFAULT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const MIME_TYPES = {
@@ -45,12 +47,8 @@ function send(request, response, status, body, contentType = 'application/json; 
 /** Creates an unbound server. Only the contents of staticRoot can be served. */
 export function createServer({ staticRoot = DEFAULT_ROOT } = {}) {
   const root = resolve(staticRoot);
+  const privateRooms = createPrivateRooms();
   return createHttpServer(async (request, response) => {
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      send(request, response, 405, JSON.stringify({ error: 'Metodo no permitido.' }), undefined, { Allow: 'GET, HEAD' });
-      return;
-    }
-
     // Inspect the original path before URL normalization can remove ../ segments.
     // Asset names are plain paths; encoded paths are deliberately unsupported.
     const requestPath = (request.url ?? '').split('?')[0];
@@ -59,6 +57,22 @@ export function createServer({ staticRoot = DEFAULT_ROOT } = {}) {
         /[%\\#\u0000-\u001f\u007f]/u.test(requestPath) ||
         segments.some((segment) => segment.startsWith('.'))) {
       send(request, response, 400, JSON.stringify({ error: 'Ruta no valida.' }));
+      return;
+    }
+
+    if (requestPath.startsWith('/api/private/')) {
+      try {
+        if (await privateRooms(request, response, requestPath)) return;
+      } catch {
+        if (!response.headersSent) {
+          send(request, response, 500, JSON.stringify({ error: 'No se pudo procesar la solicitud.', code: 'INTERNAL' }));
+        } else response.destroy();
+        return;
+      }
+    }
+
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      send(request, response, 405, JSON.stringify({ error: 'Metodo no permitido.' }), undefined, { Allow: 'GET, HEAD' });
       return;
     }
 
@@ -97,13 +111,13 @@ export function createServer({ staticRoot = DEFAULT_ROOT } = {}) {
   });
 }
 
-/** Binds exclusively to this device; port 0 is useful for isolated tests. */
-export async function startServer({ port = DEFAULT_PORT, staticRoot = DEFAULT_ROOT } = {}) {
+/** Binds to loopback unless LAN or hosting access was explicitly requested. */
+export async function startServer({ port = DEFAULT_PORT, staticRoot = DEFAULT_ROOT, lan = false } = {}) {
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('El puerto debe ser un entero entre 0 y 65535.');
   const server = createServer({ staticRoot });
   await new Promise((accept, reject) => {
     server.once('error', reject);
-    server.listen(port, '127.0.0.1', () => {
+    server.listen(port, lan ? '0.0.0.0' : '127.0.0.1', () => {
       server.off('error', reject);
       accept();
     });
@@ -126,10 +140,19 @@ export function parsePortArguments(args) {
 const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMain) {
   try {
-    const port = parsePortArguments(process.argv.slice(2));
-    const { server, url } = await startServer({ port });
+    const args = process.argv.slice(2);
+    const lan = args.includes('--lan');
+    const portArgs = args.filter(arg => arg !== '--lan');
+    const port = parsePortArguments(lan && !portArgs.length && process.env.PORT
+      ? ['--port', process.env.PORT] : portArgs);
+    const { server, url } = await startServer({ port, lan });
     console.log(`Cuarenta Local: ${url}`);
-    console.log('Disponible solo en este dispositivo. Ctrl+C para cerrar.');
+    if (lan) {
+      const addresses = Object.values(networkInterfaces()).flat()
+        .filter(address => address.family === 'IPv4' && !address.internal);
+      for (const address of addresses) console.log(`En la misma red: http://${address.address}:${server.address().port}/`);
+    }
+    console.log(lan ? 'Abre el mismo enlace de red en ambos equipos. Ctrl+C para cerrar.' : 'Disponible solo en este dispositivo. Ctrl+C para cerrar.');
     const stop = () => server.close(() => process.exit(0));
     process.once('SIGINT', stop);
     process.once('SIGTERM', stop);
