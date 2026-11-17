@@ -17,22 +17,22 @@ function defaultStorage() {
   try { return globalThis.sessionStorage; } catch { return null; }
 }
 
-function storedSeat(storage) {
+function storedSeat(storage, key) {
   try {
-    const seat = JSON.parse(storage?.getItem(CREDENTIAL_KEY) ?? 'null');
+    const seat = JSON.parse(storage?.getItem(key) ?? 'null');
     if (ROOM_CODE.test(seat?.code) && TOKEN.test(seat?.token)) return seat;
   } catch { /* Storage may be unavailable in private browsing. */ }
   return null;
 }
 
-async function request(fetcher, timeout, path, { token, body } = {}) {
+async function request(fetcher, timeout, url, { token, body } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   const headers = { Accept: 'application/json' };
   if (token) headers.Authorization = 'Bearer ' + token;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   try {
-    const response = await fetcher(ROOT + path, {
+    const response = await fetcher(url, {
       method: body === undefined ? 'GET' : 'POST',
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -72,8 +72,10 @@ function readRoom(data, code) {
 }
 
 export class PrivateTableClient {
+  #apiRoot;
   #fetcher;
   #storage;
+  #credentialKey;
   #onRoom;
   #onConnection;
   #pollInterval;
@@ -87,6 +89,7 @@ export class PrivateTableClient {
   #command;
 
   constructor({
+    apiOrigin = '',
     onRoom = () => {},
     onConnection = () => {},
     storage = defaultStorage(),
@@ -94,13 +97,21 @@ export class PrivateTableClient {
     pollInterval = 850,
     timeout = 6000,
   } = {}) {
+    if (apiOrigin !== '') {
+      const endpoint = new URL(apiOrigin);
+      if (endpoint.protocol !== 'https:' || endpoint.origin !== apiOrigin) {
+        throw new TypeError('El servidor de mesas debe ser un origen HTTPS.');
+      }
+    }
+    this.#apiRoot = apiOrigin + ROOT;
+    this.#credentialKey = apiOrigin ? CREDENTIAL_KEY + ':' + apiOrigin : CREDENTIAL_KEY;
     this.#onRoom = onRoom;
     this.#onConnection = onConnection;
     this.#storage = storage;
     this.#fetcher = fetcher;
     this.#pollInterval = pollInterval;
     this.#timeout = timeout;
-    this.#credential = storedSeat(storage);
+    this.#credential = storedSeat(storage, this.#credentialKey);
   }
 
   get room() { return this.#room; }
@@ -170,8 +181,8 @@ export class PrivateTableClient {
   #saveSeat(credential) {
     this.#credential = credential;
     try {
-      if (credential) this.#storage?.setItem(CREDENTIAL_KEY, JSON.stringify(credential));
-      else this.#storage?.removeItem(CREDENTIAL_KEY);
+      if (credential) this.#storage?.setItem(this.#credentialKey, JSON.stringify(credential));
+      else this.#storage?.removeItem(this.#credentialKey);
     } catch { /* The in-memory seat still works during this visit. */ }
   }
 
@@ -207,7 +218,7 @@ export class PrivateTableClient {
     const generation = this.#resetPolling();
     this.#setConnection('connecting');
     try {
-      const data = await request(this.#fetcher, this.#timeout, path, { body });
+      const data = await request(this.#fetcher, this.#timeout, this.#apiRoot + path, { body });
       if (generation !== this.#generation) return null;
       const room = readRoom(data, code);
       if (!TOKEN.test(data.token)) throw new PrivateTableError('No se pudo guardar el acceso a la mesa.');
@@ -229,7 +240,7 @@ export class PrivateTableClient {
 
   async #read(generation, notify = false) {
     const { code, token } = this.#credential;
-    const data = await request(this.#fetcher, this.#timeout, '/rooms/' + code, { token });
+    const data = await request(this.#fetcher, this.#timeout, this.#apiRoot + '/rooms/' + code, { token });
     if (generation !== this.#generation) return null;
     return this.#receive(readRoom(data, code), notify);
   }
@@ -271,7 +282,7 @@ export class PrivateTableClient {
     this.#active = true;
     const { code, token } = this.#credential;
     try {
-      const data = await request(this.#fetcher, this.#timeout, '/rooms/' + code + '/' + action, { token, body });
+      const data = await request(this.#fetcher, this.#timeout, this.#apiRoot + '/rooms/' + code + '/' + action, { token, body });
       if (generation !== this.#generation) return null;
       return this.#receive(readRoom(data, code));
     } catch (error) {

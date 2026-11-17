@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { Readable } from 'node:stream';
 import { legalMoves } from '../dist/js/engine.js';
 import { createPrivateRooms } from '../scripts/private-rooms.mjs';
+import { startPrivateApiServer } from '../scripts/serve-private-api.mjs';
 
 const root = '/api/private';
 const collection = root + '/rooms';
@@ -22,7 +23,7 @@ function fixture(options) {
     };
     const response = {
       writeHead(status, headers) { Object.assign(this, { status, headers }); },
-      end(data) { this.body = JSON.parse(data); },
+      end(data) { if (data) this.body = JSON.parse(data); },
     };
     const handled = await handle(stream, response);
     return { handled, status: response.status, headers: response.headers, data: response.body };
@@ -226,4 +227,73 @@ test('caps waiting rooms and polling does not prevent room expiry', async () => 
   assert.equal((await api(second.path, { token: second.host.data.token })).status, 200);
   now = 30;
   assert.equal((await api(second.path, { token: second.guest.data.token })).status, 404);
+});
+
+test('public API accepts only the exact Pages origin and returns CORS on successes and errors', async () => {
+  const api = fixture({ publicBeta: true });
+  const origin = 'https://nobodyjmc.github.io';
+  const headers = { origin, 'sec-fetch-site': 'cross-site' };
+  const statusPath = root + '/status';
+  assert.deepEqual((await api(statusPath)).data, { available: true });
+  assert.equal((await api(statusPath)).headers['Access-Control-Allow-Origin'], undefined);
+  for (const denied of ['https://other.github.io', origin + '.other.test', origin + '/cuarenta/', 'null']) {
+    const response = await api(collection, { method: 'POST', body: {}, headers: { origin: denied } });
+    assert.equal(response.status, 403);
+    assert.equal(response.headers['Access-Control-Allow-Origin'], undefined);
+  }
+  assert.equal((await post(api, collection, {})).status, 403);
+  const created = await api(collection, { method: 'POST', body: { name: 'Ana' }, headers });
+  assert.equal(created.status, 201);
+  assert.equal(created.headers['Access-Control-Allow-Origin'], origin);
+  assert.equal(created.headers['Access-Control-Allow-Credentials'], undefined);
+  const path = roomPath(created.data.room.code);
+  const guest = await api(path + '/join', { method: 'POST', body: { name: 'Joel' }, headers });
+  assert.equal(guest.status, 201);
+  assert.equal(guest.data.room.view.players[0].hand, null);
+  const unauthorized = await api(path, { headers });
+  assert.equal(unauthorized.status, 401);
+  assert.equal(unauthorized.headers['Access-Control-Allow-Origin'], origin);
+  const host = await api(path, { headers, token: created.data.token });
+  assert.equal(host.status, 200);
+  assert.equal(host.data.room.view.players[1].hand, null);
+});
+
+test('public API permits the route preflight methods and only the required request headers', async () => {
+  const api = fixture({ publicBeta: true });
+  const origin = 'https://nobodyjmc.github.io';
+  for (const [path, method] of [[collection, 'POST'], [roomPath('ABCDEFGHJK'), 'GET']]) {
+    const headers = {
+      origin,
+      'access-control-request-method': method,
+      'access-control-request-headers': 'authorization, Content-Type',
+    };
+    const preflight = await api(path, { method: 'OPTIONS', headers });
+    assert.equal(preflight.status, 204);
+    assert.equal(preflight.headers['Access-Control-Allow-Origin'], origin);
+    assert.equal(preflight.headers['Access-Control-Allow-Methods'], method);
+    assert.equal(preflight.headers['Access-Control-Allow-Headers'], 'Authorization, Content-Type');
+    assert.equal(preflight.headers['Access-Control-Allow-Credentials'], undefined);
+    assert.equal(preflight.data, undefined);
+    const wrongMethod = await api(path, { method: 'OPTIONS', headers: { ...headers, 'access-control-request-method': 'DELETE' } });
+    assert.equal(wrongMethod.status, 400);
+    const wrongHeader = await api(path, { method: 'OPTIONS', headers: { ...headers, 'access-control-request-headers': 'authorization, x-custom' } });
+    assert.equal(wrongHeader.status, 400);
+    const denied = await api(path, { method: 'OPTIONS', headers: { ...headers, origin: 'https://other.github.io' } });
+    assert.equal(denied.status, 403);
+  }
+});
+
+test('dedicated public server binds to loopback and exposes API routes only', async (t) => {
+  const server = await startPrivateApiServer({ port: 0 });
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  assert.equal(server.address().address, '127.0.0.1');
+  const url = 'http://127.0.0.1:' + server.address().port;
+  const status = await fetch(url + root + '/status');
+  assert.equal(status.status, 200);
+  assert.deepEqual(await status.json(), { available: true });
+  for (const path of ['/', '/index.html', '/assets/icon.svg', '/scripts/serve-private-api.mjs', '/api/private/unrelated']) {
+    const response = await fetch(url + path);
+    assert.equal(response.status, 404, path);
+    assert.equal((await response.json()).code, 'ROUTE_NOT_FOUND');
+  }
 });

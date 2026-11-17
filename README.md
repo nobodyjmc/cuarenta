@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.17.1
+# Cuarenta · Versión 0.18.0
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -18,7 +18,13 @@ Para informar un error, abre **Issues → Bug report** en el repositorio e inclu
 
 ### Privacidad y límites de esta prueba
 
-Las partidas locales, las preferencias y las valoraciones del bot se guardan en cada navegador. Las valoraciones ajustan el nivel Experto en ese navegador. La edición de GitHub Pages ofrece las modalidades locales. La beta **Mesa privada** está disponible en la edición servida por Node.js.
+Las partidas locales, las preferencias y las valoraciones del bot se guardan en cada navegador. Las valoraciones ajustan el nivel Experto en ese navegador. Los jugadores también pueden crear una **Mesa privada** desde GitHub Pages y compartir un enlace del mismo sitio. Esta beta usa un servidor Node.js aparte.
+
+### Mesa privada desde GitHub Pages
+
+Abre [El Cuarenta](https://nobodyjmc.github.io/cuarenta/) y elige **Mesa privada → Crear mesa**. Envía el enlace de invitación a la otra persona. Cada dispositivo recibe solo su propia mano y puede retomar el asiento desde la misma pestaña.
+
+El flujo de Pages lee `CUARENTA_PRIVATE_ORIGIN` para incluir el origen HTTPS de la API. La beta inicial usa un túnel temporal de Cloudflare hacia `npm run start:private-api`. Para moverla a un servidor Node.js permanente, ejecuta ese mismo comando en una sola instancia, con `HOST=0.0.0.0` y el puerto `PORT` del proveedor. Configura el origen HTTPS en la variable `CUARENTA_PRIVATE_ORIGIN` del repositorio y vuelve a desplegar Pages. La API autoriza el origen de GitHub Pages y el token propio de cada asiento.
 
 ### Probar Mesa privada con dos dispositivos
 

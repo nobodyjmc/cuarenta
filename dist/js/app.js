@@ -80,9 +80,18 @@ const beginnerGuide = {
 };
 let modalKind = null;
 let lastFocus = null;
-const privateTable = new PrivateTableClient({ onRoom: receivePrivateRoom, onConnection: updatePrivateConnection });
-const PRIVATE_RESTORE_KEY = 'cuarenta.private.open.v1';
-const privateAvailable = document.querySelector('meta[name="cuarenta-private"]')?.content === '1';
+const LOCAL_PRIVATE_TABLES = document.querySelector('meta[name="cuarenta-private"]')?.content === '1';
+const PAGES_ORIGIN = 'https://nobodyjmc.github.io';
+const privateApiOrigin = !LOCAL_PRIVATE_TABLES && location.origin === PAGES_ORIGIN
+  ? document.querySelector('meta[name="cuarenta-private-api"]')?.content || ''
+  : '';
+const privateTable = new PrivateTableClient({
+  apiOrigin: privateApiOrigin,
+  onRoom: receivePrivateRoom,
+  onConnection: updatePrivateConnection,
+});
+const PRIVATE_RESTORE_KEY = privateApiOrigin ? 'cuarenta.private.open.v1:' + privateApiOrigin : 'cuarenta.private.open.v1';
+const privateAvailable = LOCAL_PRIVATE_TABLES || Boolean(privateApiOrigin);
 let privateOpen = false;
 let privateGame = false;
 let privateRoom = null;

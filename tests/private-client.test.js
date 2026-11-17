@@ -137,3 +137,53 @@ test('background reads resume after a temporary connection failure', async (t) =
   assert.equal(reads, completed);
   assert.deepEqual(history, ['connecting', 'connected', 'reconnecting', 'connected', 'disconnected']);
 });
+
+test('a remote HTTPS backend receives only its own credential on reads and writes', async (t) => {
+  const apiOrigin = 'https://mesas.example.org';
+  const storage = seatStorage();
+  const fetcher = async (url, request) => {
+    assert.equal(request.credentials, 'omit');
+    assert.equal(request.redirect, 'error');
+    if (url === path + '/join' || url === apiOrigin + path + '/join') {
+      assert.equal(request.headers.Authorization, undefined);
+      const seatToken = url.startsWith(apiOrigin) ? 'r'.repeat(43) : token;
+      return Response.json({ room: makeRoom(), token: seatToken }, { status: 201 });
+    }
+    assert.ok([apiOrigin + path, apiOrigin + path + '/play'].includes(url));
+    assert.equal(request.headers.Authorization, 'Bearer ' + 'r'.repeat(43));
+    return reply(makeRoom(request.method === 'POST' ? 3 : 2));
+  };
+
+  const local = new PrivateTableClient({ fetcher, storage });
+  t.after(() => local.disconnect());
+  await local.join(code, joinOptions);
+  local.disconnect();
+
+  const remote = new PrivateTableClient({ apiOrigin, fetcher, storage });
+  t.after(() => remote.disconnect());
+  assert.equal(await remote.restore(), null);
+  await remote.join(code, joinOptions);
+  remote.disconnect();
+
+  const reloaded = new PrivateTableClient({ apiOrigin, fetcher, storage });
+  t.after(() => reloaded.disconnect());
+  assert.equal((await reloaded.restore()).version, 2);
+  assert.equal((await reloaded.play(move)).version, 3);
+  reloaded.forget();
+  assert.equal(new PrivateTableClient({ fetcher, storage }).credential.token, token);
+  assert.equal(new PrivateTableClient({ apiOrigin: 'https://otras-mesas.example.org', fetcher, storage }).credential, null);
+});
+
+test('explicit API configuration accepts only a canonical HTTPS origin', () => {
+  for (const apiOrigin of [
+    '//mesas.example.org',
+    'http://mesas.example.org',
+    'https://usuario:clave@mesas.example.org',
+    'https://mesas.example.org/',
+    'https://mesas.example.org/api',
+    'https://mesas.example.org?redirect=1',
+    'https://mesas.example.org#redirect',
+  ]) {
+    assert.throws(() => new PrivateTableClient({ apiOrigin }), TypeError, apiOrigin);
+  }
+});

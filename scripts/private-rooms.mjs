@@ -8,6 +8,8 @@ const TOKEN = /^Bearer ([\w-]{43})$/i;
 const CARD_ID = /^(?:hearts|diamonds|clubs|spades)-(?:[A2-7JQK])$/;
 const MAX_BODY = 1024;
 const MINUTE = 60_000;
+const PUBLIC_ORIGIN = 'https://nobodyjmc.github.io';
+const PUBLIC_REQUEST_HEADERS = new Set(['authorization', 'content-type']);
 
 class RoomError extends Error {
   constructor(status, code, message) {
@@ -28,6 +30,11 @@ function send(response, status, payload, headers = {}) {
     ...headers,
   });
   response.end(body);
+}
+
+function allowsPublicHeaders(request) {
+  const requested = request.headers['access-control-request-headers'];
+  return !requested || requested.split(',').every((header) => PUBLIC_REQUEST_HEADERS.has(header.trim().toLowerCase()));
 }
 
 function rejectBody(request, error) {
@@ -127,6 +134,7 @@ export function createPrivateRooms({
   waitMs = 30 * MINUTE,
   idleMs = 120 * MINUTE,
   maxAgeMs = 720 * MINUTE,
+  publicBeta = false,
 } = {}) {
   const rooms = new Map();
 
@@ -211,20 +219,44 @@ export function createPrivateRooms({
     const isCreate = requestPath === API + 'rooms';
     const route = ROOM_PATH.exec(requestPath);
     const action = route?.[2]?.toLowerCase();
+    const allowedOrigin = publicBeta && request.headers.origin === PUBLIC_ORIGIN;
+    const cors = publicBeta ? {
+      Vary: 'Origin',
+      ...(allowedOrigin && { 'Access-Control-Allow-Origin': PUBLIC_ORIGIN }),
+    } : {};
+    const reply = (status, payload, headers) => send(response, status, payload, { ...cors, ...headers });
     try {
       if (!isStatus && !isCreate && !route) {
         throw new RoomError(404, 'ROUTE_NOT_FOUND', 'Acción de mesa desconocida.');
       }
       const expectedMethod = isCreate || action ? 'POST' : 'GET';
+      if (publicBeta && !allowedOrigin && !(isStatus && request.method === 'GET' && !request.headers.origin)) {
+        throw new RoomError(403, 'CROSS_SITE', 'Abre el juego desde la página oficial de Cuarenta.');
+      }
+      if (allowedOrigin && request.method === 'OPTIONS') {
+        if (request.headers['access-control-request-method'] !== expectedMethod || !allowsPublicHeaders(request)) {
+          throw new RoomError(400, 'INVALID_PREFLIGHT', 'Método o encabezados de solicitud no permitidos.');
+        }
+        response.writeHead(204, {
+          ...cors,
+          Vary: 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers',
+          'Access-Control-Allow-Methods': expectedMethod,
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+          'Access-Control-Max-Age': '300',
+          'Cache-Control': 'no-store',
+        });
+        response.end();
+        return true;
+      }
       if (request.method !== expectedMethod) {
-        send(response, 405, { code: 'METHOD_NOT_ALLOWED', error: 'Método no permitido.' }, { Allow: expectedMethod });
-      } else if (request.headers['sec-fetch-site'] === 'cross-site') {
+        reply(405, { code: 'METHOD_NOT_ALLOWED', error: 'Método no permitido.' }, { Allow: expectedMethod });
+      } else if (!allowedOrigin && request.headers['sec-fetch-site'] === 'cross-site') {
         throw new RoomError(403, 'CROSS_SITE', 'Abre el juego en la misma dirección que la mesa.');
-      } else if (isStatus) send(response, 200, { available: true });
-      else if (isCreate) send(response, 201, createRoom(await readJson(request)));
+      } else if (isStatus) reply(200, { available: true });
+      else if (isCreate) reply(201, createRoom(await readJson(request)));
       else if (action === 'join') {
         const body = await readJson(request);
-        send(response, 201, joinRoom(roomByCode(route[1].toUpperCase()), body));
+        reply(201, joinRoom(roomByCode(route[1].toUpperCase()), body));
       } else {
         const room = roomByCode(route[1].toUpperCase());
         const seat = actorSeat(request, room);
@@ -235,12 +267,12 @@ export function createPrivateRooms({
           }
           resumePlay(room, seat, action, body);
         }
-        send(response, 200, { room: snapshot(room, seat) });
+        reply(200, { room: snapshot(room, seat) });
       }
     } catch (error) {
       if (!(error instanceof RoomError)) {
-        send(response, 500, { code: 'ROOM_ERROR', error: 'No se pudo actualizar la mesa. Vuelve a intentar.' });
-      } else send(response, error.status, { code: error.code, error: error.message });
+        reply(500, { code: 'ROOM_ERROR', error: 'No se pudo actualizar la mesa. Vuelve a intentar.' });
+      } else reply(error.status, { code: error.code, error: error.message });
     }
     return true;
   };

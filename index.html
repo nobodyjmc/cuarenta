@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
   <!-- cuarenta-private-capability -->
+  <meta name="cuarenta-private-api" content="https://trinity-viruses-boxing-bestsellers.trycloudflare.com">
   <meta name="description" content="Cuarenta ecuatoriano para jugar sin Internet, contra la máquina o compartiendo un dispositivo.">
   <title>Cuarenta | Una mesa, muchas historias</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkN1YXJlbnRhIE9ubGluZSI+CiAgPHRpdGxlPkN1YXJlbnRhIE9ubGluZTwvdGl0bGU+CiAgPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSIxMjgiIHJ4PSIyNyIgZmlsbD0iIzE3M2IzNCIvPgogIDxyZWN0IHg9IjYiIHk9IjYiIHdpZHRoPSIxMTYiIGhlaWdodD0iMTE2IiByeD0iMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M1YTk2YyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8cGF0aCBkPSJtNjQgMTYgNyA5LTcgOS03LTlaIiBmaWxsPSIjYzVhOTZjIi8+CiAgPHRleHQgeD0iNjMiIHk9Ijk0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZjdmMGRmIiBmb250LWZhbWlseT0iR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmIiBmb250LXNpemU9Ijc2IiBmb250LXdlaWdodD0iNzAwIiBsZXR0ZXItc3BhY2luZz0iLTUiPjQwPC90ZXh0PgogIDxwYXRoIGQ9Ik00MyAxMDhoNDIiIHN0cm9rZT0iI2M1YTk2YyIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K">
@@ -9511,22 +9512,22 @@ function defaultStorage() {
   try { return globalThis.sessionStorage; } catch { return null; }
 }
 
-function storedSeat(storage) {
+function storedSeat(storage, key) {
   try {
-    const seat = JSON.parse(storage?.getItem(CREDENTIAL_KEY) ?? 'null');
+    const seat = JSON.parse(storage?.getItem(key) ?? 'null');
     if (ROOM_CODE.test(seat?.code) && TOKEN.test(seat?.token)) return seat;
   } catch { /* Storage may be unavailable in private browsing. */ }
   return null;
 }
 
-async function request(fetcher, timeout, path, { token, body } = {}) {
+async function request(fetcher, timeout, url, { token, body } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
   const headers = { Accept: 'application/json' };
   if (token) headers.Authorization = 'Bearer ' + token;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   try {
-    const response = await fetcher(ROOT + path, {
+    const response = await fetcher(url, {
       method: body === undefined ? 'GET' : 'POST',
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -9566,8 +9567,10 @@ function readRoom(data, code) {
 }
 
 class PrivateTableClient {
+  #apiRoot;
   #fetcher;
   #storage;
+  #credentialKey;
   #onRoom;
   #onConnection;
   #pollInterval;
@@ -9581,6 +9584,7 @@ class PrivateTableClient {
   #command;
 
   constructor({
+    apiOrigin = '',
     onRoom = () => {},
     onConnection = () => {},
     storage = defaultStorage(),
@@ -9588,13 +9592,21 @@ class PrivateTableClient {
     pollInterval = 850,
     timeout = 6000,
   } = {}) {
+    if (apiOrigin !== '') {
+      const endpoint = new URL(apiOrigin);
+      if (endpoint.protocol !== 'https:' || endpoint.origin !== apiOrigin) {
+        throw new TypeError('El servidor de mesas debe ser un origen HTTPS.');
+      }
+    }
+    this.#apiRoot = apiOrigin + ROOT;
+    this.#credentialKey = apiOrigin ? CREDENTIAL_KEY + ':' + apiOrigin : CREDENTIAL_KEY;
     this.#onRoom = onRoom;
     this.#onConnection = onConnection;
     this.#storage = storage;
     this.#fetcher = fetcher;
     this.#pollInterval = pollInterval;
     this.#timeout = timeout;
-    this.#credential = storedSeat(storage);
+    this.#credential = storedSeat(storage, this.#credentialKey);
   }
 
   get room() { return this.#room; }
@@ -9664,8 +9676,8 @@ class PrivateTableClient {
   #saveSeat(credential) {
     this.#credential = credential;
     try {
-      if (credential) this.#storage?.setItem(CREDENTIAL_KEY, JSON.stringify(credential));
-      else this.#storage?.removeItem(CREDENTIAL_KEY);
+      if (credential) this.#storage?.setItem(this.#credentialKey, JSON.stringify(credential));
+      else this.#storage?.removeItem(this.#credentialKey);
     } catch { /* The in-memory seat still works during this visit. */ }
   }
 
@@ -9701,7 +9713,7 @@ class PrivateTableClient {
     const generation = this.#resetPolling();
     this.#setConnection('connecting');
     try {
-      const data = await request(this.#fetcher, this.#timeout, path, { body });
+      const data = await request(this.#fetcher, this.#timeout, this.#apiRoot + path, { body });
       if (generation !== this.#generation) return null;
       const room = readRoom(data, code);
       if (!TOKEN.test(data.token)) throw new PrivateTableError('No se pudo guardar el acceso a la mesa.');
@@ -9723,7 +9735,7 @@ class PrivateTableClient {
 
   async #read(generation, notify = false) {
     const { code, token } = this.#credential;
-    const data = await request(this.#fetcher, this.#timeout, '/rooms/' + code, { token });
+    const data = await request(this.#fetcher, this.#timeout, this.#apiRoot + '/rooms/' + code, { token });
     if (generation !== this.#generation) return null;
     return this.#receive(readRoom(data, code), notify);
   }
@@ -9765,7 +9777,7 @@ class PrivateTableClient {
     this.#active = true;
     const { code, token } = this.#credential;
     try {
-      const data = await request(this.#fetcher, this.#timeout, '/rooms/' + code + '/' + action, { token, body });
+      const data = await request(this.#fetcher, this.#timeout, this.#apiRoot + '/rooms/' + code + '/' + action, { token, body });
       if (generation !== this.#generation) return null;
       return this.#receive(readRoom(data, code));
     } catch (error) {
@@ -9883,9 +9895,18 @@ const beginnerGuide = {
 };
 let modalKind = null;
 let lastFocus = null;
-const privateTable = new PrivateTableClient({ onRoom: receivePrivateRoom, onConnection: updatePrivateConnection });
-const PRIVATE_RESTORE_KEY = 'cuarenta.private.open.v1';
-const privateAvailable = document.querySelector('meta[name="cuarenta-private"]')?.content === '1';
+const LOCAL_PRIVATE_TABLES = document.querySelector('meta[name="cuarenta-private"]')?.content === '1';
+const PAGES_ORIGIN = 'https://nobodyjmc.github.io';
+const privateApiOrigin = !LOCAL_PRIVATE_TABLES && location.origin === PAGES_ORIGIN
+  ? document.querySelector('meta[name="cuarenta-private-api"]')?.content || ''
+  : '';
+const privateTable = new PrivateTableClient({
+  apiOrigin: privateApiOrigin,
+  onRoom: receivePrivateRoom,
+  onConnection: updatePrivateConnection,
+});
+const PRIVATE_RESTORE_KEY = privateApiOrigin ? 'cuarenta.private.open.v1:' + privateApiOrigin : 'cuarenta.private.open.v1';
+const privateAvailable = LOCAL_PRIVATE_TABLES || Boolean(privateApiOrigin);
 let privateOpen = false;
 let privateGame = false;
 let privateRoom = null;
