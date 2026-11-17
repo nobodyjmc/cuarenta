@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createPrivateRooms } from './private-rooms.mjs';
 
 export const APP_ID = 'cuarenta-local';
-export const APP_VERSION = '0.17.0';
+export const APP_VERSION = '0.17.1';
 export const DEFAULT_PORT = 4173;
 const DEFAULT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const MIME_TYPES = {
@@ -101,7 +101,10 @@ export function createServer({ staticRoot = DEFAULT_ROOT } = {}) {
         return;
       }
       const contents = await readFile(realTarget);
-      send(request, response, 200, contents, MIME_TYPES[extname(realTarget).toLowerCase()] ?? 'application/octet-stream');
+      const body = asset === 'index.html'
+        ? contents.toString('utf8').replace('<!-- cuarenta-private-capability -->', '<meta name="cuarenta-private" content="1">')
+        : contents;
+      send(request, response, 200, body, MIME_TYPES[extname(realTarget).toLowerCase()] ?? 'application/octet-stream');
     } catch (error) {
       const missing = ['ENOENT', 'ENOTDIR', 'EACCES', 'EPERM'].includes(error.code);
       send(request, response, missing ? 404 : 500, JSON.stringify({

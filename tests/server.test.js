@@ -92,6 +92,16 @@ test('HEAD has GET headers without a response body', async (t) => {
   }
 });
 
+test('the Node entry enables private tables without waiting for the status route', async (t) => {
+  const { url, staticRoot } = await fixture(t);
+  await writeFile(join(staticRoot, 'index.html'), '<head><!-- cuarenta-private-capability --></head>');
+  for (const path of ['/', '/index.html?mesa=23456789AB']) {
+    const response = await request(url, path);
+    assert.equal(response.status, 200);
+    assert.equal(response.body, '<head><meta name="cuarenta-private" content="1"></head>');
+  }
+});
+
 test('rejects traversal, encoded paths, dotfiles, backslashes and absolute-form targets', async (t) => {
   const { url } = await fixture(t);
   const paths = [

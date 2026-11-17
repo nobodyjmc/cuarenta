@@ -71,17 +71,6 @@ function readRoom(data, code) {
   return room;
 }
 
-export async function canUsePrivateTables({ fetcher = globalThis.fetch.bind(globalThis), timeout = 1500 } = {}) {
-  const location = globalThis.location;
-  if (location && (!['http:', 'https:'].includes(location.protocol) ||
-      location.hostname.endsWith('.github.io'))) return false;
-  try {
-    return (await request(fetcher, timeout, '/status')).available === true;
-  } catch {
-    return false;
-  }
-}
-
 export class PrivateTableClient {
   #fetcher;
   #storage;

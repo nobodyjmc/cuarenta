@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setTimeout as wait } from 'node:timers/promises';
-import { canUsePrivateTables, PrivateTableClient } from '../dist/js/private-client.js';
+import { PrivateTableClient } from '../dist/js/private-client.js';
 
 const code = '23456789AB';
 const token = 'x'.repeat(43);
@@ -136,16 +136,4 @@ test('background reads resume after a temporary connection failure', async (t) =
   await wait(35);
   assert.equal(reads, completed);
   assert.deepEqual(history, ['connecting', 'connected', 'reconnecting', 'connected', 'disconnected']);
-});
-
-test('availability probing accepts only a positive API response', async () => {
-  assert.equal(await canUsePrivateTables({
-    fetcher: async (url) => {
-      assert.equal(url, '/api/private/status');
-      return Response.json({ available: true });
-    },
-  }), true);
-  assert.equal(await canUsePrivateTables({
-    fetcher: async () => new Response('<html>404</html>', { status: 404 }),
-  }), false);
 });

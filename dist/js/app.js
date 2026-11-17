@@ -8,7 +8,7 @@ import { choosePracticeReply, createPracticeGame, practiceHint } from './practic
 import { MUSIC_TRACKS, TableMusic } from './music.js';
 import { TABLE_CITIES, tableArt } from './table-art.js';
 import { HOME_ART, HOME_ART_WIDTH, HOME_ART_HEIGHT } from './home-art.js';
-import { canUsePrivateTables, PrivateTableClient } from './private-client.js';
+import { PrivateTableClient } from './private-client.js';
 
 const app = document.querySelector('#app');
 const modal = document.querySelector('#modal');
@@ -82,7 +82,7 @@ let modalKind = null;
 let lastFocus = null;
 const privateTable = new PrivateTableClient({ onRoom: receivePrivateRoom, onConnection: updatePrivateConnection });
 const PRIVATE_RESTORE_KEY = 'cuarenta.private.open.v1';
-let privateAvailable = false;
+const privateAvailable = document.querySelector('meta[name="cuarenta-private"]')?.content === '1';
 let privateOpen = false;
 let privateGame = false;
 let privateRoom = null;
@@ -155,9 +155,9 @@ function renderHome() {
       ${canResume ? `<button class="button resume-button" type="button" data-action="resume">${icon('play')} <span>Continuar partida</span><span class="resume-score">${saved.players[0].score} a ${saved.players[1].score}</span></button>` : ''}
       <p class="home-level">Nivel ${difficultyNames[difficulty]}</p>
       <button class="button primary start-button" type="button" data-action="quick-play"><span>Jugar contra ${esc(newGameOptions().names[1])}</span>${icon('arrow')}</button>
+      ${privateAvailable ? `<button class="button local-entry private-entry" type="button" data-action="private-table">${icon('shield')}<span>${privateTable.credential ? 'Volver a mi mesa privada' : 'Mesa privada'}</span>${icon('arrow')}</button>` : ''}
       <button class="button learn-entry" type="button" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button>
       <button class="button local-entry" type="button" data-action="local-game">${icon('people')}<span>Dos jugadores</span>${icon('arrow')}</button>
-      ${privateAvailable ? `<button class="button local-entry private-entry" type="button" data-action="private-table">${icon('shield')}<span>${privateTable.credential ? 'Volver a mi mesa privada' : 'Mesa privada'}</span>${icon('arrow')}</button>` : ''}
     </div>
   </section>`);
   app.querySelector('.home-cover-art').src = HOME_ART;
@@ -864,10 +864,8 @@ async function sendPrivateMove(button, command, fields = {}) {
   }
 }
 
-async function enablePrivateTables() {
-  privateAvailable = await canUsePrivateTables();
-  if (!privateAvailable || screen !== 'home') return;
-  render();
+function resumePrivateTableFromLocation() {
+  if (!privateAvailable) return;
   const params = new URLSearchParams(location.search);
   const code = normalizePrivateCode(params.get('mesa'));
   if (code || shouldRestoreTable()) void openPrivateTable(code);
@@ -1744,5 +1742,5 @@ window.addEventListener('pageshow', event => {
   if (event.persisted) { schedulePracticeReply(); resumeMusic(); }
 });
 render();
-void enablePrivateTables();
+resumePrivateTableFromLocation();
 if (session.warning) toast(session.warning);

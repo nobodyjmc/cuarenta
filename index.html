@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#000000">
+  <!-- cuarenta-private-capability -->
   <meta name="description" content="Cuarenta ecuatoriano para jugar sin Internet, contra la máquina o compartiendo un dispositivo.">
   <title>Cuarenta | Una mesa, muchas historias</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkN1YXJlbnRhIE9ubGluZSI+CiAgPHRpdGxlPkN1YXJlbnRhIE9ubGluZTwvdGl0bGU+CiAgPHJlY3Qgd2lkdGg9IjEyOCIgaGVpZ2h0PSIxMjgiIHJ4PSIyNyIgZmlsbD0iIzE3M2IzNCIvPgogIDxyZWN0IHg9IjYiIHk9IjYiIHdpZHRoPSIxMTYiIGhlaWdodD0iMTE2IiByeD0iMjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2M1YTk2YyIgc3Ryb2tlLXdpZHRoPSIxLjUiLz4KICA8cGF0aCBkPSJtNjQgMTYgNyA5LTcgOS03LTlaIiBmaWxsPSIjYzVhOTZjIi8+CiAgPHRleHQgeD0iNjMiIHk9Ijk0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZjdmMGRmIiBmb250LWZhbWlseT0iR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmIiBmb250LXNpemU9Ijc2IiBmb250LXdlaWdodD0iNzAwIiBsZXR0ZXItc3BhY2luZz0iLTUiPjQwPC90ZXh0PgogIDxwYXRoIGQ9Ik00MyAxMDhoNDIiIHN0cm9rZT0iI2M1YTk2YyIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K">
@@ -9564,17 +9565,6 @@ function readRoom(data, code) {
   return room;
 }
 
-async function canUsePrivateTables({ fetcher = globalThis.fetch.bind(globalThis), timeout = 1500 } = {}) {
-  const location = globalThis.location;
-  if (location && (!['http:', 'https:'].includes(location.protocol) ||
-      location.hostname.endsWith('.github.io'))) return false;
-  try {
-    return (await request(fetcher, timeout, '/status')).available === true;
-  } catch {
-    return false;
-  }
-}
-
 class PrivateTableClient {
   #fetcher;
   #storage;
@@ -9795,7 +9785,7 @@ class PrivateTableClient {
   }
 }
 
-return Object.freeze({ "PrivateTableError": PrivateTableError, "canUsePrivateTables": canUsePrivateTables, "PrivateTableClient": PrivateTableClient });
+return Object.freeze({ "PrivateTableError": PrivateTableError, "PrivateTableClient": PrivateTableClient });
 })();
 
 __cuarentaModules["js/app.js"] = (() => {
@@ -9809,7 +9799,7 @@ const { choosePracticeReply: choosePracticeReply, createPracticeGame: createPrac
 const { MUSIC_TRACKS: MUSIC_TRACKS, TableMusic: TableMusic } = __cuarentaModules["js/music.js"];
 const { TABLE_CITIES: TABLE_CITIES, tableArt: tableArt } = __cuarentaModules["js/table-art.js"];
 const { HOME_ART: HOME_ART, HOME_ART_WIDTH: HOME_ART_WIDTH, HOME_ART_HEIGHT: HOME_ART_HEIGHT } = __cuarentaModules["js/home-art.js"];
-const { canUsePrivateTables: canUsePrivateTables, PrivateTableClient: PrivateTableClient } = __cuarentaModules["js/private-client.js"];
+const { PrivateTableClient: PrivateTableClient } = __cuarentaModules["js/private-client.js"];
 
 
 
@@ -9895,7 +9885,7 @@ let modalKind = null;
 let lastFocus = null;
 const privateTable = new PrivateTableClient({ onRoom: receivePrivateRoom, onConnection: updatePrivateConnection });
 const PRIVATE_RESTORE_KEY = 'cuarenta.private.open.v1';
-let privateAvailable = false;
+const privateAvailable = document.querySelector('meta[name="cuarenta-private"]')?.content === '1';
 let privateOpen = false;
 let privateGame = false;
 let privateRoom = null;
@@ -9968,9 +9958,9 @@ function renderHome() {
       ${canResume ? `<button class="button resume-button" type="button" data-action="resume">${icon('play')} <span>Continuar partida</span><span class="resume-score">${saved.players[0].score} a ${saved.players[1].score}</span></button>` : ''}
       <p class="home-level">Nivel ${difficultyNames[difficulty]}</p>
       <button class="button primary start-button" type="button" data-action="quick-play"><span>Jugar contra ${esc(newGameOptions().names[1])}</span>${icon('arrow')}</button>
+      ${privateAvailable ? `<button class="button local-entry private-entry" type="button" data-action="private-table">${icon('shield')}<span>${privateTable.credential ? 'Volver a mi mesa privada' : 'Mesa privada'}</span>${icon('arrow')}</button>` : ''}
       <button class="button learn-entry" type="button" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button>
       <button class="button local-entry" type="button" data-action="local-game">${icon('people')}<span>Dos jugadores</span>${icon('arrow')}</button>
-      ${privateAvailable ? `<button class="button local-entry private-entry" type="button" data-action="private-table">${icon('shield')}<span>${privateTable.credential ? 'Volver a mi mesa privada' : 'Mesa privada'}</span>${icon('arrow')}</button>` : ''}
     </div>
   </section>`);
   app.querySelector('.home-cover-art').src = HOME_ART;
@@ -10677,10 +10667,8 @@ async function sendPrivateMove(button, command, fields = {}) {
   }
 }
 
-async function enablePrivateTables() {
-  privateAvailable = await canUsePrivateTables();
-  if (!privateAvailable || screen !== 'home') return;
-  render();
+function resumePrivateTableFromLocation() {
+  if (!privateAvailable) return;
   const params = new URLSearchParams(location.search);
   const code = normalizePrivateCode(params.get('mesa'));
   if (code || shouldRestoreTable()) void openPrivateTable(code);
@@ -11557,7 +11545,7 @@ window.addEventListener('pageshow', event => {
   if (event.persisted) { schedulePracticeReply(); resumeMusic(); }
 });
 render();
-void enablePrivateTables();
+resumePrivateTableFromLocation();
 if (session.warning) toast(session.warning);
 
 return Object.freeze({  });
