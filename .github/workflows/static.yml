@@ -28,7 +28,7 @@ jobs:
         run: npm test
       - name: Build standalone Pages site
         env:
-          CUARENTA_PRIVATE_ORIGIN: ${{ vars.CUARENTA_PRIVATE_ORIGIN || 'https://trinity-viruses-boxing-bestsellers.trycloudflare.com' }}
+          CUARENTA_PRIVATE_ORIGIN: ''
         run: npm run prepare:pages
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5

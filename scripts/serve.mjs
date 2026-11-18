@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createPrivateRooms } from './private-rooms.mjs';
 
 export const APP_ID = 'cuarenta-local';
-export const APP_VERSION = '0.18.0';
+export const APP_VERSION = '0.18.1';
 export const DEFAULT_PORT = 4173;
 const DEFAULT_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../dist');
 const MIME_TYPES = {
@@ -45,9 +45,9 @@ function send(request, response, status, body, contentType = 'application/json; 
 }
 
 /** Creates an unbound server. Only the contents of staticRoot can be served. */
-export function createServer({ staticRoot = DEFAULT_ROOT } = {}) {
+export function createServer({ staticRoot = DEFAULT_ROOT, privateTables = false } = {}) {
   const root = resolve(staticRoot);
-  const privateRooms = createPrivateRooms();
+  const privateRooms = privateTables ? createPrivateRooms() : null;
   return createHttpServer(async (request, response) => {
     // Inspect the original path before URL normalization can remove ../ segments.
     // Asset names are plain paths; encoded paths are deliberately unsupported.
@@ -60,7 +60,7 @@ export function createServer({ staticRoot = DEFAULT_ROOT } = {}) {
       return;
     }
 
-    if (requestPath.startsWith('/api/private/')) {
+    if (privateRooms && requestPath.startsWith('/api/private/')) {
       try {
         if (await privateRooms(request, response, requestPath)) return;
       } catch {
@@ -101,7 +101,7 @@ export function createServer({ staticRoot = DEFAULT_ROOT } = {}) {
         return;
       }
       const contents = await readFile(realTarget);
-      const body = asset === 'index.html'
+      const body = privateTables && asset === 'index.html'
         ? contents.toString('utf8').replace('<!-- cuarenta-private-capability -->', '<meta name="cuarenta-private" content="1">')
         : contents;
       send(request, response, 200, body, MIME_TYPES[extname(realTarget).toLowerCase()] ?? 'application/octet-stream');
@@ -115,9 +115,9 @@ export function createServer({ staticRoot = DEFAULT_ROOT } = {}) {
 }
 
 /** Binds to loopback unless LAN or hosting access was explicitly requested. */
-export async function startServer({ port = DEFAULT_PORT, staticRoot = DEFAULT_ROOT, lan = false } = {}) {
+export async function startServer({ port = DEFAULT_PORT, staticRoot = DEFAULT_ROOT, lan = false, privateTables = lan } = {}) {
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('El puerto debe ser un entero entre 0 y 65535.');
-  const server = createServer({ staticRoot });
+  const server = createServer({ staticRoot, privateTables });
   await new Promise((accept, reject) => {
     server.once('error', reject);
     server.listen(port, lan ? '0.0.0.0' : '127.0.0.1', () => {

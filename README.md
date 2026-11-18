@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.18.0
+# Cuarenta · Versión 0.18.1
 
 Juego ecuatoriano de cartas para dos participantes en un solo dispositivo. Incluye las reglas de ronda, cuatro dificultades y retroalimentación local para calibrar Experto al final de cada partida, 2 de noviembre de 2026.
 
@@ -18,15 +18,15 @@ Para informar un error, abre **Issues → Bug report** en el repositorio e inclu
 
 ### Privacidad y límites de esta prueba
 
-Las partidas locales, las preferencias y las valoraciones del bot se guardan en cada navegador. Las valoraciones ajustan el nivel Experto en ese navegador. Los jugadores también pueden crear una **Mesa privada** desde GitHub Pages y compartir un enlace del mismo sitio. Esta beta usa un servidor Node.js aparte.
+Las partidas locales, las preferencias y las valoraciones del bot se guardan en cada navegador. Las valoraciones ajustan el nivel Experto en ese navegador.
 
-### Mesa privada desde GitHub Pages
+### Pausa de Mesa privada
 
-Abre [El Cuarenta](https://nobodyjmc.github.io/cuarenta/) y elige **Mesa privada → Crear mesa**. Envía el enlace de invitación a la otra persona. Cada dispositivo recibe solo su propia mano y puede retomar el asiento desde la misma pestaña.
+**Mesa privada** está pausada en GitHub Pages y en el inicio local normal. Las invitaciones anteriores abren la portada del juego.
 
-El flujo de Pages lee `CUARENTA_PRIVATE_ORIGIN` para incluir el origen HTTPS de la API. La beta inicial usa un túnel temporal de Cloudflare hacia `npm run start:private-api`. Para moverla a un servidor Node.js permanente, ejecuta ese mismo comando en una sola instancia, con `HOST=0.0.0.0` y el puerto `PORT` del proveedor. Configura el origen HTTPS en la variable `CUARENTA_PRIVATE_ORIGIN` del repositorio y vuelve a desplegar Pages. La API autoriza el origen de GitHub Pages y el token propio de cada asiento.
+Para reactivar el modo público, primero verifica una API de Mesa privada disponible por HTTPS. Después configura `CUARENTA_PRIVATE_ORIGIN` con ese origen en el paso de compilación del [flujo de GitHub Pages](.github/workflows/static.yml) y vuelve a desplegar.
 
-### Probar Mesa privada con dos dispositivos
+### Prueba interna de Mesa privada con dos dispositivos
 
 1. En este directorio, ejecuta `npm run start:private`. Deja abierta la terminal durante la prueba.
 2. Conecta ambos dispositivos a la misma red y abre en los dos la dirección **En la misma red** que imprime la terminal. Usa la dirección de la red de tu PC también en el primer dispositivo, así el enlace generado será accesible para el segundo.

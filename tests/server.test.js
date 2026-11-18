@@ -26,7 +26,7 @@ function request(url, path, method = 'GET') {
   });
 }
 
-async function fixture(t) {
+async function fixture(t, { privateTables = false } = {}) {
   const directory = await mkdtemp(join(tmpdir(), 'cuarenta server '));
   const staticRoot = join(directory, 'dist');
   await mkdir(join(staticRoot, 'assets'), { recursive: true });
@@ -38,7 +38,7 @@ async function fixture(t) {
   await writeFile(join(staticRoot, 'favicon.ico'), Buffer.from([0, 0, 1, 0]));
   await writeFile(join(staticRoot, '.secret'), 'private');
   await writeFile(join(directory, 'outside.txt'), 'outside');
-  const { server, url } = await startServer({ staticRoot, port: 0 });
+  const { server, url } = await startServer({ staticRoot, port: 0, privateTables });
   t.after(async () => {
     await new Promise((accept, reject) => server.close((error) => error ? reject(error) : accept()));
     await rm(directory, { recursive: true, force: true });
@@ -92,14 +92,26 @@ test('HEAD has GET headers without a response body', async (t) => {
   }
 });
 
-test('the Node entry enables private tables without waiting for the status route', async (t) => {
+test('the default Node server serves the game with private tables disabled', async (t) => {
   const { url, staticRoot } = await fixture(t);
+  const html = '<head><!-- cuarenta-private-capability --></head>';
+  await writeFile(join(staticRoot, 'index.html'), html);
+  const response = await request(url, '/?mesa=23456789AB');
+  assert.equal(response.status, 200);
+  assert.equal(response.body, html);
+  assert.equal((await request(url, '/api/private/status')).status, 404);
+});
+
+test('the Node server enables private tables when explicitly requested for testing', async (t) => {
+  const { url, staticRoot } = await fixture(t, { privateTables: true });
   await writeFile(join(staticRoot, 'index.html'), '<head><!-- cuarenta-private-capability --></head>');
   for (const path of ['/', '/index.html?mesa=23456789AB']) {
     const response = await request(url, path);
     assert.equal(response.status, 200);
     assert.equal(response.body, '<head><meta name="cuarenta-private" content="1"></head>');
   }
+  const status = await request(url, '/api/private/status');
+  assert.deepEqual(JSON.parse(status.body), { available: true });
 });
 
 test('rejects traversal, encoded paths, dotfiles, backslashes and absolute-form targets', async (t) => {
