@@ -5,6 +5,10 @@ import { chooseBotMove } from '../dist/js/bot.js';
 import { createDeck } from '../dist/js/engine.js';
 
 const SAVE = 'cuarenta.local.game.v1';
+const originalCityCloths = {
+  quito: 'borgona', guayaquil: 'quito', cuenca: 'azul',
+  loja: 'cobre', manta: 'oceano', ambato: 'violeta',
+};
 const memoryStorage = () => {
   const values = new Map();
   return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
@@ -90,19 +94,19 @@ test('preferences accept booleans only, clamp local bot feedback, and tolerate u
   assert.equal(savePreferences({ sound: true, reducedMotion: true, quickBot: 'true', feedbackMode: 'false', feedbackChallenge: '3', tableLayout: 'diagonal' }, storage), true);
   assert.deepEqual(loadPreferences(storage), {
     sound: true, reducedMotion: true, quickBot: false, feedbackMode: false,
-    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', tableCity: 'quito',
+    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'borgona', tableCity: 'quito', cityFelts: originalCityCloths,
     music: true, musicVolume: .32, musicTrack: 'reminiscencias',
   });
   assert.equal(savePreferences({ feedbackMode: true, feedbackChallenge: 9, tableLayout: 'vertical' }, storage), true);
   assert.deepEqual(loadPreferences(storage), {
     sound: true, reducedMotion: false, quickBot: false, feedbackMode: true,
-    feedbackChallenge: 3, tableLayout: 'vertical', feltTheme: 'quito', tableCity: 'quito',
+    feedbackChallenge: 3, tableLayout: 'vertical', feltTheme: 'borgona', tableCity: 'quito', cityFelts: originalCityCloths,
     music: true, musicVolume: .32, musicTrack: 'reminiscencias',
   });
   assert.equal(savePreferences({}, { setItem() { throw Error('blocked'); } }), false);
   assert.deepEqual(loadPreferences({ getItem() { throw Error('blocked'); } }), {
     sound: true, reducedMotion: false, quickBot: false, feedbackMode: true,
-    feedbackChallenge: 0, tableLayout: 'horizontal', feltTheme: 'quito', tableCity: 'quito',
+    feedbackChallenge: 0, tableLayout: 'vertical', feltTheme: 'borgona', tableCity: 'quito', cityFelts: originalCityCloths,
     music: true, musicVolume: .32, musicTrack: 'reminiscencias',
   });
 });
@@ -152,8 +156,34 @@ test('city and palette choices are restored independently, and a legacy custom c
 
   assert.equal(savePreferences({ feltTheme: 'custom', feltColor: 'var(--custom)', tableCity: 'unknown' }, storage), true);
   const invalid = loadPreferences(storage);
-  assert.equal(invalid.feltTheme, 'quito');
+  assert.equal(invalid.feltTheme, 'borgona');
   assert.equal(invalid.tableCity, 'quito');
+});
+
+test('the city collection restores earlier production preferences and remembers each cloth separately', () => {
+  const storage = memoryStorage();
+  const fresh = loadPreferences(storage);
+  assert.equal(fresh.tableLayout, 'vertical');
+  assert.deepEqual(fresh.cityFelts, originalCityCloths);
+
+  storage.setItem('cuarenta.local.preferences.v1', JSON.stringify({
+    tableCity: 'guayaquil', feltTheme: 'oliva', feedbackChallenge: 2, music: false,
+  }));
+  const previous = loadPreferences(storage);
+  assert.equal(previous.tableLayout, 'horizontal');
+  assert.equal(previous.music, false);
+  assert.equal(previous.feedbackChallenge, 2);
+  assert.deepEqual(previous.cityFelts, { ...originalCityCloths, guayaquil: 'oliva' });
+
+  savePreferences({ ...previous, tableCity: 'cuenca', feltTheme: 'carbon' }, storage);
+  const changed = loadPreferences(storage);
+  assert.equal(changed.tableCity, 'cuenca');
+  assert.equal(changed.feltTheme, 'carbon');
+  assert.deepEqual(changed.cityFelts, { ...originalCityCloths, guayaquil: 'oliva', cuenca: 'carbon' });
+
+  const invalidCityCloths = { ...changed.cityFelts, loja: 'sepia', unknownCity: 'cobre' };
+  savePreferences({ ...changed, cityFelts: invalidCityCloths }, storage);
+  assert.deepEqual(loadPreferences(storage).cityFelts, changed.cityFelts);
 });
 
 function roundRandom() {

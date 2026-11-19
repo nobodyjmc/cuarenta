@@ -1,3 +1,5 @@
+import { TABLE_CITIES } from './table-art.js';
+
 /** Original, dependency-free SVG artwork for the forty-card Cuarenta deck. */
 const COLORS = Object.freeze({
   paper: '#f5e9ce',
@@ -5,7 +7,7 @@ const COLORS = Object.freeze({
   ink: '#233d35',
   red: '#8b3239',
   gold: '#b09255',
-  back: '#632c32',
+  back: 'var(--city-dye, #632c32)',
 });
 
 const SUITS = Object.freeze({
@@ -96,7 +98,7 @@ export function cardLabel(card) {
   return `${RANK_NAMES[rank]} de ${suit.name}`;
 }
 
-/** A complete, accessible SVG with no IDs, external assets, or shared definitions. */
+/** The card owns its rank and suit. Its engraving follows the current city. */
 export function cardSvg(card) {
   const { rank, suit } = validateCard(card);
   const corners = corner(rank, suit);
@@ -106,7 +108,10 @@ export function cardSvg(card) {
   } else if (Object.hasOwn(PIPS, rank)) {
     center = PIPS[rank].map(([x, y, inverted]) => pip(suit, x, y, 17, inverted)).join('');
   } else {
-    center = court(rank, suit);
+    const portraits = TABLE_CITIES.map(({ id }) =>
+      `<use class="city-figure ${id}" href="#figure-${id}-${rank}" x="17" y="16" width="66" height="112" aria-hidden="true"/>`
+    ).join('');
+    center = `<g class="standard-figure">${court(rank, suit)}</g>${portraits}`;
   }
   return svgRoot(`${RANK_NAMES[rank]} de ${suit.name}`, `<rect x=".7" y=".7" width="98.6" height="142.6" rx="5.5" fill="${COLORS.paper}" stroke="${COLORS.border}" stroke-width="1.1"/><rect x="3.2" y="3.2" width="93.6" height="137.6" rx="3.5" fill="none" stroke="#fff8e7" stroke-width="1.2"/><path d="M24 6h52M24 138h52M6 40v64m88-64v64" stroke="${COLORS.border}" stroke-width=".4" opacity=".65"/><g fill="${COLORS.gold}" opacity=".15"><circle cx="6" cy="36" r=".8"/><circle cx="94" cy="108" r=".8"/><circle cx="82" cy="8" r=".6"/><circle cx="18" cy="136" r=".6"/><circle cx="8" cy="119" r=".5"/><circle cx="92" cy="25" r=".5"/></g>${corners}<g transform="rotate(180 50 72)">${corners}</g>${center}`);
 }
@@ -120,5 +125,17 @@ export function cardBackSvg() {
     }
   }
   const flourish = '<path d="M15 32V15h17m-17 7q12 0 12-7m-12 14q17 0 17-14m-11 1 3 3-3 3-3-3Z"/>';
+  const backDesigns = {
+    quito: '<path d="m29 16 29 23 3-3-28-23Zm2 21 29-23m-3-1 5-1-1 5M26 36l4-4 4 4-7 4Z"/>',
+    cuenca: '<path d="M16 21q11-11 24 0t24 0 20 0M16 26q11-11 24 0t24 0 20 0M20 33q9-7 20 0t21 0 19 0"/>',
+    guayaquil: '<path d="M21 15h58v18H21zM24 18h52l-4 3H24zm0 6h52l-4 3H24zm0 6h52"/>',
+    loja: '<path d="M31 30q-4-5 2-9c-2-6 6-9 9-3l19 7-1 3-19-6q-1 8-7 9zm29-6 6 2-1 5-6-3z"/><circle cx="37" cy="23" r="2"/>',
+    manta: '<path d="m23 26 8 5h36l9-7-23 2-7-5H33v5m12-7v-7l12 9m-41 14q9-5 19 0t19 0 19 0 10 0"/>',
+    ambato: '<path d="M26 31q9-7 19-9m11 9-4-12m-17 6-3-7-6 0q0 6 9 7m26 1q5-9 12-9l-3 7z"/><path d="M46 18q-9-7-4-10 4-2 7 4 4-6 8-2t-3 9q8 5 3 8t-9-5q-6 4-9 0t7-4Z"/>',
+  };
+  const workshops = Object.entries(backDesigns).map(([city, motif]) =>
+    `<g class="city-figure ${city}" fill="none" stroke="currentColor" stroke-width="1.4" color="#f1ce87">${motif}<g transform="rotate(180 50 72)">${motif}</g></g>`
+  ).join('');
+  lattice = `<g class="standard-figure">${lattice}</g>${workshops}`;
   return svgRoot('Reverso de carta', `<rect x=".7" y=".7" width="98.6" height="142.6" rx="5.5" fill="${COLORS.paper}" stroke="${COLORS.border}" stroke-width="1.1"/><rect x="5" y="5" width="90" height="134" rx="2.5" fill="${COLORS.back}" stroke="${COLORS.gold}" stroke-width=".65"/><rect x="9" y="9" width="82" height="126" rx="1" fill="none" stroke="${COLORS.gold}" stroke-width=".4"/><g fill="none" stroke="${COLORS.gold}" stroke-width=".4" opacity=".65">${lattice}</g><g fill="none" stroke="#d6bd87" stroke-width=".7">${flourish}<g transform="translate(100 144) rotate(180)">${flourish}</g><g transform="translate(100 0) scale(-1 1)">${flourish}</g><g transform="translate(0 144) scale(1 -1)">${flourish}</g></g><ellipse cx="50" cy="72" rx="27" ry="35" fill="${COLORS.back}" stroke="${COLORS.gold}" stroke-width="1.3"/><ellipse cx="50" cy="72" rx="23.5" ry="31.5" fill="none" stroke="${COLORS.gold}" stroke-width=".5"/><path d="m50 46 3 4-3 4-3-4Zm0 44 3 4-3 4-3-4Z" fill="${COLORS.gold}"/><path d="M33 58q17-5 34 0M33 86q17 5 34 0" fill="none" stroke="${COLORS.gold}" stroke-width=".4"/><text x="50" y="82" text-anchor="middle" fill="#ead6a8" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" letter-spacing="-2">40</text>`);
 }

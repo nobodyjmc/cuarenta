@@ -26,6 +26,22 @@ function localPath(root, from, specifier) {
   return target;
 }
 
+// City artwork is served as individual files in dist and travels inside the portable document.
+async function inlineCityArtwork(source, root, entryHtml) {
+  const literal = /(["'])(\.\/assets\/mesas\/[A-Za-z0-9-]+\.webp)\1/g;
+  const paths = new Set(Array.from(source.matchAll(literal), match => match[2]));
+  if (!paths.size) return source;
+  const realRoot = await realpath(root);
+  const resources = await Promise.all([...paths].map(async specifier => {
+    const target = await realpath(localPath(root, entryHtml, specifier));
+    assertInside(realRoot, target, specifier);
+    const bytes = await readFile(target);
+    return [specifier, 'data:image/webp;base64,' + bytes.toString('base64')];
+  }));
+  const urls = new Map(resources);
+  return source.replace(literal, (_, quote, specifier) => quote + urls.get(specifier) + quote);
+}
+
 async function bundleMusic(source, root, entryHtml, audioMode) {
   const paths = new Set([...source.matchAll(MUSIC_LITERAL)].map((match) => match[2]));
   const references = MUSIC_FILES.map((file) => `./assets/${file}`);
@@ -147,13 +163,13 @@ export async function buildStandalone({ projectRoot = PROJECT_ROOT, outputFile, 
     const tag = match[0];
     const attr = attributes(tag);
     if (attr.rel === 'stylesheet') {
-      const css = await readFile(localPath(root, entryHtml, attr.href), 'utf8');
+      const css = await inlineCityArtwork(await readFile(localPath(root, entryHtml, attr.href), 'utf8'), root, entryHtml);
       const cssUrls = [...css.matchAll(/url\(\s*(?:(["'])(.*?)\1|([^\s)]+))\s*\)/gis)];
       if (/@import\b/iu.test(css) || cssUrls.some((url) => !(url[2] ?? url[3]).startsWith('data:'))) {
         throw new Error('El CSS debe ser autocontenido, sin @import ni URL externas.');
       }
       if (/<\/style/iu.test(css)) throw new Error('El CSS contiene un cierre de style no permitido.');
-      html = html.replace(tag, `<style>\n${css}\n</style>`);
+      html = html.replace(tag, () => `<style>\n${css}\n</style>`);
       stylesheets += 1;
     } else if (attr.rel === 'icon') {
       const svg = await readFile(localPath(root, entryHtml, attr.href), 'utf8');
@@ -164,9 +180,11 @@ export async function buildStandalone({ projectRoot = PROJECT_ROOT, outputFile, 
       throw new Error(`Enlace externo no soportado en HTML autocontenido: ${attr.rel ?? tag}`);
     }
   }
-  if (stylesheets !== 1 || icons !== 1) throw new Error('Se esperaba una hoja de estilos y un icono SVG.');
+  if (stylesheets === 0 || icons !== 1) throw new Error('Se esperaba al menos una hoja de estilos y un icono SVG.');
+  html = await inlineCityArtwork(html, root, entryHtml);
   // Prevent accidental runtime asset requests in the portable file.
-  if (/<(?:script|img|iframe|audio|video|source)\b[^>]*\bsrc\s*=\s*['"](?!data:)/iu.test(html)) {
+  if (/<(?:script|img|iframe|audio|video|source)\b[^>]*\bsrc\s*=\s*['"](?!data:)/iu.test(html) ||
+      /<image\b[^>]*\bhref\s*=\s*['"](?!data:)/iu.test(html)) {
     throw new Error('El documento todavia contiene recursos externos.');
   }
   const destination = outputFile ? resolve(outputFile) : resolve(projectRoot, 'Jugar_Cuarenta.html');

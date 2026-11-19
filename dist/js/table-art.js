@@ -1,10 +1,10 @@
 export const TABLE_CITIES = Object.freeze([
-  { id: 'quito', name: 'Quito', detail: 'Basílica, balcones del Centro Histórico y Panecillo' },
-  { id: 'guayaquil', name: 'Guayaquil', detail: 'Las Peñas, faro del cerro Santa Ana y La Rotonda' },
-  { id: 'cuenca', name: 'Cuenca', detail: 'Catedral Nueva, El Barranco y Puente Roto' },
-  { id: 'loja', name: 'Loja', detail: 'Puerta de la Ciudad y tradición musical' },
-  { id: 'manta', name: 'Manta', detail: 'Pesca artesanal y faro de San Lorenzo' },
-  { id: 'ambato', name: 'Ambato', detail: 'Catedral y Fiesta de la Fruta y de las Flores' },
+  { id: 'quito', name: 'Quito', felt: 'borgona', detail: 'Pinceles y letras pintadas, entre balcones del Centro Histórico' },
+  { id: 'guayaquil', name: 'Guayaquil', felt: 'quito', detail: 'Persianas de madera y oficios del puerto' },
+  { id: 'cuenca', name: 'Cuenca', felt: 'azul', detail: 'Piedras del Tomebamba y tinta de grabado' },
+  { id: 'loja', name: 'Loja', felt: 'cobre', detail: 'Cuerdas, guitarras y el taller del lutier' },
+  { id: 'manta', name: 'Manta', felt: 'oceano', detail: 'Barcos de pesca, redes y mar abierto' },
+  { id: 'ambato', name: 'Ambato', felt: 'violeta', detail: 'Flores, frutas y manos de la feria' },
 ]);
 
 // Cada escena combina siluetas, contornos y detalles de grabado.

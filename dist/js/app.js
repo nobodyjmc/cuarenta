@@ -19,12 +19,6 @@ let comboPoints = 2;
 let difficulty = 'easy';
 const draftNames = { player: '', solo: '', pass: '' };
 const difficultyNames = { easy: 'Fácil', medium: 'Medio', hard: 'Difícil', expert: 'Experto' };
-const levelDescriptions = {
-  easy: 'Para aprender y practicar con calma.',
-  medium: 'El rival busca puntos y buenas capturas.',
-  hard: 'El rival anticipa tu próxima jugada.',
-  expert: 'El rival analiza varias jugadas por delante.',
-};
 const tableLayouts = { horizontal: 'Horizontal', vertical: 'Vertical' };
 const feltNames = {
   quito: 'Verde', azul: 'Azul Metro', borgona: 'Borgoña', oceano: 'Turquesa',
@@ -143,9 +137,9 @@ function shell(content) {
     <header class="app-bar">
       ${playing
         ? `<button type="button" class="app-tool" data-action="home" aria-label="Volver al inicio" title="Volver al inicio">${icon('back')}</button><h1 class="game-brand">El Cuarenta</h1>`
-        : '<button type="button" class="brand" data-action="home" aria-label="Cuarenta, inicio"><span class="brand-mark" aria-hidden="true">40<span>◆</span></span><span class="brand-word">Cuarenta</span></button>'}
+        : '<button type="button" class="brand" data-action="home" aria-label="El Cuarenta, inicio"><span class="brand-mark" aria-hidden="true">40</span><span class="studio-brand-word">Baraja ecuatoriana</span></button>'}
       <nav class="app-tools" aria-label="Herramientas">
-        <button type="button" class="app-tool" data-action="settings" aria-label="Preferencias" title="Preferencias">${icon('settings')}</button>
+        <button type="button" class="app-tool" data-action="settings" aria-label="Ajustes" title="Ajustes">${icon('settings')}${playing ? '' : '<span>Ajustes</span>'}</button>
       </nav>
     </header>
     <main id="main" class="workspace" tabindex="-1">${content}</main>
@@ -155,28 +149,26 @@ function shell(content) {
 function renderHome() {
   const saved = session.view(0);
   const canResume = saved && saved.status !== 'finished';
-  app.innerHTML = shell(`<section class="quick-home" aria-labelledby="setup-heading">
+  app.innerHTML = shell(`<section class="quick-home studio-home" aria-labelledby="setup-heading">
     <div class="home-cover">
       <h1 id="setup-heading">El Cuarenta</h1>
-      <img class="home-cover-art" alt="" width="${HOME_ART_WIDTH}" height="${HOME_ART_HEIGHT}" decoding="async">
+      <div class="studio-illustration"><img class="home-cover-art" alt="Dos amigos juegan cuarenta en un taller de rótulos de Quito." width="${HOME_ART_WIDTH}" height="${HOME_ART_HEIGHT}" decoding="async"></div>
     </div>
     <div class="home-actions${canResume ? ' has-saved' : ''}">
       ${canResume ? `<button class="button resume-button" type="button" data-action="resume">${icon('play')} <span>Continuar partida</span><span class="resume-score">${saved.players[0].score} a ${saved.players[1].score}</span></button>` : ''}
-      <p class="home-level">Nivel ${difficultyNames[difficulty]}</p>
       <button class="button primary start-button" type="button" data-action="quick-play"><span>Jugar contra ${esc(newGameOptions().names[1])}</span>${icon('arrow')}</button>
       ${privateAvailable ? `<button class="button local-entry private-entry" type="button" data-action="private-table">${icon('shield')}<span>${privateTable.credential ? 'Volver a mi mesa privada' : 'Mesa privada'}</span>${icon('arrow')}</button>` : ''}
-      <button class="button learn-entry" type="button" data-action="tutorial">${icon('book')}<span>Aprender a jugar</span></button>
-      <button class="button local-entry" type="button" data-action="local-game">${icon('people')}<span>Dos jugadores</span>${icon('arrow')}</button>
+      <button class="button learn-entry studio-row" type="button" data-action="tutorial">${icon('book')}<span>Aprender a jugar<small>Practica una mano con ayuda</small></span>${icon('arrow')}</button>
+      <button class="button local-entry studio-row" type="button" data-action="local-game">${icon('people')}<span>Dos jugadores<small>Compartan el mismo dispositivo</small></span>${icon('arrow')}</button>
+      <button class="button studio-row studio-custom" type="button" data-action="felt-settings">${icon('palette')}<span>Personalizar mesa<small><b data-table-city-name>${esc(cityNames[prefs.tableCity])}</b> · <b data-studio-felt-name>${esc(feltNames[prefs.feltTheme])}</b></small></span><i class="studio-felt-dot" aria-hidden="true"></i></button>
     </div>
   </section>`);
   app.querySelector('.home-cover-art').src = HOME_ART;
 }
 
 function updateHomeMatchLabels() {
-  const level = app.querySelector('.home-level');
-  if (!level) return;
-  level.textContent = `Nivel ${difficultyNames[difficulty]}`;
-  app.querySelector('.start-button span').textContent = `Jugar contra ${newGameOptions().names[1]}`;
+  const play = app.querySelector('.start-button span');
+  if (play) play.textContent = `Jugar contra ${newGameOptions().names[1]}`;
 }
 
 function scorePanel(v) {
@@ -286,16 +278,28 @@ function releaseNativeRotation() {
   rotationOwnsFullscreen = false;
 }
 
-function describePlay(move) {
-  if (!move) return 'Toca una carta de tu mano.';
-  if (move.rondaFall) return '¡Caída a la ronda! Victoria inmediata.';
-  if (move.winsGame) return 'Con esta jugada llegas a 40.';
-  if (move.fall && move.clean) return `Caída y limpia · +${move.points} puntos`;
-  if (move.fall) return `Caída · +${move.points} puntos`;
-  if (!move.captureIds.length) return 'La carta quedará en la mesa.';
+function rankInSentence(rank) {
+  if (rank === 'A') return 'el as';
+  return `${['J', 'Q', 'K'].includes(rank) ? 'la' : 'el'} ${rank}`;
+}
 
+function playLabelFor(move) {
+  if (!move) return 'Jugar carta';
   const rank = impactCards.get(move.cardId).rank;
-  const bonus = move.clean && move.points ? ` · Limpia +${move.points}` : '.';
+  if (!move.captureIds.length) return `Dejar ${rankInSentence(rank)}`;
+  if (move.captureIds.length === 1) return move.clean || move.fall ? `Recoger ${rankInSentence(rank)}` : 'Recoger pareja';
+  return 'Recoger las cartas';
+}
+
+function describePlay(move) {
+  if (!move) return 'Elige una carta de tu mano.';
+  if (move.rondaFall) return '¡Caída a la ronda! Con esta jugada ganas la partida.';
+  if (move.winsGame) return 'Con esta jugada llegas a 40.';
+  const rank = impactCards.get(move.cardId).rank;
+  if (move.fall && move.clean) return `Igualas la última carta y dejas la mesa limpia. Sumas ${move.points} puntos.`;
+  if (move.fall) return `Igualas la última carta. Es caída y sumas ${move.points} puntos.`;
+  if (!move.captureIds.length) return 'Tu carta se queda sobre la mesa.';
+  const bonus = move.clean && move.points ? `. Limpia, +${move.points}.` : '.';
   // The engine orders the base of a capture before any cards in the ladder.
   if (move.kind === 'sum') {
     const [first, second] = move.captureIds.slice(0, 2).map(id => impactCards.get(id).rank);
@@ -303,7 +307,26 @@ function describePlay(move) {
     return `Con tu ${rank} recoges ${first} + ${second}${ladder}${bonus}`;
   }
   if (move.captureIds.length > 1) return `Recoges ${move.captureIds.length + 1} cartas con tu ${rank}${bonus}`;
-  return `Tu ${rank} recoge el ${rank} de la mesa${bonus}`;
+  if (!move.clean) {
+    const courtPair = { A: 'los dos ases', J: 'las dos sotas', Q: 'las dos reinas', K: 'los dos reyes' };
+    return courtPair[rank] ? `Junta ${courtPair[rank]}.` : `Junta tu ${rank} con el de la mesa.`;
+  }
+  return `Tu ${rank} recoge ${rankInSentence(rank)} de la mesa${bonus}`;
+}
+
+function turnPrompt(view) {
+  const previous = view.lastPlay;
+  const card = view.table.find(item => item.id === previous?.cardId);
+  if (!card || previous.playerId === view.currentPlayerId) return describePlay(null);
+  return `${view.players[previous.playerId].name} dejó ${rankInSentence(card.rank)}. Elige tu carta.`;
+}
+
+function cityFrontispiece() {
+  return `<h2 class="city-frontispiece"><span class="sr-only">Mesa de <span data-table-city-name>${esc(cityNames[prefs.tableCity])}</span></span></h2>`;
+}
+
+function tableHeading() {
+  return '<div class="craft-table-heading"><p class="table-zone-label">Mesa</p></div>';
 }
 
 function tableCardsMarkup(view, captureIds = []) {
@@ -320,7 +343,7 @@ function handMarkup(player, { active, selected, suggested, action = 'select-card
   const cards = player.hand?.map(card => cardMarkup(card, {
     interactive: active, selected: card.id === selected, coach: card.id === suggested, action,
   })).join('');
-  return `<div class="own-hand ${active ? '' : 'waiting-hand'}">${cards || '<span class="empty-table">Sin cartas</span>'}</div>`;
+  return `<div class="own-hand ${active ? '' : 'waiting-hand'}" style="--cards-in-hand:${player.hand?.length || 1}">${cards || '<span class="empty-table">Sin cartas</span>'}</div>`;
 }
 
 function scorePlayers(view, active) {
@@ -352,27 +375,29 @@ function renderGame(dealDelay) {
   const hasRonda = ronda && me.hand?.some(card => ronda.cardIds.includes(card.id));
   const score = scorePlayers(v, !locked && v.status === 'playing');
   const scoreLabel = v.players.map(player => `${player.name} ${player.score}`).join(', ');
+  const instruction = myTurn ? (chosen ? describePlay(chosen) : turnPrompt(v)) : turn;
   const playButton = v.status === 'round-end' ? '<button class="button primary play-button" data-action="round-summary">Ver el conteo</button>'
     : v.status === 'finished' ? '<button class="button primary play-button" data-action="result">Ver resultado</button>'
-      : `<button class="button primary play-button" data-action="play" ${chosen ? '' : 'disabled'}>${captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>`;
+      : `<button class="button primary play-button" data-action="play" ${chosen ? '' : 'disabled'}>${esc(playLabelFor(chosen))} ${icon('arrow')}</button>`;
 
   app.innerHTML = shell(`
     <div class="game-layout">
       <section class="game-column${locked ? ' is-locked' : ''}" aria-label="Partida de Cuarenta">
         <div class="game-overview">
+          ${cityFrontispiece()}
           <button type="button" class="compact-score" data-action="game-summary" aria-label="${esc(scoreLabel)}. Abrir marcador e historial" title="Marcador e historial">
-            ${score[0]}<span class="score-target">A 40 puntos</span>${score[1]}
+            ${score[0]}<span class="score-target">Meta 40</span>${score[1]}
           </button>
-          <p class="game-turn" data-current="${myTurn}">${esc(turn)}</p>
+          <p class="game-turn" data-current="${myTurn}" aria-live="polite">${esc(instruction)}</p>
         </div>
         <section class="game-table${locked ? ' table-locked' : ''}" aria-label="Mesa">
           ${tableArt(prefs.tableCity)}
           ${locked ? `<div class="privacy-curtain">
             <div class="privacy-icon">${icon('eye')}</div>
-            <h2>Pásale el celular a ${esc(v.players[v.turn].name)}</h2>
+            <h2>${v.players[v.turn].name === 'Tú' ? 'Es tu turno' : 'Turno de ' + esc(v.players[v.turn].name)}</h2>
             <button class="button gold" data-action="reveal">Ver mi mano ${icon('arrow')}</button>
           </div>` : `<div class="table-center">
-            <p class="table-zone-label">Mesa</p>
+            ${tableHeading()}
             ${tableCardsMarkup(v, captureIds)}
           </div>`}
         </section>
@@ -382,7 +407,6 @@ function renderGame(dealDelay) {
           ${handMarkup(me, { active: myTurn, selected: selectedId })}
         </section>
         <div class="action-panel">
-          ${myTurn ? `<p class="action-copy"><strong>${esc(describePlay(chosen))}</strong></p>` : ''}
           <div class="move-controls">
             ${moves.length > 1 ? `<button class="button outline option-button" data-action="next-capture">Otra captura · ${selectedMoveIndex + 1}/${moves.length}</button>` : ''}
             ${playButton}
@@ -646,7 +670,7 @@ function startGame(options) {
 
 function newGameOptions(gameMode = 'solo', gameDifficulty = difficulty, points = comboPoints) {
   const clean = (value, fallback) => value.replace(/[\u0000-\u001f]/g, '').trim().slice(0, 20) || fallback;
-  const names = [clean(draftNames.player, 'Tú'), clean(draftNames[gameMode], gameMode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2')];
+  const names = [clean(draftNames.player, gameMode === 'pass' ? 'Jugador 1' : 'Tú'), clean(draftNames[gameMode], gameMode === 'solo' ? DEFAULT_BOT_NAME : 'Jugador 2')];
   if (names[0] === names[1]) names[1] = names[1].slice(0, 17) + ' 2';
   return { mode: gameMode, names, comboPoints: points, difficulty: gameDifficulty };
 }
@@ -682,8 +706,8 @@ function closeModal(resume = true) {
   if (resume) scheduleBot();
 }
 
-function modalHeader(title, eyebrow = 'EN TU MESA') {
-  return `<div class="modal-top"><p class="eyebrow">${eyebrow}</p><button class="icon-button" data-action="close-modal" aria-label="Cerrar">${icon('close')}</button></div><h2 id="modal-title">${title}</h2>`;
+function modalHeader(title, eyebrow = '') {
+  return `<div class="modal-top">${eyebrow ? `<p class="eyebrow">${eyebrow}</p>` : ''}<button class="icon-button" data-action="close-modal" aria-label="Cerrar">${icon('close')}</button></div><h2 id="modal-title">${title}</h2>`;
 }
 
 function rememberOpenTable(code) {
@@ -881,12 +905,19 @@ function resumePrivateTableFromLocation() {
 }
 
 function showSoloLevels() {
-  const options = Object.entries(difficultyNames).map(([key, label]) => `
+  const strengths = {
+    easy: 'Para cogerle el ritmo a las cartas.',
+    medium: 'Busca parejas y aprovecha las sumas.',
+    hard: 'Mira qué podrías recoger en tu turno.',
+    expert: 'Piensa en la respuesta y en la siguiente jugada.',
+  };
+  const options = Object.entries(difficultyNames).map(([key, label], index) => `
     <button type="button" class="button level-option${key === difficulty ? ' is-selected' : ''}" data-action="start-solo" data-difficulty="${key}">
-      <span><strong>${label}</strong><small>${levelDescriptions[key]}</small></span>
-      ${icon(key === difficulty ? 'check' : 'arrow')}
+      <span class="level-suit" aria-hidden="true">${['♣', '♦', '♥', '♠'][index]}</span>
+      <span><strong>${label}</strong><small>${strengths[key]}</small></span>
+      ${icon('arrow')}
     </button>`).join('');
-  showModal('solo-levels', `${modalHeader('Elige tu nivel', `CONTRA ${esc(newGameOptions().names[1])}`)}
+  showModal('solo-levels', `${modalHeader('Elige tu nivel', `Jugar con ${esc(newGameOptions().names[1])}`)}
     <div class="solo-levels" role="group" aria-label="Nivel de juego">${options}</div>`);
   const title = modal.querySelector('#modal-title');
   title.tabIndex = -1;
@@ -895,23 +926,23 @@ function showSoloLevels() {
 
 function showSetupOptions(gameMode = 'solo') {
   const local = gameMode === 'pass';
-  const opponentLabel = local ? 'Nombre del segundo jugador' : 'Nombre del bot (opcional)';
+  const opponentLabel = local ? 'Jugador 2' : 'Nombre del rival';
   const opponentDefault = local ? 'Jugador 2' : DEFAULT_BOT_NAME;
-  showModal('setup-options', `${modalHeader(local ? 'Dos jugadores' : 'Ajustes de partida')}
-    ${local ? '<p class="modal-intro">Jueguen en el mismo dispositivo y pásenlo al cambiar de turno.</p>' : ''}
+  showModal('setup-options', `${modalHeader(local ? 'Dos jugadores' : 'Tu partida')}
+    ${local ? '<p class="modal-intro">Al terminar tu turno, pasa el dispositivo. Cada persona verá solo su mano.</p>' : ''}
     <div class="match-options">
       <div class="name-fields">
-        <label>${local ? 'Nombre del primer jugador' : 'Tu nombre'}<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="Tú" value="${esc(draftNames.player)}"></label>
+        <label>${local ? 'Jugador 1' : 'Tu nombre'}<input id="player-name" name="player" autocomplete="off" maxlength="20" placeholder="${local ? 'Jugador 1' : 'Tú'}" value="${esc(draftNames.player)}"></label>
         <label>${opponentLabel}<input id="opponent-name" name="opponent" data-opponent-mode="${gameMode}" autocomplete="off" maxlength="20" placeholder="${opponentDefault}" value="${esc(draftNames[gameMode])}"></label>
       </div>
       ${local ? '' : `<div class="difficulty-picker">
-        <label for="bot-difficulty">Nivel de la máquina</label>
+        <label for="bot-difficulty">Nivel del rival</label>
         <select id="bot-difficulty" name="difficulty" aria-describedby="difficulty-note">${Object.entries(difficultyNames).map(([key, label]) =>
           `<option value="${key}" ${difficulty === key ? 'selected' : ''}>${label}</option>`
         ).join('')}</select>
         <p class="difficulty-note" id="difficulty-note">${difficultyNotes[difficulty]}</p>
       </div>`}
-      <div class="combo-choice"><span>Caída y limpia</span>
+      <div class="combo-choice"><span>Caída y limpia juntas</span>
         <div role="group" aria-label="Puntos de caída y limpia">
           ${[2, 4].map(points => `<button type="button" class="${comboPoints === points ? 'chosen' : ''}" data-action="combo" data-points="${points}" aria-pressed="${comboPoints === points}">${points} puntos</button>`).join('')}
         </div>
@@ -951,17 +982,20 @@ function applyFelt() {
   document.documentElement.dataset.city = prefs.tableCity;
 }
 
-function setTableAppearance({ theme = prefs.feltTheme, city = prefs.tableCity }) {
+function setTableAppearance({ city = prefs.tableCity, theme = prefs.cityFelts[city] }) {
   if (!FELT_THEMES.includes(theme) || !Object.hasOwn(cityNames, city)) return;
   if (city !== prefs.tableCity) {
     const artwork = tableArt(city);
     for (const svg of document.querySelectorAll('.table-city-art')) svg.outerHTML = artwork;
     for (const label of document.querySelectorAll('[data-table-city-name]')) label.textContent = cityNames[city];
     for (const label of document.querySelectorAll('[data-table-city-detail]')) label.textContent = cityDetails[city];
+    for (const label of document.querySelectorAll('[data-follow-city]')) label.dataset.city = city;
   }
   prefs.feltTheme = theme;
   prefs.tableCity = city;
+  prefs.cityFelts[city] = theme;
   applyFelt();
+  for (const label of document.querySelectorAll('[data-table-felt-name], [data-studio-felt-name]')) label.textContent = feltNames[theme];
   for (const button of modal.querySelectorAll('.felt-option, .city-option')) {
     const selected = button.dataset.felt === theme || button.dataset.city === city;
     button.setAttribute('aria-pressed', String(selected));
@@ -971,20 +1005,24 @@ function setTableAppearance({ theme = prefs.feltTheme, city = prefs.tableCity })
 
 function showTableAppearance() {
   const cities = TABLE_CITIES.map(({ id, name }) =>
-    `<button type="button" class="city-option" data-action="table-city" data-city="${id}" aria-pressed="${id === prefs.tableCity}">${name}</button>`
+    `<button type="button" class="city-option" data-action="table-city" data-city="${id}" data-art-city="${id}" aria-pressed="${id === prefs.tableCity}"><span class="city-option-print" aria-hidden="true"></span><span class="city-option-caption">${esc(name)}</span></button>`
   ).join('');
   const colors = FELT_THEMES.map(theme =>
     `<button type="button" class="felt-option" data-action="felt-theme" data-felt="${theme}" aria-pressed="${theme === prefs.feltTheme}"><span class="felt-swatch" data-felt-option="${theme}" aria-hidden="true"></span><span>${feltNames[theme]}</span></button>`
   ).join('');
-  showModal('table-design', `${settingsHeader('Diseño de mesa')}
+  const backAction = modalKind === 'settings' ? 'settings' : 'close-modal';
+  showModal('table-design', `${settingsHeader('Diseño de mesa', backAction)}
     <div class="settings-content felt-settings">
-      <figure class="table-preview">
-        <div class="felt-preview">${tableArt(prefs.tableCity)}</div>
-        <figcaption><strong data-table-city-name>${cityNames[prefs.tableCity]}</strong><span data-table-city-detail>${cityDetails[prefs.tableCity]}</span></figcaption>
+      <figure class="table-preview" aria-label="Vista previa de la mesa">
+        <div class="felt-preview">${tableArt(prefs.tableCity)}
+          <span class="taller-city-print" data-follow-city data-city="${prefs.tableCity}" aria-hidden="true"></span>
+          <span class="sample-pair" aria-hidden="true">${cardSvg({rank:'K',suit:'clubs'})}${cardSvg({rank:'A',suit:'hearts'})}</span>
+        </div>
+        <figcaption aria-live="polite"><strong data-table-city-name>${cityNames[prefs.tableCity]}</strong><span class="sample-color">Paño <b data-table-felt-name>${feltNames[prefs.feltTheme]}</b></span></figcaption>
       </figure>
-      <p id="table-city-label" class="table-choice-label">Ciudad</p>
+      <p id="table-city-label" class="table-choice-label">Elige una ciudad</p>
       <div class="city-options" role="group" aria-labelledby="table-city-label">${cities}</div>
-      <p id="table-color-label" class="table-choice-label">Color</p>
+      <p id="table-color-label" class="table-choice-label">Color del paño</p>
       <div class="felt-options" role="group" aria-labelledby="table-color-label">${colors}</div>
     </div>
     ${settingsFooter()}`);
@@ -992,9 +1030,9 @@ function showTableAppearance() {
   modal.querySelector('#modal-title').focus({ preventScroll: true });
 }
 
-function settingsHeader(title) {
+function settingsHeader(title, backAction = 'close-modal') {
   return `<header class="settings-header">
-    <button type="button" class="icon-button" data-action="close-modal" aria-label="Cerrar ${title.toLowerCase()}">${icon('back')}</button>
+    <button type="button" class="icon-button" data-action="${backAction}" aria-label="${backAction === 'settings' ? 'Volver a ajustes' : `Cerrar ${title.toLowerCase()}`}">${icon('back')}</button>
     <h2 id="modal-title" tabindex="-1">${title}</h2>
   </header>`;
 }
@@ -1022,12 +1060,12 @@ function audioSettings() {
   const tracks = MUSIC_TRACKS.map(({ id, title }) =>
     `<option value="${esc(id)}"${id === prefs.musicTrack ? ' selected' : ''}>${esc(title)}</option>`
   ).join('');
-  return `<section class="settings-group music-settings" aria-labelledby="audio-settings-title">
-    <h3 id="audio-settings-title">${icon('music')} Sonido y música</h3>
+  return `<details class="settings-group settings-fold music-settings">
+    <summary>${icon('music')} <span>Música y sonido<small>Instrumentales y sonidos de las cartas</small></span>${icon('arrow')}</summary>
     <div class="settings-controls">
       ${settingSwitch('Música de fondo', `<input type="checkbox" role="switch" id="music-enabled"${prefs.music ? ' checked' : ''}>`)}
       <div class="music-options">
-        <label for="music-track">Pista<select id="music-track">${tracks}</select></label>
+        <label for="music-track">Instrumental<select id="music-track">${tracks}</select></label>
         <div class="music-volume">
           <label for="music-volume">Volumen</label><output id="music-level" for="music-volume">${volume}%</output>
           <input type="range" id="music-volume" min="0" max="100" value="${volume}">
@@ -1036,41 +1074,43 @@ function audioSettings() {
       <p class="music-status" id="music-status" role="status" hidden></p>
       ${preferenceSwitch('sound', 'Sonidos de la mesa', 'Reparto, jugadas y capturas.')}
     </div>
-  </section>`;
+  </details>`;
 }
 
 function showSettings() {
   const inGame = screen === 'game';
-  const links = [['felt-settings', 'palette', 'Diseño de mesa']];
+  const links = [];
   if (inGame) links.push(['tutorial', 'book', 'Aprender a jugar'], ['new', 'cards', 'Nueva partida']);
-  else links.unshift(['setup-options', 'cards', 'Ajustes de partida']);
+  else links.push(['setup-options', 'cards', 'Nombres y reglas de la mesa']);
   const shortcuts = links.map(([action, symbol, label]) =>
     `<button type="button" class="settings-link" data-action="${action}">${icon(symbol)} <span>${label}</span> ${icon('arrow')}</button>`
   ).join('');
   const adjustment = prefs.feedbackChallenge > 0 ? 'Más difícil' : prefs.feedbackChallenge < 0 ? 'Más accesible' : 'Estándar';
   showModal('settings', `
-    ${settingsHeader('Preferencias')}
+    ${settingsHeader('Ajustes')}
     <div class="settings-content">
-      <section class="settings-group" aria-labelledby="settings-table-title">
-        <h3 id="settings-table-title">${icon('cards')} Mesa</h3>
-        <div class="settings-controls">
-          ${inGame ? `<div class="settings-orientation">${tableLayoutPicker()}</div>` : ''}
-          <nav class="settings-shortcuts" aria-label="Opciones de la mesa">${shortcuts}</nav>
-        </div>
-      </section>
+      <button type="button" class="design-feature" data-action="felt-settings">
+        <span class="design-miniature" aria-hidden="true">${tableArt(prefs.tableCity)}<span>40</span></span>
+        <span class="design-label"><strong>Diseño de mesa</strong><small>${cityNames[prefs.tableCity]} · ${feltNames[prefs.feltTheme]}</small></span>
+        ${icon('arrow')}
+      </button>
       ${audioSettings()}
-      <section class="settings-group" aria-labelledby="settings-play-title">
-        <h3 id="settings-play-title">${icon('settings')} Jugabilidad</h3>
+      <details class="settings-group settings-fold">
+        <summary>${icon('settings')} <span>Ritmo de juego<small>Movimiento, turnos y nivel experto</small></span>${icon('arrow')}</summary>
         <div class="settings-controls">
-          ${preferenceSwitch('reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo ya lo tiene activado.' : 'Reduce las animaciones de la mesa.')}
-          ${preferenceSwitch('quickBot', 'Máquina más rápida', 'Menos espera entre turnos.')}
+          ${preferenceSwitch('reducedMotion', 'Reducir movimiento', systemReducedMotion.matches ? 'Tu dispositivo ya lo tiene activado.' : 'Suaviza las animaciones de las cartas.')}
+          ${preferenceSwitch('quickBot', 'Turnos rápidos del rival', 'Acorta la pausa antes de que juegue su carta.')}
           ${preferenceSwitch('feedbackMode', 'Valoración del Experto', 'Al final de una partida en Experto.')}
           <div class="settings-calibration">
             <span>Ajuste del Experto <strong>${adjustment}</strong></span>
             ${prefs.feedbackChallenge ? '<button type="button" class="button text-button" data-action="reset-feedback">Restablecer</button>' : ''}
           </div>
         </div>
-      </section>
+      </details>
+      <div class="settings-other">
+        ${inGame ? `<div class="settings-orientation">${tableLayoutPicker()}</div>` : ''}
+        <nav class="settings-shortcuts" aria-label="Opciones de la partida">${shortcuts}</nav>
+      </div>
     </div>
     ${settingsFooter()}`);
   modal.scrollTop = 0;
@@ -1130,12 +1170,11 @@ function practiceTechniques(move) {
 function explainPracticeMove(move) {
   const techniques = practiceTechniques(move);
   const explanations = [];
-  if (move.kind === 'drop') return 'Cuando tu carta no puede recoger, queda en la mesa.';
-  if (move.kind === 'sum') explanations.push('La suma usa exactamente dos cartas numéricas.');
-  else if (!move.fall) explanations.push('Igualas una carta de la mesa.');
-  if (techniques.includes('ladder')) explanations.push('La escalera sigue en orden: después del 7 van J, Q y K.');
-  if (move.fall) explanations.push('Igualar la última carta del rival es una caída.');
-  if (move.clean) explanations.push('Al vaciar la mesa haces una limpia.');
+  if (move.kind === 'drop') return 'Después le toca jugar a Don Julio.';
+  if (move.kind === 'sum') explanations.push('Para sumar, usa dos cartas de la mesa.');
+  if (techniques.includes('ladder')) explanations.push('Te llevas también las cartas que siguen en orden.');
+  if (move.kind === 'match' && !move.fall && !techniques.includes('ladder')) explanations.push('Para recoger una pareja basta con igualar su valor.');
+  if (move.clean && !move.fall && !move.points) explanations.push('Con 38 puntos, solo una caída te da los dos que faltan.');
   return explanations.join(' ');
 }
 
@@ -1144,11 +1183,11 @@ function practiceCoach(view, chosen) {
   if (chosen) return [describePlay(chosen), explainPracticeMove(chosen)];
   if (practice.hint) {
     const card = impactCards.get(practice.hint.cardId);
-    return [`Prueba con ${cardLabel(card)}.`, view.revision === 0
-      ? 'Toca la carta marcada y pulsa Jugar carta. Juegas una carta por turno.'
-      : `${describePlay(practice.hint)} Toca la carta marcada para ver la jugada.`];
+    return ['Toca la carta marcada.', view.revision === 0
+      ? `${cardLabel(card)}. Hoy te toca abrir el juego.`
+      : `${cardLabel(card)}. ${describePlay(practice.hint)}`];
   }
-  return ['Elige una carta de tu mano', practice.recap || 'La mesa marcará las cartas que puedes recoger.'];
+  return ['¿Cuál quieres jugar?', practice.recap || 'Toca una carta de tu mano para probar.'];
 }
 
 function practiceFinish(view) {
@@ -1161,7 +1200,7 @@ function practiceFinish(view) {
   const score = scorePlayers(view, false);
   return `<section class="practice-finish">
     <h3>${summary ? 'Completaste el ciclo' : 'Terminaste la partida'}</h3>
-    <div class="compact-score" aria-label="Marcador de la práctica">${score[0]}<span class="score-target">A 40 puntos</span>${score[1]}</div>
+    <div class="compact-score" aria-label="Marcador de la práctica">${score[0]}<span class="score-target">Meta 40</span>${score[1]}</div>
     ${summary ? `<div class="practice-results">
       ${view.players.map((player, index) => `<div><strong>${esc(player.name)}</strong><span>${summary.captured[index]} cartas · +${summary.awarded[index]} por cartón</span></div>`).join('')}
     </div>` : ''}
@@ -1196,12 +1235,13 @@ function showPractice(focus, dealing = false) {
   <section class="practice-game" data-revision="${view.revision}" data-turn="${view.turn}" data-status="${view.status}" aria-label="Partida guiada en Fácil">
     ${playing ? `<div class="game-column${dealing ? ' is-dealing' : ''}">
       <div class="game-overview">
-        <div class="compact-score" aria-label="Marcador de la práctica">${score[0]}<span class="score-target">A 40 puntos</span>${score[1]}</div>
+        ${cityFrontispiece()}
+        <div class="compact-score" aria-label="Marcador de la práctica">${score[0]}<span class="score-target">Meta 40</span>${score[1]}</div>
         <p class="game-turn" data-current="${myTurn}">${myTurn ? 'Tu turno' : 'Juega Don Julio'}</p>
       </div>
       <section class="game-table" aria-label="Mesa">
         ${tableArt(prefs.tableCity)}
-        <div class="table-center"><p class="table-zone-label">Mesa</p>${tableCardsMarkup(view, chosen?.captureIds)}</div>
+        <div class="table-center">${tableHeading()}${tableCardsMarkup(view, chosen?.captureIds)}</div>
       </section>
       <section class="own-zone" aria-label="Tu mano">
         <p class="table-zone-label">Tu mano</p>
@@ -1217,7 +1257,7 @@ function showPractice(focus, dealing = false) {
         <div class="move-controls">
           ${moves.length > 1 ? `<button type="button" class="button outline option-button" data-action="practice-next-capture">Otra captura · ${practice.option + 1}/${moves.length}</button>` : ''}
           <button type="button" class="button outline practice-hint" data-action="practice-hint" ${myTurn ? '' : 'disabled'}>Pista</button>
-          <button type="button" class="button gold play-button" data-action="practice-play" ${chosen ? '' : 'disabled'}>${chosen?.captureIds.length ? 'Recoger cartas' : 'Jugar carta'} ${icon('arrow')}</button>
+          <button type="button" class="button gold play-button" data-action="practice-play" ${chosen ? '' : 'disabled'}>${esc(playLabelFor(chosen))} ${icon('arrow')}</button>
         </div>
       </div>
     </div>` : practiceFinish(view)}
@@ -1330,7 +1370,7 @@ function tutorialBoard(lesson, answer, guidedChoice) {
   const handOnly = !play && table.length === 0;
   const lastCard = answer ? (answer.after?.move?.kind === 'drop' ? answer.after.move.cardId : null) : lesson.lastCardId;
   const suggestedCaptures = tutorialCardId === guidedChoice?.cardId ? guidedChoice?.captureIds : [];
-  return `<div class="lesson-board tutorial-board${answer ? ' is-solved' : ''}" data-hand-only="${handOnly}">
+  return `<div class="lesson-board tutorial-board${answer ? ' is-solved' : ''}" data-hand-only="${handOnly}" role="group" aria-label="Mesa de ${esc(cityNames[prefs.tableCity])}">
     ${tableArt(prefs.tableCity)}
     ${handOnly ? '' : `<p class="tutorial-zone-label tutorial-table-label">Mesa</p>
     <div class="tutorial-table">${table.map(card => cardMarkup(card, {
@@ -1511,7 +1551,19 @@ function showResult() {
   const waiting = privateGame && privateRoom.rematch[viewer];
   const invited = privateGame && privateRoom.rematch[1 - viewer];
   const rematchLabel = waiting ? 'Esperando la respuesta…' : invited ? 'Aceptar revancha' : privateGame ? 'Pedir revancha' : 'Una revancha';
-  showModal('result', `${modalHeader('¡Chica ganada!', privateGame ? 'MESA PRIVADA' : 'UNA BUENA PARTIDA')}<div class="winner-symbol">${icon('trophy')}</div><h3 class="winner-name">${esc(v.players[v.winner]?.name || 'La mesa')}</h3><p class="winner-subtitle">${esc(v.lastEvent?.text || 'Llegó el momento de volver a repartir.')}</p><div class="final-score">${v.players.map(p => `<div><strong>${p.score}</strong><span>${esc(p.name)}</span></div>`).join('<span class="score-divider">:</span>')}</div>${feedback}<button class="button primary full-width" data-action="rematch" ${waiting ? 'disabled' : ''}>${rematchLabel} ${icon('cards')}</button><button class="button text-button full-width" data-action="home">Volver al inicio</button>`);
+  const winner = esc(v.players[v.winner].name);
+  const personalWin = (v.mode === 'solo' || privateGame) && v.winner === viewer;
+  const headline = personalWin ? '¡Ganaste la chica!' : `Gana ${winner}`;
+  const score = v.players.map((player, index) => `
+    <div class="${index === v.winner ? 'winning-score' : ''}">
+      <span>${esc(player.name)}</span><strong>${player.score}</strong>
+    </div>`).join('<i class="score-divider" aria-hidden="true">·</i>');
+  showModal('result', `${modalHeader(headline, 'Fin de la partida')}
+    <p class="winner-subtitle">${esc(v.lastEvent?.text || '')}</p>
+    <div class="final-score" role="group" aria-label="Marcador final">${score}</div>
+    ${feedback}
+    <button class="button primary full-width" data-action="rematch" ${waiting ? 'disabled' : ''}>${rematchLabel} ${icon('cards')}</button>
+    <button class="button text-button full-width" data-action="home">Volver al inicio</button>`);
 }
 
 function handleAction(target) {

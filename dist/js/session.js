@@ -3,8 +3,9 @@ import { TABLE_CITIES } from './table-art.js';
 
 const SAVE_KEY = 'cuarenta.local.game.v1';
 const PREFS_KEY = 'cuarenta.local.preferences.v1';
-const DEFAULT_FELT_THEME = 'quito';
 const DEFAULT_TABLE_CITY = 'quito';
+const CITY_FELTS = Object.fromEntries(TABLE_CITIES.map(city => [city.id, city.felt]));
+const DEFAULT_FELT_THEME = CITY_FELTS[DEFAULT_TABLE_CITY];
 const TABLE_CITY_IDS = new Set(TABLE_CITIES.map(({ id }) => id));
 const DEFAULT_MUSIC_VOLUME = .32;
 const DEFAULT_MUSIC_TRACK = 'reminiscencias';
@@ -124,13 +125,25 @@ export function loadPreferences(storage) {
     quickBot: false,
     feedbackMode: true,
     feedbackChallenge: 0,
-    tableLayout: 'horizontal',
+    tableLayout: 'vertical',
     feltTheme: DEFAULT_FELT_THEME,
     tableCity: DEFAULT_TABLE_CITY,
+    cityFelts: { ...CITY_FELTS },
   };
   try {
-    const saved = JSON.parse((storage ?? globalThis.localStorage).getItem(PREFS_KEY) || '{}');
+    const stored = (storage ?? globalThis.localStorage).getItem(PREFS_KEY);
+    if (!stored) return fallback;
+    const saved = JSON.parse(stored);
     const feedbackChallenge = Number.isInteger(saved.feedbackChallenge) ? Math.max(-3, Math.min(3, saved.feedbackChallenge)) : 0;
+    const tableCity = TABLE_CITY_IDS.has(saved.tableCity) ? saved.tableCity : DEFAULT_TABLE_CITY;
+    const cityFelts = { ...CITY_FELTS };
+    for (const city of TABLE_CITY_IDS) {
+      if (FELT_THEMES.includes(saved.cityFelts?.[city])) cityFelts[city] = saved.cityFelts[city];
+    }
+    // Earlier releases and callers store the active cloth in feltTheme.
+    if (FELT_THEMES.includes(saved.feltTheme) || saved.feltTheme === 'custom') {
+      cityFelts[tableCity] = resolveFeltTheme(saved.feltTheme, saved.feltColor);
+    }
     return {
       sound: saved.sound === undefined || saved.sound === true,
       music: saved.music === undefined || saved.music === true,
@@ -141,9 +154,11 @@ export function loadPreferences(storage) {
       quickBot: saved.quickBot === true,
       feedbackMode: saved.feedbackMode === undefined ? true : saved.feedbackMode === true,
       feedbackChallenge,
+      // Profiles that predate the layout selector opened in landscape.
       tableLayout: saved.tableLayout === 'vertical' ? 'vertical' : 'horizontal',
-      feltTheme: resolveFeltTheme(saved.feltTheme, saved.feltColor),
-      tableCity: TABLE_CITY_IDS.has(saved.tableCity) ? saved.tableCity : DEFAULT_TABLE_CITY,
+      feltTheme: cityFelts[tableCity],
+      tableCity,
+      cityFelts,
     };
   } catch { return fallback; }
 }

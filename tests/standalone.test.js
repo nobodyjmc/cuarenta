@@ -105,3 +105,36 @@ test('rejects external stylesheet assets in portable output', async (t) => {
   await writeFile(join(root, 'dist', 'styles.css'), 'body { background: url("https://example.com/image.png"); }');
   await assert.rejects(buildStandalone({ projectRoot: root }), /CSS/);
 });
+
+test('the cover, city sign and SVG portrait render from embedded WebPs in every build', async (t) => {
+  const path = './assets/mesas/quito-K.webp';
+  const root = await fixture(t, { 'app.js': `globalThis.cover = "${path}";` });
+  const dist = join(root, 'dist');
+  const sample = Buffer.from('RIFF sample WEBP');
+  await mkdir(join(dist, 'assets', 'mesas'));
+  await writeFile(join(dist, path), sample);
+  const entry = await readFile(join(dist, 'index.html'), 'utf8');
+  await writeFile(join(dist, 'index.html'), entry
+    .replace('</head>', '<link rel="stylesheet" href="./cities.css"></head>')
+    .replace('<main>', `<svg><image href="${path}"/></svg><main>`));
+  await writeFile(join(dist, 'cities.css'), `.sign { background-image: url("${path}"); }`);
+  const data = 'data:image/webp;base64,' + sample.toString('base64');
+  for (const audioMode of ['inline', 'adjacent', 'dist']) {
+    const output = await buildStandalone({ projectRoot: root, audioMode });
+    const document = await readFile(output.path, 'utf8');
+    assert.ok(document.includes(`<image href="${data}"/>`));
+    assert.ok(document.includes(`url("${data}")`));
+    assert.ok(document.includes(`globalThis.cover = "${data}"`));
+    assert.ok(!document.includes(path));
+  }
+});
+
+test('artwork cannot reference an unsupported location or leave dist', async (t) => {
+  const root = await fixture(t, { 'app.js': 'globalThis.ready = true;' });
+  const entryPath = join(root, 'dist', 'index.html');
+  const html = await readFile(entryPath, 'utf8');
+  for (const path of ['https://example.com/cover.webp', './assets/mesas/../../outside.webp']) {
+    await writeFile(entryPath, html.replace('<main>', `<svg><image href="${path}"/></svg><main>`));
+    await assert.rejects(buildStandalone({ projectRoot: root }), /recursos externos/);
+  }
+});
