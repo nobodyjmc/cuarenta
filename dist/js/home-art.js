@@ -1,3 +1,4 @@
-export const HOME_ART_WIDTH = 1200;
-export const HOME_ART_HEIGHT = 800;
-export const HOME_ART = "./assets/mesas/portada.webp";
+import { cardSvg } from './cards.js';
+
+export const COVER_CARDS = cardSvg({ rank: 'K', suit: 'clubs' })
+  + cardSvg({ rank: 'A', suit: 'hearts' });

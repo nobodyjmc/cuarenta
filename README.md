@@ -1,4 +1,4 @@
-# Cuarenta · Versión 0.19.0
+# Cuarenta · Versión 0.19.1
 
 Juego ecuatoriano de cartas para jugar contra Don Julio o con otra persona en el mismo dispositivo. Puedes escoger una de seis mesas ilustradas y practicar con una mano guiada. [Jugar en el navegador](https://nobodyjmc.github.io/cuarenta/).
 

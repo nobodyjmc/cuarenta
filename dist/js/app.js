@@ -7,7 +7,7 @@ import { createTutorialLessons } from './tutorial.js';
 import { choosePracticeReply, createPracticeGame, practiceHint } from './practice.js';
 import { MUSIC_TRACKS, TableMusic } from './music.js';
 import { TABLE_CITIES, tableArt } from './table-art.js';
-import { HOME_ART, HOME_ART_WIDTH, HOME_ART_HEIGHT } from './home-art.js';
+import { COVER_CARDS } from './home-art.js';
 import { PrivateTableClient } from './private-client.js';
 
 const app = document.querySelector('#app');
@@ -152,7 +152,7 @@ function renderHome() {
   app.innerHTML = shell(`<section class="quick-home studio-home" aria-labelledby="setup-heading">
     <div class="home-cover">
       <h1 id="setup-heading">El Cuarenta</h1>
-      <div class="studio-illustration"><img class="home-cover-art" alt="Dos amigos juegan cuarenta en un taller de rótulos de Quito." width="${HOME_ART_WIDTH}" height="${HOME_ART_HEIGHT}" decoding="async"></div>
+      <div class="studio-illustration">${COVER_CARDS}</div>
     </div>
     <div class="home-actions${canResume ? ' has-saved' : ''}">
       ${canResume ? `<button class="button resume-button" type="button" data-action="resume">${icon('play')} <span>Continuar partida</span><span class="resume-score">${saved.players[0].score} a ${saved.players[1].score}</span></button>` : ''}
@@ -163,7 +163,6 @@ function renderHome() {
       <button class="button studio-row studio-custom" type="button" data-action="felt-settings">${icon('palette')}<span>Personalizar mesa<small><b data-table-city-name>${esc(cityNames[prefs.tableCity])}</b> · <b data-studio-felt-name>${esc(feltNames[prefs.feltTheme])}</b></small></span><i class="studio-felt-dot" aria-hidden="true"></i></button>
     </div>
   </section>`);
-  app.querySelector('.home-cover-art').src = HOME_ART;
 }
 
 function updateHomeMatchLabels() {
@@ -1016,7 +1015,7 @@ function showTableAppearance() {
       <figure class="table-preview" aria-label="Vista previa de la mesa">
         <div class="felt-preview">${tableArt(prefs.tableCity)}
           <span class="taller-city-print" data-follow-city data-city="${prefs.tableCity}" aria-hidden="true"></span>
-          <span class="sample-pair" aria-hidden="true">${cardSvg({rank:'K',suit:'clubs'})}${cardSvg({rank:'A',suit:'hearts'})}</span>
+          <span class="sample-pair" aria-hidden="true">${COVER_CARDS}</span>
         </div>
         <figcaption aria-live="polite"><strong data-table-city-name>${cityNames[prefs.tableCity]}</strong><span class="sample-color">Paño <b data-table-felt-name>${feltNames[prefs.feltTheme]}</b></span></figcaption>
       </figure>
