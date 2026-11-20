@@ -6262,6 +6262,222 @@ svg.aside-panel-icon {
   #modal[data-kind="practice"] .city-frontispiece { max-height: 9dvh; }
 }
 
+/* Cartón: the counters and the faces stay on the same two spots as the piles grow. */
+.carton-count {
+  --carton-card-width: var(--carton-compact-card, clamp(58px, min(19vw, 17dvh), 102px));
+  display: grid;
+  grid-template: var(--carton-grid, "stage" auto "status" auto "receipt" auto "actions" auto / minmax(0, 1fr));
+  align-items: center;
+  column-gap: 12px;
+  margin-block: 12px;
+}
+.carton-stage {
+  grid-area: stage;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 6px;
+  overflow: hidden;
+  border: 1px solid #ae9363;
+  border-radius: 12px;
+  background-color: var(--felt-edge, #203c30);
+  background-image: var(--city-grain), var(--felt-surface);
+  background-size: 250px 250px, cover;
+  background-blend-mode: overlay, normal;
+  box-shadow: inset 0 0 0 3px #110c0873, inset 0 0 0 4px #dfc38c4a;
+}
+.carton-stage::before {
+  content: "";
+  position: absolute;
+  inset: 11% auto 11% 50%;
+  width: 1px;
+  background: linear-gradient(transparent, #ead8af9e 25% 75%, transparent);
+}
+.carton-player {
+  --card-travel-x: 25%;
+  --card-tilt: 10deg;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  row-gap: 10px;
+  padding: clamp(9px, 2.5vw, 18px) 4px;
+  color: #fff0d4;
+  text-align: center;
+}
+.carton-player:nth-child(2) {
+  --card-travel-x: -25%;
+  --card-tilt: -10deg;
+}
+.carton-name {
+  max-width: 100%;
+  margin: 0;
+  padding-inline: 3px;
+  overflow-wrap: anywhere;
+  font: 700 clamp(14px, 3.7vw, 19px)/1.15 Georgia, serif;
+  text-shadow: 0 1px 3px #120e0b;
+}
+.carton-stack {
+  position: relative;
+  width: var(--carton-card-width);
+  aspect-ratio: 100 / 144;
+  margin-block: 3px 6px;
+  border-radius: 7%;
+  outline: 1px dashed #f6e6c963;
+  outline-offset: 3px;
+  background: #100d0a24;
+}
+.carton-stack[data-stacked="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid #ad946b;
+  border-radius: inherit;
+  background: #ddc9a2;
+  transform: translate(-2%, 2%) rotate(-3deg);
+  box-shadow: 0 3px 3px #110d0947;
+}
+.carton-player:nth-child(2) .carton-stack[data-stacked="true"]::before {
+  transform: translate(2%, 2%) rotate(3deg);
+}
+.carton-face, .carton-under {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  transform-origin: 50% 86%;
+}
+.carton-under { pointer-events: none; }
+.carton-face svg, .carton-under svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 2px 2px #140d0b70);
+}
+.carton-tally {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  color: #fff0d4;
+  font: 600 13px/1.1 var(--sans);
+}
+.carton-tally small { font: inherit; text-shadow: 0 1px 2px #120e0b; }
+.carton-count-value {
+  min-width: 2ch;
+  margin: 0;
+  padding: 2px 10px 3px;
+  border: 1px solid #ead6af69;
+  border-radius: 5px;
+  background: #1a1610d9;
+  color: #fff0d4;
+  font: 700 clamp(17px, 4.2vw, 23px)/1.1 Georgia, serif;
+  font-variant-numeric: tabular-nums;
+}
+.carton-player[data-active="true"] .carton-count-value {
+  border-color: #ffe3a5;
+  background: #f7e3b2;
+  color: #302416;
+}
+.carton-player[data-finished="true"] .carton-stack { outline-color: #ebd0a35e; }
+.carton-award {
+  max-width: 100%;
+  margin: 0;
+  color: #ffe7b0;
+  font: 650 13px/1.3 var(--sans);
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 2px #120e0b;
+}
+.carton-receipt {
+  grid-area: receipt;
+  margin: 8px 0;
+  padding: 9px 11px;
+  border-inline-start: 2px solid #d9b478;
+  background: #251f17;
+  color: var(--paper, #f5e8c9);
+  font: 500 13px/1.4 var(--sans);
+  overflow-wrap: anywhere;
+}
+.carton-receipt p { margin: 0; }
+.carton-receipt p + p { margin-top: 3px; }
+.carton-receipt:empty { display: none; }
+.carton-status {
+  grid-area: status;
+  margin: 8px 0;
+  color: var(--soft-paper, #e1d5bd);
+  font: 550 13px/1.35 var(--sans);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.carton-actions {
+  grid-area: actions;
+  display: grid;
+  gap: 6px;
+}
+.carton-actions .button { width: 100%; min-height: 44px; }
+#modal .carton-actions .button {
+  border: 1px solid #c2a370;
+  border-radius: 9px;
+  font-weight: 680;
+}
+#modal .carton-actions .button.primary { color: #261e16; background: var(--paper, #f5e8c9); }
+#modal .carton-actions .button.outline { color: var(--paper, #f5e8c9); background: transparent; }
+#modal[data-kind="round"] > .modal-top .icon-button {
+  position: var(--carton-close-position, static);
+  top: 8px;
+  inset-inline-end: 8px;
+}
+#modal[data-kind="round"] > #modal-title { margin-block: 3px 8px; }
+.carton-count [hidden], .carton-actions [hidden] { display: none; }
+
+@keyframes carton-deal {
+  0% { transform: perspective(500px) translate(var(--card-travel-x), -18%) rotate(var(--card-tilt)) rotateX(30deg) scale(.92); opacity: .58; }
+  72% { transform: perspective(500px) translate(0, 1.5%) rotate(0deg) rotateX(0deg) scale(1.015); opacity: 1; }
+  100% { transform: none; }
+}
+@keyframes carton-reveal {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  :root:not(.reduce-motion) .carton-face.carton-dealt {
+    animation: carton-deal 190ms cubic-bezier(.2,.78,.32,1) both;
+  }
+  :root:not(.reduce-motion) .carton-count[data-complete="true"] :is(.carton-receipt, .carton-award) {
+    animation: carton-reveal 230ms ease-out both;
+  }
+}
+
+@media (max-height: 600px) {
+  #modal:has(.carton-count) { padding: 12px 14px; }
+  #modal:has(.carton-count) .modal-top { margin-bottom: 0; }
+  #modal:has(.carton-count) #modal-title { margin-block: 2px 6px; }
+  .carton-count { margin-block: 8px; }
+  .carton-player { row-gap: 5px; padding-block: 8px; }
+  .carton-status { margin-block: 6px; }
+}
+@media (max-height: 450px) and (orientation: landscape) {
+  #modal[open][data-kind="round"] {
+    --carton-grid: "stage status" auto "stage receipt" auto "stage actions" auto / minmax(0, 1.2fr) minmax(0, 1fr);
+    --carton-compact-card: clamp(38px, 14dvh, 56px);
+    --carton-close-position: absolute;
+    width: min(680px, calc(100% - 20px));
+    max-width: none;
+    max-height: calc(100dvh - 14px);
+  }
+}
+.is-rotated-view #modal[open][data-kind="round"] {
+  --carton-grid: "stage status" auto "stage receipt" auto "stage actions" auto / minmax(0, 1.2fr) minmax(0, 1fr);
+  --carton-compact-card: clamp(38px, calc(var(--rotated-height) * .14), 56px);
+  --carton-close-position: absolute;
+  width: min(680px, calc(var(--rotated-width) - 20px));
+  max-height: calc(var(--rotated-height) - 14px);
+  padding: 12px 14px;
+}
+
 /* Each choice shows the same inked sign that appears on its table. */
 #modal .city-options .city-option {
   position: relative;
@@ -6712,6 +6928,9 @@ function publicView(state, playerId) {
   const lastEvent = latest ? Object.fromEntries(Object.entries(latest).filter(([key]) => key !== 'id')) : null;
   const lastPlay = state.lastPlay ? { ...state.lastPlay } : null;
   if (lastPlay?.playerId !== playerId) delete lastPlay?.fromRonda;
+  const roundSummary = state.status === 'round-end'
+    ? { ...state.roundSummary, piles: state.players.map((player) => player.captured) }
+    : null;
   return copy({
     schemaVersion: state.schemaVersion, id: state.id, revision: state.revision,
     rules: state.rules, mode: state.mode, difficulty: state.difficulty ?? 'medium', currentPlayerId: playerId,
@@ -6724,7 +6943,7 @@ function publicView(state, playerId) {
     table: state.table, deckCount: state.deck.length, discardedCount: state.discarded.length,
     dealer: state.dealer, turn: state.turn, round: state.round, deal: state.deal,
     status: state.status, winner: state.winner, lastPlay,
-    history, roundSummary: state.roundSummary, lastEvent,
+    history, roundSummary, lastEvent,
   });
 }
 
@@ -7376,6 +7595,103 @@ function cardBackSvg() {
 }
 
 return Object.freeze({ "cardLabel": cardLabel, "cardSvg": cardSvg, "cardBackSvg": cardBackSvg });
+})();
+
+__cuarentaModules["js/carton.js"] = (() => {
+const { cardSvg: cardSvg } = __cuarentaModules["js/cards.js"];
+
+
+
+/** Animate a projection of the completed cycle. Scoring and ownership are already settled. */
+function startCartonCount(root, view, animated, onPileStart) {
+  const { piles, captured } = view.roundSummary;
+  const hasCards = piles?.length === 2 && piles.every((pile, seat) =>
+    Array.isArray(pile) && pile.length === captured[seat]);
+  const panels = Array.from(root.querySelectorAll('.carton-player'));
+  const skip = root.querySelector('[data-action="skip-carton"]');
+  const next = root.querySelector('.carton-continue');
+  const status = root.querySelector('.carton-status');
+  let timer;
+  let seat = 0;
+  let count = 0;
+
+  function display(index, total, deal) {
+    const panel = panels[index];
+    panel.querySelector('.carton-count-value').textContent = total;
+    panel.querySelector('.carton-tally small').textContent = total === 1 ? 'carta' : 'cartas';
+    const stack = panel.querySelector('.carton-stack');
+    stack.dataset.stacked = String(total > 1 && hasCards);
+    const card = hasCards && piles[index][total - 1];
+    const previous = stack.lastElementChild;
+    if (!card || previous?.dataset.card === card.id) return;
+    const face = document.createElement('div');
+    face.className = deal ? 'carton-face carton-dealt' : 'carton-face';
+    face.dataset.card = card.id;
+    face.innerHTML = cardSvg(card);
+    if (previous && deal) {
+      previous.className = 'carton-under';
+      previous.setAttribute('aria-hidden', 'true');
+      stack.replaceChildren(previous, face);
+    } else {
+      stack.replaceChildren(face);
+    }
+  }
+
+  function cancel() {
+    clearTimeout(timer);
+    document.removeEventListener('visibilitychange', visibilityChanged);
+  }
+
+  function finish() {
+    cancel();
+    if (root.dataset.complete === 'true') return;
+    const transferFocus = document.activeElement === skip;
+    panels.forEach((panel, index) => {
+      display(index, captured[index], false);
+      panel.dataset.active = 'false';
+      panel.dataset.finished = 'true';
+      panel.querySelector('.carton-award').hidden = false;
+    });
+    root.dataset.complete = 'true';
+    root.querySelector('.carton-receipt').hidden = false;
+    status.textContent = 'Conteo completo';
+    next.hidden = false;
+    skip.hidden = true;
+    if (transferFocus) next.focus({ preventScroll: true });
+  }
+
+  function step() {
+    while (seat < panels.length && count === captured[seat]) {
+      panels[seat].dataset.active = 'false';
+      panels[seat].dataset.finished = 'true';
+      seat++;
+      count = 0;
+    }
+    if (seat === panels.length) { finish(); return; }
+    if (count === 0) {
+      panels[seat].dataset.active = 'true';
+      status.textContent = 'Contando · ' + view.players[seat].name;
+      onPileStart();
+    }
+    display(seat, ++count, true);
+    timer = setTimeout(step, count === captured[seat] ? 580 : 265);
+  }
+
+  function visibilityChanged() {
+    clearTimeout(timer);
+    if (!document.hidden) timer = setTimeout(step, 250);
+  }
+
+  if (animated && hasCards && captured.some(Boolean)) {
+    document.addEventListener('visibilitychange', visibilityChanged);
+    visibilityChanged();
+  } else {
+    finish();
+  }
+  return { cancel, finish };
+}
+
+return Object.freeze({ "startCartonCount": startCartonCount });
 })();
 
 __cuarentaModules["js/card-sound-samples.js"] = (() => {
@@ -9119,6 +9435,7 @@ __cuarentaModules["js/app.js"] = (() => {
 const { applyMove: applyMove, createDeck: createDeck, DEFAULT_BOT_NAME: DEFAULT_BOT_NAME, legalMoves: legalMoves, publicView: publicView } = __cuarentaModules["js/engine.js"];
 const { chooseBotMove: chooseBotMove } = __cuarentaModules["js/bot.js"];
 const { cardSvg: cardSvg, cardBackSvg: cardBackSvg, cardLabel: cardLabel } = __cuarentaModules["js/cards.js"];
+const { startCartonCount: startCartonCount } = __cuarentaModules["js/carton.js"];
 const { playCardSound: playCardSound } = __cuarentaModules["js/card-sounds.js"];
 const { LocalSession: LocalSession, FELT_THEMES: FELT_THEMES, loadPreferences: loadPreferences, savePreferences: savePreferences } = __cuarentaModules["js/session.js"];
 const { createTutorialLessons: createTutorialLessons } = __cuarentaModules["js/tutorial.js"];
@@ -9127,6 +9444,7 @@ const { MUSIC_TRACKS: MUSIC_TRACKS, TableMusic: TableMusic } = __cuarentaModules
 const { TABLE_CITIES: TABLE_CITIES, tableArt: tableArt } = __cuarentaModules["js/table-art.js"];
 const { COVER_CARDS: COVER_CARDS } = __cuarentaModules["js/home-art.js"];
 const { PrivateTableClient: PrivateTableClient } = __cuarentaModules["js/private-client.js"];
+
 
 
 
@@ -9183,6 +9501,7 @@ let pendingCardArrival = false;
 let pendingPassMove = null;
 let practice;
 let practiceReplyTimer;
+let cartonCount;
 let tutorialStep = 0;
 let tutorialTrack = 'starter';
 let tutorialCourses;
@@ -9816,6 +10135,8 @@ function requestNewGame(options) {
 }
 
 function showModal(kind, content) {
+  cartonCount?.cancel();
+  cartonCount = null;
   cancelBot();
   if (kind !== 'practice') cancelPracticeReply();
   if (!modal.open) lastFocus = document.activeElement;
@@ -9826,6 +10147,8 @@ function showModal(kind, content) {
 }
 
 function closeModal(resume = true) {
+  cartonCount?.cancel();
+  cartonCount = null;
   if (!privateGame && (modalKind === 'private-wait' || modalKind === 'private-setup')) stopPrivateTable();
   cancelPracticeReply();
   if (modal.open) modal.close();
@@ -10344,8 +10667,12 @@ function practiceFinish(view) {
   </section>`;
 }
 
-function showPractice(focus, dealing = false) {
+function showPractice(focus, dealing = false, showFinal = false) {
   const view = publicView(practice.state, 0);
+  if (view.status === 'round-end' && !showFinal) {
+    showRoundSummary(view, true);
+    return;
+  }
   const playing = view.status === 'playing';
   const myTurn = playing && view.turn === 0;
   const moves = practiceMoves(view);
@@ -10650,28 +10977,53 @@ function advanceTutorial() {
   if (lesson && tutorialSolved.has(lesson.id)) selectTutorialStep(tutorialStep + 1);
 }
 
-function showRoundSummary() {
-  const v = getView();
-  if (v.status !== 'round-end') return;
-  const { captured, base, awarded, leftover } = v.roundSummary;
-  const tied = captured[0] === captured[1];
-  const nextDealer = 1 - v.dealer;
-  const nextName = esc(v.players[nextDealer].name);
-  const tieReason = awarded[nextDealer]
-    ? `${nextName} suma ${awarded[nextDealer]} puntos porque reparte el siguiente ciclo.`
-    : `${nextName} reparte el siguiente ciclo. El tope de 30 puntos impide sumar la bonificación.`;
-  const results = v.players.map((player, index) => `
-    <div>
-      <span>${esc(player.name)}</span>
-      <strong>${captured[index]}<small>cartas recogidas</small></strong>
-      <p><b>+${awarded[index]} puntos</b>${base[index] > awarded[index] ? ' · Tope de 30' : ''}</p>
-      <div class="round-total">${player.score} / 40</div>
+function cartonExplanation(view) {
+  const { captured, base, awarded } = view.roundSummary;
+  const recipient = base.findIndex(points => points > 0);
+  if (recipient < 0) return 'Ninguna pila llegó a 20 cartas.';
+  const total = captured[recipient];
+  let reason;
+  if (captured[0] === captured[1]) {
+    const dealerName = view.players[recipient].name;
+    reason = dealerName === 'Tú' ? 'Dos por dar. Tú repartes el siguiente ciclo.'
+      : `Dos por dar. ${esc(dealerName)} reparte el siguiente ciclo.`;
+  } else if (total === 20) {
+    reason = '20 cartas dan 6 puntos de cartón.';
+  } else {
+    const extra = total - 20;
+    reason = `${total} cartas dan 6 + ${extra} = ${6 + extra} puntos.`;
+    if (6 + extra !== base[recipient]) reason += ` Se redondea a ${base[recipient]}.`;
+  }
+  if (awarded[recipient] < base[recipient]) reason += ` Por el tope de 30 se suman ${awarded[recipient]}.`;
+  return reason;
+}
+
+function showRoundSummary(view = getView(), inPractice = false) {
+  if (view?.status !== 'round-end') return;
+  const { awarded, leftover } = view.roundSummary;
+  const players = view.players.map((player, seat) => `
+    <div class="carton-player" data-seat="${seat}" data-active="false" data-finished="false">
+      <h3 class="carton-name">${esc(player.name)}</h3>
+      <div class="carton-stack" data-stacked="false"></div>
+      <div class="carton-tally"><strong class="carton-count-value">0</strong> <small>cartas</small></div>
+      <div class="carton-award" hidden>+${awarded[seat]} puntos · ${player.score}/40</div>
     </div>`).join('');
-  showModal('round', `${modalHeader('Conteo del cartón', `FIN DEL CICLO ${v.round}`)}
-    ${tied ? `<p class="round-explanation"><strong>Dos por dar.</strong> ${tieReason}</p>` : ''}
-    <div class="round-results">${results}</div>
-    ${leftover ? `<p class="round-leftover">${leftover === 1 ? 'Se descarta 1 carta que quedó en la mesa.' : `Se descartan ${leftover} cartas que quedaron en la mesa.`}</p>` : ''}
-    <button class="button primary full-width" data-action="next-round">Barajar y seguir ${icon('arrow')}</button>`);
+  showModal('round', `${modalHeader('Conteo del cartón', `Fin del ciclo ${view.round}`)}
+    <section class="carton-count" data-complete="false" aria-label="Cartas recogidas por jugador">
+      <div class="carton-stage">${players}</div>
+      <p class="carton-status" role="status">Cartas recogidas</p>
+      <div class="carton-receipt" hidden>
+        <p>${cartonExplanation(view)}</p>
+        ${leftover ? `<p>${leftover === 1 ? 'Se descarta 1 carta de la mesa.' : `Se descartan ${leftover} cartas de la mesa.`}</p>` : ''}
+      </div>
+      <div class="carton-actions">
+        <button type="button" class="button outline" data-action="skip-carton">Omitir conteo</button>
+        <button type="button" class="button primary carton-continue" hidden data-action="${inPractice ? 'carton-practice-finish' : 'next-round'}">${inPractice ? 'Ver mi práctica' : 'Barajar y seguir'} ${icon('arrow')}</button>
+      </div>
+    </section>`);
+  const root = modal.querySelector('.carton-count');
+  cartonCount = startCartonCount(root, view, animateTable(), () => playSound('place'));
+  root.querySelector('.carton-actions button:not([hidden])').focus({ preventScroll: true });
 }
 
 function showResult() {
@@ -10764,6 +11116,8 @@ function handleAction(target) {
     try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(move, viewer); }
     catch (error) { toast(error.message); selectedId = null; render(); }
   }
+  else if (action === 'skip-carton') cartonCount?.finish();
+  else if (action === 'carton-practice-finish') showPractice('#modal-title', false, true);
   else if (action === 'next-round') {
     if (privateGame) { void sendPrivateMove(target, 'nextRound'); return; }
     closeModal(false);
@@ -10911,6 +11265,9 @@ document.addEventListener('change', event => {
 });
 modal.addEventListener('cancel', event => { event.preventDefault(); closeModal(); });
 landscapeGame.addEventListener('change', updateGameOrientation);
+systemReducedMotion.addEventListener('change', event => {
+  if (event.matches) cartonCount?.finish();
+});
 window.addEventListener('resize', updateGameOrientation);
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {

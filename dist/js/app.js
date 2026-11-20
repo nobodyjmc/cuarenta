@@ -1,6 +1,7 @@
 import { applyMove, createDeck, DEFAULT_BOT_NAME, legalMoves, publicView } from './engine.js';
 import { chooseBotMove } from './bot.js';
 import { cardSvg, cardBackSvg, cardLabel } from './cards.js';
+import { startCartonCount } from './carton.js';
 import { playCardSound } from './card-sounds.js';
 import { LocalSession, FELT_THEMES, loadPreferences, savePreferences } from './session.js';
 import { createTutorialLessons } from './tutorial.js';
@@ -53,6 +54,7 @@ let pendingCardArrival = false;
 let pendingPassMove = null;
 let practice;
 let practiceReplyTimer;
+let cartonCount;
 let tutorialStep = 0;
 let tutorialTrack = 'starter';
 let tutorialCourses;
@@ -686,6 +688,8 @@ function requestNewGame(options) {
 }
 
 function showModal(kind, content) {
+  cartonCount?.cancel();
+  cartonCount = null;
   cancelBot();
   if (kind !== 'practice') cancelPracticeReply();
   if (!modal.open) lastFocus = document.activeElement;
@@ -696,6 +700,8 @@ function showModal(kind, content) {
 }
 
 function closeModal(resume = true) {
+  cartonCount?.cancel();
+  cartonCount = null;
   if (!privateGame && (modalKind === 'private-wait' || modalKind === 'private-setup')) stopPrivateTable();
   cancelPracticeReply();
   if (modal.open) modal.close();
@@ -1214,8 +1220,12 @@ function practiceFinish(view) {
   </section>`;
 }
 
-function showPractice(focus, dealing = false) {
+function showPractice(focus, dealing = false, showFinal = false) {
   const view = publicView(practice.state, 0);
+  if (view.status === 'round-end' && !showFinal) {
+    showRoundSummary(view, true);
+    return;
+  }
   const playing = view.status === 'playing';
   const myTurn = playing && view.turn === 0;
   const moves = practiceMoves(view);
@@ -1520,28 +1530,53 @@ function advanceTutorial() {
   if (lesson && tutorialSolved.has(lesson.id)) selectTutorialStep(tutorialStep + 1);
 }
 
-function showRoundSummary() {
-  const v = getView();
-  if (v.status !== 'round-end') return;
-  const { captured, base, awarded, leftover } = v.roundSummary;
-  const tied = captured[0] === captured[1];
-  const nextDealer = 1 - v.dealer;
-  const nextName = esc(v.players[nextDealer].name);
-  const tieReason = awarded[nextDealer]
-    ? `${nextName} suma ${awarded[nextDealer]} puntos porque reparte el siguiente ciclo.`
-    : `${nextName} reparte el siguiente ciclo. El tope de 30 puntos impide sumar la bonificación.`;
-  const results = v.players.map((player, index) => `
-    <div>
-      <span>${esc(player.name)}</span>
-      <strong>${captured[index]}<small>cartas recogidas</small></strong>
-      <p><b>+${awarded[index]} puntos</b>${base[index] > awarded[index] ? ' · Tope de 30' : ''}</p>
-      <div class="round-total">${player.score} / 40</div>
+function cartonExplanation(view) {
+  const { captured, base, awarded } = view.roundSummary;
+  const recipient = base.findIndex(points => points > 0);
+  if (recipient < 0) return 'Ninguna pila llegó a 20 cartas.';
+  const total = captured[recipient];
+  let reason;
+  if (captured[0] === captured[1]) {
+    const dealerName = view.players[recipient].name;
+    reason = dealerName === 'Tú' ? 'Dos por dar. Tú repartes el siguiente ciclo.'
+      : `Dos por dar. ${esc(dealerName)} reparte el siguiente ciclo.`;
+  } else if (total === 20) {
+    reason = '20 cartas dan 6 puntos de cartón.';
+  } else {
+    const extra = total - 20;
+    reason = `${total} cartas dan 6 + ${extra} = ${6 + extra} puntos.`;
+    if (6 + extra !== base[recipient]) reason += ` Se redondea a ${base[recipient]}.`;
+  }
+  if (awarded[recipient] < base[recipient]) reason += ` Por el tope de 30 se suman ${awarded[recipient]}.`;
+  return reason;
+}
+
+function showRoundSummary(view = getView(), inPractice = false) {
+  if (view?.status !== 'round-end') return;
+  const { awarded, leftover } = view.roundSummary;
+  const players = view.players.map((player, seat) => `
+    <div class="carton-player" data-seat="${seat}" data-active="false" data-finished="false">
+      <h3 class="carton-name">${esc(player.name)}</h3>
+      <div class="carton-stack" data-stacked="false"></div>
+      <div class="carton-tally"><strong class="carton-count-value">0</strong> <small>cartas</small></div>
+      <div class="carton-award" hidden>+${awarded[seat]} puntos · ${player.score}/40</div>
     </div>`).join('');
-  showModal('round', `${modalHeader('Conteo del cartón', `FIN DEL CICLO ${v.round}`)}
-    ${tied ? `<p class="round-explanation"><strong>Dos por dar.</strong> ${tieReason}</p>` : ''}
-    <div class="round-results">${results}</div>
-    ${leftover ? `<p class="round-leftover">${leftover === 1 ? 'Se descarta 1 carta que quedó en la mesa.' : `Se descartan ${leftover} cartas que quedaron en la mesa.`}</p>` : ''}
-    <button class="button primary full-width" data-action="next-round">Barajar y seguir ${icon('arrow')}</button>`);
+  showModal('round', `${modalHeader('Conteo del cartón', `Fin del ciclo ${view.round}`)}
+    <section class="carton-count" data-complete="false" aria-label="Cartas recogidas por jugador">
+      <div class="carton-stage">${players}</div>
+      <p class="carton-status" role="status">Cartas recogidas</p>
+      <div class="carton-receipt" hidden>
+        <p>${cartonExplanation(view)}</p>
+        ${leftover ? `<p>${leftover === 1 ? 'Se descarta 1 carta de la mesa.' : `Se descartan ${leftover} cartas de la mesa.`}</p>` : ''}
+      </div>
+      <div class="carton-actions">
+        <button type="button" class="button outline" data-action="skip-carton">Omitir conteo</button>
+        <button type="button" class="button primary carton-continue" hidden data-action="${inPractice ? 'carton-practice-finish' : 'next-round'}">${inPractice ? 'Ver mi práctica' : 'Barajar y seguir'} ${icon('arrow')}</button>
+      </div>
+    </section>`);
+  const root = modal.querySelector('.carton-count');
+  cartonCount = startCartonCount(root, view, animateTable(), () => playSound('place'));
+  root.querySelector('.carton-actions button:not([hidden])').focus({ preventScroll: true });
 }
 
 function showResult() {
@@ -1634,6 +1669,8 @@ function handleAction(target) {
     try { session.dispatch({ type: 'PLAY', move: { ...move, playerId: viewer, expectedRevision: v.revision } }); afterMove(move, viewer); }
     catch (error) { toast(error.message); selectedId = null; render(); }
   }
+  else if (action === 'skip-carton') cartonCount?.finish();
+  else if (action === 'carton-practice-finish') showPractice('#modal-title', false, true);
   else if (action === 'next-round') {
     if (privateGame) { void sendPrivateMove(target, 'nextRound'); return; }
     closeModal(false);
@@ -1781,6 +1818,9 @@ document.addEventListener('change', event => {
 });
 modal.addEventListener('cancel', event => { event.preventDefault(); closeModal(); });
 landscapeGame.addEventListener('change', updateGameOrientation);
+systemReducedMotion.addEventListener('change', event => {
+  if (event.matches) cartonCount?.finish();
+});
 window.addEventListener('resize', updateGameOrientation);
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {

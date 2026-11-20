@@ -1,8 +1,10 @@
-# Cuarenta · Versión 0.19.1
+# Cuarenta · Versión 0.20.0
 
 Juego ecuatoriano de cartas para jugar contra Don Julio o con otra persona en el mismo dispositivo. Puedes escoger una de seis mesas ilustradas y practicar con una mano guiada. [Jugar en el navegador](https://nobodyjmc.github.io/cuarenta/).
 
 ## Versión para probar en línea
+
+Al cierre de cada ciclo, el cartón muestra primero las cartas que recogió un jugador y luego las del otro. **Omitir conteo** lleva directamente a los totales y al cálculo de puntos.
 
 Esta versión está preparada para GitHub Pages. En cada cambio de `main`, GitHub Actions ejecuta las pruebas, genera `site/index.html` y publica ese directorio junto con `site/assets/`. El comando `npm run prepare:pages` también genera el `index.html` de la raíz, que usa las pistas de `dist/assets/`. Para subir el proyecto y activar Pages, sigue [SUBIR_A_GITHUB.md](SUBIR_A_GITHUB.md). El enlace público aparecerá en **Settings → Pages** después de completar el primer despliegue.
 

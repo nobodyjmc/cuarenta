@@ -321,6 +321,9 @@ export function publicView(state, playerId) {
   const lastEvent = latest ? Object.fromEntries(Object.entries(latest).filter(([key]) => key !== 'id')) : null;
   const lastPlay = state.lastPlay ? { ...state.lastPlay } : null;
   if (lastPlay?.playerId !== playerId) delete lastPlay?.fromRonda;
+  const roundSummary = state.status === 'round-end'
+    ? { ...state.roundSummary, piles: state.players.map((player) => player.captured) }
+    : null;
   return copy({
     schemaVersion: state.schemaVersion, id: state.id, revision: state.revision,
     rules: state.rules, mode: state.mode, difficulty: state.difficulty ?? 'medium', currentPlayerId: playerId,
@@ -333,6 +336,6 @@ export function publicView(state, playerId) {
     table: state.table, deckCount: state.deck.length, discardedCount: state.discarded.length,
     dealer: state.dealer, turn: state.turn, round: state.round, deal: state.deal,
     status: state.status, winner: state.winner, lastPlay,
-    history, roundSummary: state.roundSummary, lastEvent,
+    history, roundSummary, lastEvent,
   });
 }

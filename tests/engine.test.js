@@ -196,6 +196,28 @@ test('carton covers exact twenty, excess, ties, unequal minorities, discarded le
   assert.deepEqual(state.roundSummary.awarded, [0, 0]);
 });
 
+test('carton reveals the actual ordered piles to both seats only at the end of the cycle', () => {
+  for (const [first, second] of [[18, 18], [21, 17], [40, 0], [2, 38]]) {
+    const state = ending(first, second);
+    const expected = state.players.map(player => player.captured);
+    assert.deepEqual(expected[0].slice(-2).map(card => card.id), [h('K'), s('K')]);
+    assert.equal(Object.hasOwn(state.roundSummary, 'piles'), false);
+    for (const seat of [0, 1]) {
+      // Old saved cycles already have the cards in the two real capture piles.
+      const view = publicView(JSON.parse(JSON.stringify(state)), seat);
+      assert.deepEqual(view.roundSummary.piles, expected);
+      assert.deepEqual(view.roundSummary.piles.map(pile => pile.length), view.roundSummary.captured);
+      assert.equal(view.players[1 - seat].hand, null);
+    }
+    const detached = publicView(state, 0);
+    detached.roundSummary.piles[0][0].rank = 'changed';
+    assert.notEqual(state.players[0].captured[0].rank, 'changed');
+    const next = publicView(advanceRound(state, { random: rng(12) }), 1);
+    assert.equal(next.roundSummary, null);
+    assert.equal(next.players[0].captured, undefined);
+  }
+});
+
 test('advance resets the card cycle, preserves score, changes dealer, and cannot skip an unfinished cycle', () => {
   const state = ending(21, 17, [30, 30]);
   const next = advanceRound(state, { random: rng(12) });
